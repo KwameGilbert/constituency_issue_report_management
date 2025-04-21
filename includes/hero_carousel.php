@@ -8,7 +8,7 @@ $items = $conn
     <div id="hero-carousel" class="relative" data-carousel="slide" data-carousel-autoplay="true"
         data-carousel-interval="5000">
         <!-- Wrapper (Flowbite carousel structure) -->
-        <div class="relative w-full h-[500px] md:aspect-[16/9] overflow-hidden rounded-lg">
+        <div class="relative w-full h-[400px] md:aspect-[16/9] overflow-hidden rounded-lg">
             <!-- Hero Slide (active by default) -->
             <div class="hidden duration-700 ease-in-out absolute inset-0 transition-transform transform"
                 data-carousel-item="active">
