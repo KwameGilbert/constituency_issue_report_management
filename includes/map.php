@@ -1,0 +1,14 @@
+<section class="py-12 bg-gray-50">
+    <div class="max-w-6xl mx-auto px-4">
+        <h2 class="text-2xl font-semibold mb-6">Our Projects Map</h2>
+        <div id="map" class="h-96 rounded-lg"></div>
+    </div>
+</section>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([5.6037, -0.1870], 8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+// Later: fetch markers via AJAX endpoint
+</script>
