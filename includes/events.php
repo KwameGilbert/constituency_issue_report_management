@@ -16,7 +16,7 @@ $evs = $conn
     <div class="max-w-4xl mx-auto px-4">
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900">Upcoming Events</h2>
-            <div class="mt-2 w-20 h-1 bg-blue-500"></div>
+            <div class="mt-2 w-20 h-1 bg-red-500"></div>
         </div>
 
         <?php if (empty($evs)): ?>
@@ -29,19 +29,19 @@ $evs = $conn
 
                 <!-- Date Block -->
                 <div class="flex flex-col items-center text-center w-16 mr-4">
-                    <div class="text-2xl font-bold text-blue-600"><?= htmlspecialchars($e['day']) ?></div>
+                    <div class="text-2xl font-bold text-red-600"><?= htmlspecialchars($e['day']) ?></div>
                     <div class="text-sm text-gray-600"><?= htmlspecialchars($e['month_year']) ?></div>
                 </div>
 
                 <!-- Details -->
                 <div class="flex-1">
-                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-blue-600 mb-2">
+                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-red-600 mb-2">
                         <?= htmlspecialchars($e['name']) ?>
                     </h4>
-                    <div class="flex flex-wrap items-center text-sm text-gray-600 space-x-4">
+                    <div class="flex flex-wrap items-center text-sm text-gray-600">
 
                         <!-- Time -->
-                        <div class="flex items-center">
+                        <div class="flex items-center mr-2">
                             <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
