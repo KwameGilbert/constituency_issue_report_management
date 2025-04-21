@@ -1,9 +1,10 @@
 <section class="py-12 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
         <h2 class="text-2xl font-semibold mb-6">Our Projects Map</h2>
-        <div id="map" class="h-96 rounded-lg"></div>
+        <div id="map" class="h-96 rounded-lg" style="height: 384px;"></div>
     </div>
 </section>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const map = L.map('map').setView([5.6037, -0.1870], 8);
