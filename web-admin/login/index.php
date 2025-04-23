@@ -20,45 +20,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$email || !$password) {
         $error = "All fields are required";
     } else {
-        // Prevent brute force attacks
-        if (checkLoginAttempts($_SERVER['REMOTE_ADDR'])) {
-            try {
-                $stmt = $conn->prepare("SELECT id, password_hash, username FROM users WHERE role='admin' AND email=? AND status='active'");
-                $stmt->bind_param('s', $email);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $user = $result->fetch_assoc();
+        try {
+            // Updated to use admins table
+            $stmt = $conn->prepare("SELECT id, password_hash, username, first_name, role FROM admins WHERE email=? AND status='active' AND id > 0");
+            $stmt->bind_param('s', $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $admin = $result->fetch_assoc();
+            
+            if ($admin && password_verify($password, $admin['password_hash'])) {
+                // Successful login
+                $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['admin_username'] = $admin['username'];
+                $_SESSION['admin_role'] = $admin['role'];
+                $_SESSION['admin_name'] = $admin['first_name'];
+                $_SESSION['admin_last_activity'] = time();
                 
-                if ($user && password_verify($password, $user['password_hash'])) {
-                    // Successful login
-                    $_SESSION['admin_id'] = $user['id'];
-                    $_SESSION['admin_username'] = $user['username'];
-                    $_SESSION['admin_last_activity'] = time();
-                    
-                    // Log successful login
-                    logActivity($conn, $user['id'], 'login_success', 'Admin logged in');
-                    
-                    // Reset login attempts
-                    resetLoginAttempts($_SERVER['REMOTE_ADDR']);
-                    
-                    // Redirect to dashboard
-                    header('Location: ../dashboard/');
-                    exit;
-                } else {
-                    // Failed login
-                    logFailedAttempt($_SERVER['REMOTE_ADDR']);
-                    $error = "Invalid email or password";
-                    
-                    // Log failed attempt
-                    logActivity($conn, 0, 'login_failed', 'Failed login attempt with email: ' . $email);
+                // Update last login timestamp
+                $updateStmt = $conn->prepare("UPDATE admins SET last_login = NOW() WHERE id = ?");
+                $updateStmt->bind_param('i', $admin['id']);
+                $updateStmt->execute();
+                
+                // Log activity if table exists
+                try {
+                    $logStmt = $conn->prepare("INSERT INTO admins_activity_log (admin_id, action, details, ip_address, user_agent) VALUES (?, 'login', 'Admin logged in successfully', ?, ?)");
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+                    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+                    $logStmt->bind_param('iss', $admin['id'], $ip, $userAgent);
+                    $logStmt->execute();
+                } catch (Exception $logError) {
+                    // Silently fail if logging fails
+                    error_log("Login log error: " . $logError->getMessage());
                 }
-            } catch (Exception $e) {
-                // Log error
-                error_log("Login error: " . $e->getMessage());
-                $error = "System error. Please try again later.";
+                
+                // Redirect to dashboard
+                header('Location: ../dashboard/');
+                exit;
+            } else {
+                // Failed login
+                $error = "Invalid email or password";
+                
+                // Log failed attempt if table exists - use system ID (0) for failed attempts
+                try {
+                    $systemId = 0; // Reference to system account
+                    $details = "Failed login attempt with email: " . $email;
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+                    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+                    
+                    $failedLogStmt = $conn->prepare("INSERT INTO admins_activity_log (admin_id, action, details, ip_address, user_agent) VALUES (?, 'login_failed', ?, ?, ?)");
+                    $failedLogStmt->bind_param('isss', $systemId, $details, $ip, $userAgent);
+                    $failedLogStmt->execute();
+                } catch (Exception $logError) {
+                    // Silently fail if logging fails
+                    error_log("Failed login log error: " . $logError->getMessage());
+                }
             }
-        } else {
-            $error = "Too many failed attempts. Please try again later.";
+        } catch (Exception $e) {
+            // Log error
+            error_log("Login error: " . $e->getMessage());
+            $error = "System error. Please try again later.";
         }
     }
 }
@@ -77,7 +97,7 @@ if (isset($_SESSION['success_message'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Admin login page for content management">
-    <title>Content Management System | Admin Login</title>
+    <title>Constituency Issue Management | Admin Login</title>
     <link rel="icon" href="../../assets/images/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -85,8 +105,9 @@ if (isset($_SESSION['success_message'])) {
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
     <div class="max-w-md w-full px-6 py-8">
         <div class="mb-8 text-center">
-            <img src="../../assets/images/logo.png" alt="Company Logo" class="h-16 mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">Content Management System</h1>
+            <img src="../../assets/images/logo.png" alt="Logo" class="h-16 mx-auto mb-4"
+                onerror="this.style.display='none'">
+            <h1 class="text-2xl font-bold text-gray-800">Constituency Issue Report Management</h1>
             <p class="text-gray-600">Manage blog posts, events, carousels, and more</p>
         </div>
 
@@ -146,7 +167,7 @@ if (isset($_SESSION['success_message'])) {
     </div>
 
     <footer class="w-full text-center p-4 text-sm text-gray-600">
-        &copy; <?= date('Y') ?> Your Company Name. All rights reserved.
+        &copy; <?= date('Y') ?> Constituency Issue Management. All rights reserved.
     </footer>
 
     <script>
