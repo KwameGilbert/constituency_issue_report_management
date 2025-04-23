@@ -2,13 +2,20 @@
 require_once '../../includes/auth.php';
 require_once '../../../config/db.php';
 
+// Check if ID is provided
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$post_id = (int) $_GET['id'];
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $conn->real_escape_string($_POST['title']);
-    $content = $_POST['content'];
+    $content = $conn->real_escape_string($_POST['content']);
     $excerpt = $conn->real_escape_string($_POST['excerpt']);
-    $author_id = isset($_SESSION['admin_id']) ? (int)$_SESSION['admin_id'] : 1;
-     $featured = isset($_POST['featured']) ? 1 : 0;
+       $featured = isset($_POST['featured']) ? 1 : 0;
     
     // Handle slug
     if (!empty($_POST['slug'])) {
@@ -19,17 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower(trim($title)));
     }
     
-    // Make sure slug is unique
-    $original_slug = $slug;
-    $counter = 1;
-    
-    while ($conn->query("SELECT id FROM blog_posts WHERE slug = '$slug'")->num_rows > 0) {
-        $slug = $original_slug . '-' . $counter;
-        $counter++;
+    // Check if slug exists and is not the current post's slug
+    $existing = $conn->query("SELECT id FROM blog_posts WHERE slug = '$slug' AND id != $post_id");
+    if ($existing->num_rows > 0) {
+        // Slug already exists, make it unique
+        $original_slug = $slug;
+        $counter = 1;
+        
+        while ($conn->query("SELECT id FROM blog_posts WHERE slug = '$slug' AND id != $post_id")->num_rows > 0) {
+            $slug = $original_slug . '-' . $counter;
+            $counter++;
+        }
     }
     
-    // Handle image upload
-    $image_url = '';
+    // Get current featured image
+    $current_image = $conn->query("SELECT image_url FROM blog_posts WHERE id = $post_id")->fetch_assoc()['image_url'];
+    
+    // Handle image upload if a new one is provided
+    $image_url = $current_image;
     if (isset($_FILES['image_url']) && $_FILES['image_url']['error'] == 0) {
         $upload_dir = '/uploads/blog/';
         $server_upload_dir = $_SERVER['DOCUMENT_ROOT'] . $upload_dir;
@@ -46,25 +60,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (in_array($_FILES['image_url']['type'], $allowed_types)) {
             if (move_uploaded_file($_FILES['image_url']['tmp_name'], $file_path)) {
+                // Delete old image if it exists
+                if (!empty($current_image) && file_exists($_SERVER['DOCUMENT_ROOT'] . $current_image)) {
+                    unlink($_SERVER['DOCUMENT_ROOT'] . $current_image);
+                }
                 $image_url = $upload_dir . $file_name;
             }
         }
     }
     
-    // Insert the blog post - add slug to the query
-     $stmt = $conn->prepare("INSERT INTO blog_posts (title, content, excerpt, image_url, author_id, slug, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssissi", $title, $content, $excerpt, $image_url, $author_id, $slug, $featured);
-  
+    // Update the blog post - add slug to the query
+    $stmt = $conn->prepare("UPDATE blog_posts SET title = ?, content = ?, excerpt = ?, image_url = ?, slug = ?, featured = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param("sssssii", $title, $content, $excerpt, $image_url, $slug, $featured, $post_id);
+    
+    
     if ($stmt->execute()) {
         $_SESSION['notification'] = [
             'type' => 'success',
-            'message' => 'Blog post created successfully!'
+            'message' => 'Blog post updated successfully!'
         ];
         header("Location: index.php");
         exit;
     } else {
-        $error = "Error creating blog post: " . $conn->error;
+        $error = "Error updating blog post: " . $conn->error;
     }
+}
+
+// Fetch the post data
+$post = $conn->query("SELECT * FROM blog_posts WHERE id = $post_id")->fetch_assoc();
+
+// If post doesn't exist, redirect back to index
+if (!$post) {
+    header("Location: index.php");
+    exit;
 }
 ?>
 
@@ -74,12 +102,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Blog Post | Admin Panel</title>
+    <title>Edit Blog Post | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Include TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/kq54asy1zm0lhnt1x2zsqhel46zq48awgwxzw51xfjx1unf9/tinymce/6/tinymce.min.js"
-        referrerpolicy="origin"></script>
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
@@ -99,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
 
                     <div class="flex items-center ml-4 md:ml-0">
-                        <h2 class="text-xl font-semibold text-gray-800">Create Blog Post</h2>
+                        <h2 class="text-xl font-semibold text-gray-800">Edit Blog Post</h2>
                     </div>
 
                     <!-- User profile -->
@@ -136,8 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Blog post form -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b">
-                        <h3 class="text-lg font-semibold">Create New Blog Post</h3>
-                        <p class="text-gray-500 text-sm">Enter the details for your new blog post</p>
+                        <h3 class="text-lg font-semibold">Edit Blog Post</h3>
+                        <p class="text-gray-500 text-sm">Update the details for this blog post</p>
                     </div>
 
                     <form action="" method="post" enctype="multipart/form-data" class="p-6">
@@ -146,7 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div>
                                 <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Post
                                     Title</label>
-                                <input type="text" id="title" name="title" required
+                                <input type="text" id="title" name="title"
+                                    value="<?= htmlspecialchars($post['title']) ?>" required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
 
@@ -154,18 +182,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div>
                                 <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">
                                     URL Slug
-                                    <span class="text-gray-400">(Leave empty to auto-generate from title)</span>
+                                    <span class="text-gray-400">(How the post appears in URLs)</span>
                                 </label>
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" id="slug" name="slug" placeholder="my-post-url"
+                                    <input type="text" id="slug" name="slug"
+                                        value="<?= htmlspecialchars($post['slug']) ?>"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <button type="button" id="generate-slug"
                                         class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
-                                        Generate
+                                        Regenerate
                                     </button>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">This will be used in the post's URL:
-                                    yourdomain.com/blog/<span class="font-mono" id="slug-preview">post-slug</span></p>
+                                <p class="text-xs text-gray-500 mt-1">This is used in the post's URL:
+                                    yourdomain.com/blog/<span class="font-mono"
+                                        id="slug-preview"><?= htmlspecialchars($post['slug']) ?></span></p>
                             </div>
 
                             <!-- Excerpt input -->
@@ -175,13 +205,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="text-gray-400">(A short summary of the post)</span>
                                 </label>
                                 <textarea id="excerpt" name="excerpt" rows="2"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"><?= htmlspecialchars($post['excerpt']) ?></textarea>
                             </div>
 
                             <!-- Add this after the excerpt input -->
                             <div class="flex items-center">
                                 <input type="checkbox" id="featured" name="featured"
-                                    class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                    <?= $post['featured'] ? 'checked' : '' ?>>
                                 <label for="featured" class="ml-2 block text-sm text-gray-700">
                                     Feature this post
                                     <span class="text-xs text-gray-500">(Featured posts appear in highlights
@@ -199,13 +230,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                         <div
                                             class="px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 cursor-pointer">
-                                            Choose File
+                                            Choose New Image
                                         </div>
                                     </div>
-                                    <div id="file-name" class="text-sm text-gray-500">No file chosen</div>
+                                    <div id="file-name" class="text-sm text-gray-500">
+                                        <?= !empty($post['image_url']) ? 'Current image: ' . basename($post['image_url']) : 'No image selected' ?>
+                                    </div>
                                 </div>
-                                <div id="image-preview" class="mt-4 hidden">
-                                    <img src="" alt="Preview" class="max-h-40 rounded">
+                                <div id="image-preview" class="mt-4 <?= empty($post['image_url']) ? 'hidden' : '' ?>">
+                                    <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="Preview"
+                                        class="max-h-40 rounded">
                                 </div>
                             </div>
 
@@ -219,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </a>
                                 <button type="submit"
                                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                    Create Post
+                                    Update Post
                                 </button>
                             </div>
                         </div>
@@ -228,8 +262,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </main>
         </div>
     </div>
-
-
 
     <script>
     // File upload preview
@@ -240,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     fileInput.addEventListener('change', function() {
         if (fileInput.files && fileInput.files[0]) {
-            fileNameDisplay.textContent = fileInput.files[0].name;
+            fileNameDisplay.textContent = 'New image: ' + fileInput.files[0].name;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -248,9 +280,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 imagePreview.classList.remove('hidden');
             }
             reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            fileNameDisplay.textContent = 'No file chosen';
-            imagePreview.classList.add('hidden');
         }
     });
 
@@ -271,21 +300,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update slug preview when slug input changes
     slugInput.addEventListener('input', function() {
-        slugPreview.textContent = slugInput.value ? generateSlug(slugInput.value) : 'post-slug';
+        slugPreview.textContent = slugInput.value;
     });
 
     // Generate slug from title
     generateSlugBtn.addEventListener('click', function() {
         if (titleInput.value) {
-            const newSlug = generateSlug(titleInput.value);
-            slugInput.value = newSlug;
-            slugPreview.textContent = newSlug;
-        }
-    });
-
-    // Generate slug when title changes if slug is empty
-    titleInput.addEventListener('blur', function() {
-        if (titleInput.value && !slugInput.value) {
             const newSlug = generateSlug(titleInput.value);
             slugInput.value = newSlug;
             slugPreview.textContent = newSlug;

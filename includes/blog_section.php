@@ -6,7 +6,6 @@ $posts = $conn
         FROM blog_posts
         WHERE featured = 1
         ORDER BY created_at DESC
-        LIMIT 10
     ")
     ->fetch_all(MYSQLI_ASSOC);
 ?>

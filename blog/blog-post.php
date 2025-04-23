@@ -26,7 +26,7 @@ if (!$post) {
 ?>
  <!DOCTYPE html>
  <html lang="en" itemscope itemtype="http://schema.org/Article">
- <!-- Schema.org Article :contentReference[oaicite:6]{index=6} -->
+ <!-- Schema.org Article -->
 
  <head>
      <meta charset="UTF-8">
@@ -36,7 +36,7 @@ if (!$post) {
      <title><?= htmlspecialchars($post['title']) ?></title>
      <meta name="description" content="<?= htmlspecialchars(
           mb_substr(strip_tags($post['content']), 0, 160)
-        ) ?>"> <!-- Standard description :contentReference[oaicite:7]{index=7} -->
+        ) ?>"> <!-- Standard description -->
 
      <!-- Open Graph / Facebook -->
      <meta property="og:type" content="article">
@@ -118,7 +118,7 @@ if (!$post) {
 
              <!-- Content -->
              <section class="prose max-w-none" itemprop="articleBody">
-                 <?= nl2br(htmlspecialchars($post['content'])) ?>
+                 <?= nl2br($post['content']) ?>
              </section>
          </article>
      </main>
