@@ -9,6 +9,7 @@ $posts = $conn
     ")
     ->fetch_all(MYSQLI_ASSOC);
 ?>
+
 <section class="py-12 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
         <h2 class="text-2xl font-semibold mb-6">Featured Articles</h2>
