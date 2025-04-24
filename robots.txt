@@ -1,0 +1,45 @@
+# robots.txt for https://swma.rf.gd/
+
+User-agent: \*
+
+# Allow all bots to access most content
+
+Allow: /
+Allow: /blog/
+Allow: /events/
+Allow: /about/
+Allow: /contact/
+Allow: /projects
+
+# Block access to admin areas
+
+Disallow: /web-admin/
+Disallow: /admin/
+Disallow: /config/
+Disallow: /includes/
+
+# Block access to specific file types
+
+Disallow: /_.sql$
+Disallow: /*.log$
+
+# Allow specific PHP files that should be accessible
+
+Allow: /index.php
+Allow: /sitemap.php
+Allow: /blog/blog-post.php
+Allow: /events/event-detail.php
+
+# Media and asset files can be crawled
+
+Allow: /uploads/
+Allow: /assets/
+Allow: /images/
+
+# Sitemap location
+
+Sitemap: https://swma.rf.gd/sitemap.xml
+
+# Crawl delay directive (used by some bots, like Bing)
+
+Crawl-delay: 10

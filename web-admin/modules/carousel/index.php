@@ -7,9 +7,9 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $carousel_id = (int) $_GET['delete'];
     
     // Get image path before deletion to remove the file
-    $image_result = $conn->query("SELECT image FROM homepage_carousel WHERE id = $carousel_id");
+    $image_result = $conn->query("SELECT image_url FROM carousel_items WHERE id = $carousel_id");
     if ($image_result && $image_result->num_rows > 0) {
-        $image_path = $image_result->fetch_assoc()['image'];
+        $image_path = $image_result->fetch_assoc()['image_url'];
         // Remove the image file if it exists
         if ($image_path && file_exists($_SERVER['DOCUMENT_ROOT'] . $image_path)) {
             unlink($_SERVER['DOCUMENT_ROOT'] . $image_path);
@@ -17,7 +17,7 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     }
     
     // Delete the carousel item
-    $conn->query("DELETE FROM homepage_carousel WHERE id = $carousel_id");
+    $conn->query("DELETE FROM carousel_items WHERE id = $carousel_id");
     
     // Set notification message
     $_SESSION['notification'] = [
@@ -38,7 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     foreach ($items as $position => $id) {
         $id = (int) $id;
         $position = (int) $position + 1; // Make position 1-based
-        if (!$conn->query("UPDATE homepage_carousel SET position = $position WHERE id = $id")) {
+        $now = date('Y-m-d H:i:s');
+        if (!$conn->query("UPDATE carousel_items SET position = $position, updated_at = '$now' WHERE id = $id")) {
             $success = false;
         }
     }
@@ -54,11 +55,11 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Get total carousel items count
-$total_items = $conn->query("SELECT COUNT(*) as count FROM homepage_carousel")->fetch_assoc()['count'];
+$total_items = $conn->query("SELECT COUNT(*) as count FROM carousel_items")->fetch_assoc()['count'];
 $total_pages = ceil($total_items / $limit);
 
 // Fetch carousel items with pagination
-$carousel_items = $conn->query("SELECT id, title, image, link, created_at FROM homepage_carousel ORDER BY position, created_at DESC LIMIT $offset, $limit")->fetch_all(MYSQLI_ASSOC);
+$carousel_items = $conn->query("SELECT id, title, image_url, link, position, created_at FROM carousel_items ORDER BY position, created_at DESC LIMIT $offset, $limit")->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -170,8 +171,8 @@ $carousel_items = $conn->query("SELECT id, title, image, link, created_at FROM h
                                 <i class="fas fa-grip-vertical"></i>
                             </div>
                             <div class="h-16 w-28 flex-shrink-0 bg-gray-100 rounded overflow-hidden mr-4">
-                                <?php if (!empty($item['image'])): ?>
-                                <img src="<?= htmlspecialchars($item['image']) ?>"
+                                <?php if (!empty($item['image_url'])): ?>
+                                <img src="<?= htmlspecialchars($item['image_url']) ?>"
                                     alt="<?= htmlspecialchars($item['title']) ?>" class="h-full w-full object-cover">
                                 <?php else: ?>
                                 <div class="h-full w-full flex items-center justify-center text-gray-400">
@@ -274,16 +275,6 @@ $carousel_items = $conn->query("SELECT id, title, image, link, created_at FROM h
     </div>
 
     <script>
-    // Mobile menu functionality
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileSidebar = document.getElementById('mobile-sidebar');
-
-    if (mobileMenuButton && mobileSidebar) {
-        mobileMenuButton.addEventListener('click', function() {
-            mobileSidebar.classList.toggle('hidden');
-        });
-    }
-
     // Delete confirmation functionality
     function confirmDelete(id, title) {
         document.getElementById('carouselItemTitle').textContent = title;
@@ -299,7 +290,7 @@ $carousel_items = $conn->query("SELECT id, title, image, link, created_at FROM h
     document.getElementById('deleteModal').addEventListener('click', function(e) {
         if (e.target === this) {
             hideDeleteModal();
-        });
+        }
     });
 
     // Sortable functionality for drag-and-drop reordering
