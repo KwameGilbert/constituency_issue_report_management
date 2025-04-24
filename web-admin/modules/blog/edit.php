@@ -12,9 +12,9 @@ $post_id = (int) $_GET['id'];
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $conn->real_escape_string($_POST['title']);
-    $content = $conn->$_POST['content'];
-    $excerpt = $conn->real_escape_string($_POST['excerpt']);
+    $title = $_POST['title'];
+    $content = $_POST['content'];
+    $excerpt = $_POST['excerpt'];
        $featured = isset($_POST['featured']) ? 1 : 0;
     
     // Handle slug

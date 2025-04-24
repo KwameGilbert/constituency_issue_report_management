@@ -11,8 +11,8 @@
                 <div>Western North Region</div>
                 <div>Ghana, W/Africa</div>
                 <div class="mt-2">
-                    Tel.: <a href="tel:+233266040695" class="hover:underline">(+233) 266 040 695</a><br>
-                    Tel.: <a href="tel:+233593281499" class="hover:underline">059 328 1499</a>
+                    Tel.: <a href="tel:+233242560140" class="hover:underline">(+233) 242 560 140</a><br>
+                    Tel.: <a href="tel:+233548531963" class="hover:underline">054 853 1963</a>
                 </div>
                 <div>
                     Email:
@@ -61,6 +61,7 @@
 
     <!-- Bottom Bar -->
     <div class="mt-8 border-t border-gray-700 pt-4 text-center text-sm">
-        &copy; <?php echo date('Y'); ?> Office of the Member of Parliament. All rights reserved.
+        &copy; <?php echo date('Y'); ?> Office of the Member of Parliament - Hon. Kofi Benteh Afful. All rights
+        reserved.
     </div>
 </footer>

@@ -4,9 +4,9 @@ require_once '../../../config/db.php';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = $conn->real_escape_string($_POST['title']);
+    $title = $_POST['title'];
     $content = $_POST['content'];
-    $excerpt = $conn->real_escape_string($_POST['excerpt']);
+    $excerpt = $_POST['excerpt'];
     $author_id = isset($_SESSION['admin_id']) ? (int)$_SESSION['admin_id'] : 1;
      $featured = isset($_POST['featured']) ? 1 : 0;
     
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Insert the blog post - add slug to the query
      $stmt = $conn->prepare("INSERT INTO blog_posts (title, content, excerpt, image_url, author_id, slug, featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssissi", $title, $content, $excerpt, $image_url, $author_id, $slug, $featured);
+    $stmt->bind_param("ssssiss", $title, $content, $excerpt, $image_url, $author_id, $slug, $featured);
   
     if ($stmt->execute()) {
         $_SESSION['notification'] = [
