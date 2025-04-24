@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                            <?php require_once __DIR__ . '/../../includes/tinymce.php'; ?>
+                            <?php require_once './blog_tinymce.php'; ?>
 
                             <!-- Submit buttons -->
                             <div class="flex justify-end space-x-3">

@@ -2,6 +2,14 @@
 require_once '../../includes/auth.php';
 require_once '../../../config/db.php';
 
+// Check if ID is provided
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$event_id = (int) $_GET['id'];
+
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $conn->real_escape_string($_POST['name']);
@@ -20,17 +28,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower(trim($name)));
     }
     
-    // Make sure slug is unique
-    $original_slug = $slug;
-    $counter = 1;
-    
-    while ($conn->query("SELECT id FROM events WHERE slug = '$slug'")->num_rows > 0) {
-        $slug = $original_slug . '-' . $counter;
-        $counter++;
+    // Check if slug exists and is not the current event's slug
+    $existing = $conn->query("SELECT id FROM events WHERE slug = '$slug' AND id != $event_id");
+    if ($existing->num_rows > 0) {
+        // Slug already exists, make it unique
+        $original_slug = $slug;
+        $counter = 1;
+        
+        while ($conn->query("SELECT id FROM events WHERE slug = '$slug' AND id != $event_id")->num_rows > 0) {
+            $slug = $original_slug . '-' . $counter;
+            $counter++;
+        }
     }
     
-    // Handle image upload
-    $image_url = '';
+    // Get current image
+    $current_image = $conn->query("SELECT image_url FROM events WHERE id = $event_id")->fetch_assoc()['image_url'];
+    
+    // Handle image upload if a new one is provided
+    $image_url = $current_image;
     if (isset($_FILES['image_url']) && $_FILES['image_url']['error'] == 0) {
         $upload_dir = '/uploads/events/';
         $server_upload_dir = $_SERVER['DOCUMENT_ROOT'] . $upload_dir;
@@ -47,25 +62,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         if (in_array($_FILES['image_url']['type'], $allowed_types)) {
             if (move_uploaded_file($_FILES['image_url']['tmp_name'], $file_path)) {
+                // Delete old image if it exists
+                if (!empty($current_image) && file_exists($_SERVER['DOCUMENT_ROOT'] . $current_image)) {
+                    unlink($_SERVER['DOCUMENT_ROOT'] . $current_image);
+                }
                 $image_url = $upload_dir . $file_name;
             }
         }
     }
     
-    // Insert the event
-    $stmt = $conn->prepare("INSERT INTO events (name, slug, description, location, start_date, end_date, event_time, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssssss", $name, $slug, $description, $location, $start_date, $end_date, $event_time, $image_url);
+    // Update the event
+    $stmt = $conn->prepare("UPDATE events SET name = ?, slug = ?, description = ?, location = ?, start_date = ?, end_date = ?, event_time = ?, image_url = ? WHERE id = ?");
+    $stmt->bind_param("ssssssssi", $name, $slug, $description, $location, $start_date, $end_date, $event_time, $image_url, $event_id);
     
     if ($stmt->execute()) {
         $_SESSION['notification'] = [
             'type' => 'success',
-            'message' => 'Event created successfully!'
+            'message' => 'Event updated successfully!'
         ];
         header("Location: index.php");
         exit;
     } else {
-        $error = "Error creating event: " . $conn->error;
+        $error = "Error updating event: " . $conn->error;
     }
+}
+
+// Fetch the event data
+$event = $conn->query("SELECT * FROM events WHERE id = $event_id")->fetch_assoc();
+
+// If event doesn't exist, redirect back to index
+if (!$event) {
+    header("Location: index.php");
+    exit;
 }
 ?>
 
@@ -75,11 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Event | Admin Panel</title>
+    <title>Edit Event | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- Include TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
@@ -99,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </button>
 
                     <div class="flex items-center ml-4 md:ml-0">
-                        <h2 class="text-xl font-semibold text-gray-800">Create Event</h2>
+                        <h2 class="text-xl font-semibold text-gray-800">Edit Event</h2>
                     </div>
 
                     <!-- User profile -->
@@ -136,8 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <!-- Event form -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-6 border-b">
-                        <h3 class="text-lg font-semibold">Create New Event</h3>
-                        <p class="text-gray-500 text-sm">Enter the details for your new event</p>
+                        <h3 class="text-lg font-semibold">Edit Event</h3>
+                        <p class="text-gray-500 text-sm">Update the details for this event</p>
                     </div>
 
                     <form action="" method="post" enctype="multipart/form-data" class="p-6">
@@ -146,7 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="md:col-span-2">
                                 <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Event
                                     Name</label>
-                                <input type="text" id="name" name="name" required
+                                <input type="text" id="name" name="name" value="<?= htmlspecialchars($event['name']) ?>"
+                                    required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
 
@@ -154,26 +181,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="md:col-span-2">
                                 <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">
                                     URL Slug
-                                    <span class="text-gray-400">(Leave empty to auto-generate from event name)</span>
+                                    <span class="text-gray-400">(How the event appears in URLs)</span>
                                 </label>
                                 <div class="flex items-center space-x-2">
-                                    <input type="text" id="slug" name="slug" placeholder="my-event-url"
+                                    <input type="text" id="slug" name="slug"
+                                        value="<?= htmlspecialchars($event['slug']) ?>"
                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                                     <button type="button" id="generate-slug"
                                         class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
-                                        Generate
+                                        Regenerate
                                     </button>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">This will be used in the event's URL:
-                                    yourdomain.com/events/<span class="font-mono" id="slug-preview">event-slug</span>
-                                </p>
+                                <p class="text-xs text-gray-500 mt-1">This is used in the event's URL:
+                                    yourdomain.com/events/<span class="font-mono"
+                                        id="slug-preview"><?= htmlspecialchars($event['slug']) ?></span></p>
                             </div>
 
                             <!-- Location -->
                             <div class="md:col-span-2">
                                 <label for="location"
                                     class="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                <input type="text" id="location" name="location" required
+                                <input type="text" id="location" name="location"
+                                    value="<?= htmlspecialchars($event['location']) ?>" required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
 
@@ -181,7 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div>
                                 <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start
                                     Date</label>
-                                <input type="date" id="start_date" name="start_date" required
+                                <input type="date" id="start_date" name="start_date"
+                                    value="<?= htmlspecialchars($event['start_date']) ?>" required
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
 
@@ -192,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="text-gray-400">(Optional, for multi-day events)</span>
                                 </label>
                                 <input type="date" id="end_date" name="end_date"
+                                    value="<?= htmlspecialchars($event['end_date']) ?>"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
 
@@ -202,10 +233,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <span class="text-gray-400">(Leave empty for all-day events)</span>
                                 </label>
                                 <input type="time" id="event_time" name="event_time"
+                                    value="<?= htmlspecialchars($event['event_time'] ?? '') ?>"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
 
-                            <!-- Featured image upload -->
+                            <!-- Image upload -->
                             <div class="md:col-span-2">
                                 <label for="image_url" class="block text-sm font-medium text-gray-700 mb-1">Event
                                     Image</label>
@@ -215,13 +247,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                         <div
                                             class="px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 cursor-pointer">
-                                            Choose File
+                                            Choose New Image
                                         </div>
                                     </div>
-                                    <div id="file-name" class="text-sm text-gray-500">No file chosen</div>
+                                    <div id="file-name" class="text-sm text-gray-500">
+                                        <?= !empty($event['image_url']) ? 'Current image: ' . basename($event['image_url']) : 'No image selected' ?>
+                                    </div>
                                 </div>
-                                <div id="image-preview" class="mt-4 hidden">
-                                    <img src="" alt="Preview" class="max-h-40 rounded">
+                                <div id="image-preview" class="mt-4 <?= empty($event['image_url']) ? 'hidden' : '' ?>">
+                                    <img src="<?= htmlspecialchars($event['image_url']) ?>" alt="Preview"
+                                        class="max-h-40 rounded">
                                 </div>
                             </div>
 
@@ -236,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </a>
                                 <button type="submit"
                                     class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                    Create Event
+                                    Update Event
                                 </button>
                             </div>
                         </div>
@@ -255,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     fileInput.addEventListener('change', function() {
         if (fileInput.files && fileInput.files[0]) {
-            fileNameDisplay.textContent = fileInput.files[0].name;
+            fileNameDisplay.textContent = 'New image: ' + fileInput.files[0].name;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -263,9 +298,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 imagePreview.classList.remove('hidden');
             }
             reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            fileNameDisplay.textContent = 'No file chosen';
-            imagePreview.classList.add('hidden');
         }
     });
 
@@ -286,21 +318,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Update slug preview when slug input changes
     slugInput.addEventListener('input', function() {
-        slugPreview.textContent = slugInput.value ? slugInput.value : 'event-slug';
+        slugPreview.textContent = slugInput.value;
     });
 
-    // Generate slug from event name
+    // Generate slug from title
     generateSlugBtn.addEventListener('click', function() {
         if (nameInput.value) {
-            const newSlug = generateSlug(nameInput.value);
-            slugInput.value = newSlug;
-            slugPreview.textContent = newSlug;
-        }
-    });
-
-    // Generate slug when name changes if slug is empty
-    nameInput.addEventListener('blur', function() {
-        if (nameInput.value && !slugInput.value) {
             const newSlug = generateSlug(nameInput.value);
             slugInput.value = newSlug;
             slugPreview.textContent = newSlug;
@@ -310,6 +333,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // End date validation - should not be before start date
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
+
+    // Set min attribute on page load
+    if (startDateInput.value) {
+        endDateInput.min = startDateInput.value;
+    }
 
     startDateInput.addEventListener('change', function() {
         if (endDateInput.value && endDateInput.value < startDateInput.value) {

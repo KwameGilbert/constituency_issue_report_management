@@ -13,7 +13,7 @@ $post_id = (int) $_GET['id'];
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $conn->real_escape_string($_POST['title']);
-    $content = $conn->real_escape_string($_POST['content']);
+    $content = $conn->$_POST['content'];
     $excerpt = $conn->real_escape_string($_POST['excerpt']);
        $featured = isset($_POST['featured']) ? 1 : 0;
     
@@ -243,7 +243,7 @@ if (!$post) {
                                 </div>
                             </div>
 
-                            <?php require_once __DIR__ . '/../../includes/tinymce.php'; ?>
+                            <?php require_once './blog_tinymce.php'; ?>
 
                             <!-- Submit buttons -->
                             <div class="flex justify-end space-x-3">
