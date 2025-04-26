@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_id = $conn->insert_id;
         
         // Prepare email notification
-        $admin_email = 'admin@swma.rf.gd'; // Change to your admin email
-        $cc_email = 'issues@swma.gov.gh'; // Additional recipient if needed
+        $admin_email = 'kwamegilbert1114@gmail.com'; // Change to your admin email
+        // <!-- // $cc_email = 'issues@swma.gov.gh'; // Additional recipient if needed -->
         
         // Email subject with reference number
         $email_subject = "New Contact Form Message #" . $message_id . ": " . $subject;
@@ -128,11 +128,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $mail = new PHPMailer\PHPMailer\PHPMailer();
                 $mail->isSMTP();
-                $mail->Host = 'smtp.example.com'; // Set your SMTP server
+                $mail->Host = 'smtp.gmail.com';
                 $mail->SMTPAuth = true;
-                $mail->Username = 'your-email@example.com'; // SMTP username
-                $mail->Password = 'your-password'; // SMTP password
-                $mail->SMTPSecure = 'tls';
+                $mail->Username = 'kwamegilbert1114@gmail.com'; // Your Gmail address
+                $mail->Password = 'vowl uaqn dovs dtid'; // Your Gmail app-specific password
+                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
                 
                 $mail->setFrom('noreply@swma.rf.gd', 'Website Contact Form');
@@ -207,13 +207,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $mail = new PHPMailer\PHPMailer\PHPMailer();
                     $mail->isSMTP();
-                    $mail->Host = 'smtp.example.com';
+                    $mail->Host = 'smtp.gmail.com';
                     $mail->SMTPAuth = true;
-                    $mail->Username = 'your-email@example.com';
-                    $mail->Password = 'your-password';
-                    $mail->SMTPSecure = 'tls';
+                    $mail->Username = 'kwamegilbert1114@gmail.com'; // Your Gmail address
+                    $mail->Password = 'vowl uaqn dovs dtid'; // Your Gmail app-specific password
+                    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port = 587;
-                    
+                        
                     $mail->setFrom('info@swma.rf.gd', 'Sefwi Wiawso Constituency Office');
                     $mail->addAddress($email, $name);
                     
