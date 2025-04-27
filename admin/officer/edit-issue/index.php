@@ -93,83 +93,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                          WHERE id = ? AND officer_id = ?";
         
         $stmt = $conn->prepare($update_query);
-        $stmt->bind_param("sssisisi", $title, $description, $location, $electoral_area_id, $severity, $people_affected, $additional_notes, $issue_id, $officer_id);
-        
-        if ($stmt->execute()) {
-            // Handle photo deletions
-            if (isset($_POST['delete_photo']) && is_array($_POST['delete_photo'])) {
-                foreach ($_POST['delete_photo'] as $photo_id) {
-                    // Get file path first
-                    $get_photo = "SELECT photo_url FROM issue_photos WHERE id = ? AND issue_id = ?";
-                    $photo_stmt = $conn->prepare($get_photo);
-                    $photo_stmt->bind_param("ii", $photo_id, $issue_id);
-                    $photo_stmt->execute();
-                    $photo_result = $photo_stmt->get_result();
-                    
-                    if ($photo_result->num_rows > 0) {
-                        $photo_path = $photo_result->fetch_assoc()['photo_url'];
-                        
-                        // Delete from database
-                        $delete_photo = "DELETE FROM issue_photos WHERE id = ? AND issue_id = ?";
-                        $delete_stmt = $conn->prepare($delete_photo);
-                        $delete_stmt->bind_param("ii", $photo_id, $issue_id);
-                        $delete_stmt->execute();
-                        
-                        // Delete file from server if it exists
-                        if (file_exists($_SERVER['DOCUMENT_ROOT'] . $photo_path)) {
-                            unlink($_SERVER['DOCUMENT_ROOT'] . $photo_path);
-                        }
-                    }
-                }
-            }
-            
-            // Handle new file uploads
-            if (!empty($_FILES['photos']['name'][0])) {
-                $upload_dir = '../../../uploads/issues/' . $issue_id . '/';
-                
-                // Create directory if it doesn't exist
-                if (!file_exists($upload_dir)) {
-                    mkdir($upload_dir, 0777, true);
-                }
-                
-                // Upload each file
-                $total_files = count($_FILES['photos']['name']);
-                for ($i = 0; $i < $total_files; $i++) {
-                    if ($_FILES['photos']['error'][$i] === 0) {
-                        $tmp_name = $_FILES['photos']['tmp_name'][$i];
-                        $name = time() . '_' . basename($_FILES['photos']['name'][$i]);
-                        $file_path = $upload_dir . $name;
-                        $db_path = '/uploads/issues/' . $issue_id . '/' . $name;
-                        
-                        if (move_uploaded_file($tmp_name, $file_path)) {
-                            // Insert file info into database
-                            $insert_file = "INSERT INTO issue_photos (issue_id, photo_url, uploaded_at) VALUES (?, ?, NOW())";
-                            $file_stmt = $conn->prepare($insert_file);
-                            $file_stmt->bind_param("is", $issue_id, $db_path);
-                            $file_stmt->execute();
-                        }
-                    }
-                }
-            }
-            
-            $success_message = "Issue updated successfully!";
-            
-            // Refresh issue data
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param("ii", $issue_id, $officer_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $issue = $result->fetch_assoc();
-            
-            // Refresh photos
-            $photos_stmt->execute();
-            $photos_result = $photos_stmt->get_result();
-            $photos = [];
-            while($photo = $photos_result->fetch_assoc()) {
-                $photos[] = $photo;
-            }
+        if (!$stmt) {
+            $error_message = "Prepare statement failed: " . $conn->error;
         } else {
-            $error_message = "Error updating issue: " . $conn->error;
+            // Debug information
+            echo "<!-- Debug: Binding parameters with title=$title, description=..., location=$location, electoral_area_id=$electoral_area_id, severity=$severity, people_affected=$people_affected, additional_notes=..., issue_id=$issue_id, officer_id=$officer_id -->";
+            
+            if (!$stmt->bind_param("sssissiis", $title, $description, $location, $electoral_area_id, $severity, $people_affected, $additional_notes, $issue_id, $officer_id)) {
+                $error_message = "Binding parameters failed: " . $stmt->error;
+            } else if (!$stmt->execute()) {
+                $error_message = "Execute failed: " . $stmt->error;
+            } else {
+                // Handle photo deletions
+                if (isset($_POST['delete_photo']) && is_array($_POST['delete_photo'])) {
+                    foreach ($_POST['delete_photo'] as $photo_id) {
+                        // Get file path first
+                        $get_photo = "SELECT photo_url FROM issue_photos WHERE id = ? AND issue_id = ?";
+                        $photo_stmt = $conn->prepare($get_photo);
+                        $photo_stmt->bind_param("ii", $photo_id, $issue_id);
+                        $photo_stmt->execute();
+                        $photo_result = $photo_stmt->get_result();
+                        
+                        if ($photo_result->num_rows > 0) {
+                            $photo_path = $photo_result->fetch_assoc()['photo_url'];
+                            
+                            // Delete from database
+                            $delete_photo = "DELETE FROM issue_photos WHERE id = ? AND issue_id = ?";
+                            $delete_stmt = $conn->prepare($delete_photo);
+                            $delete_stmt->bind_param("ii", $photo_id, $issue_id);
+                            $delete_stmt->execute();
+                            
+                            // Delete file from server if it exists
+                            if (file_exists($_SERVER['DOCUMENT_ROOT'] . $photo_path)) {
+                                unlink($_SERVER['DOCUMENT_ROOT'] . $photo_path);
+                            }
+                        }
+                    }
+                }
+                
+                // Handle new file uploads
+                if (!empty($_FILES['photos']['name'][0])) {
+                    $upload_dir = '../../../uploads/issues/' . $issue_id . '/';
+                    
+                    // Create directory if it doesn't exist
+                    if (!file_exists($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+                    
+                    // Upload each file
+                    $total_files = count($_FILES['photos']['name']);
+                    for ($i = 0; $i < $total_files; $i++) {
+                        if ($_FILES['photos']['error'][$i] === 0) {
+                            $tmp_name = $_FILES['photos']['tmp_name'][$i];
+                            $name = time() . '_' . basename($_FILES['photos']['name'][$i]);
+                            $file_path = $upload_dir . $name;
+                            $db_path = '/uploads/issues/' . $issue_id . '/' . $name;
+                            
+                            if (move_uploaded_file($tmp_name, $file_path)) {
+                                // Insert file info into database
+                                $insert_file = "INSERT INTO issue_photos (issue_id, photo_url, uploaded_at) VALUES (?, ?, NOW())";
+                                $file_stmt = $conn->prepare($insert_file);
+                                $file_stmt->bind_param("is", $issue_id, $db_path);
+                                $file_stmt->execute();
+                            }
+                        }
+                    }
+                }
+                
+                $success_message = "Issue updated successfully!";
+                
+                // Refresh issue data
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ii", $issue_id, $officer_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $issue = $result->fetch_assoc();
+                
+                // Refresh photos
+                $photos_stmt->execute();
+                $photos_result = $photos_stmt->get_result();
+                $photos = [];
+                while($photo = $photos_result->fetch_assoc()) {
+                    $photos[] = $photo;
+                }
+            }
         }
     }
 }
