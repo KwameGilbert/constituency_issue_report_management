@@ -32,16 +32,16 @@ $period_clause = '';
 
 switch ($period) {
     case 'week':
-        $period_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
         break;
     case 'month':
-        $period_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
         break;
     case 'quarter':
-        $period_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
         break;
     case 'year':
-        $period_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
         break;
     default:
         $period_clause = "";
@@ -58,7 +58,8 @@ $stats_query = "SELECT
                 SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high_issues,
                 SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium_issues,
                 SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low_issues
-                FROM issues i WHERE officer_id = ? $period_clause";
+                FROM issues 
+                WHERE officer_id = ? $period_clause";
 
 $stats_stmt = $conn->prepare($stats_query);
 $stats_stmt->bind_param("i", $officer_id);
@@ -68,11 +69,11 @@ $stats = $stats_result->fetch_assoc();
 
 // Monthly trend data for line chart
 $trend_query = "SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') as month,
+                DATE_FORMAT(issues.created_at, '%Y-%m') as month,
                 COUNT(*) as issue_count 
                 FROM issues 
                 WHERE officer_id = ? 
-                GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+                GROUP BY DATE_FORMAT(issues.created_at, '%Y-%m')
                 ORDER BY month ASC
                 LIMIT 12";
 

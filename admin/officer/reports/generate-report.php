@@ -43,24 +43,24 @@ $date_clause = '';
 
 switch ($report_period) {
     case 'week':
-        $date_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        $date_clause = "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
         $period_text = "Past Week";
         break;
     case 'month':
-        $date_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        $date_clause = "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
         $period_text = "Past Month";
         break;
     case 'quarter':
-        $date_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+        $date_clause = "AND created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
         $period_text = "Past Quarter";
         break;
     case 'year':
-        $date_clause = "AND i.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+        $date_clause = "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
         $period_text = "Past Year";
         break;
     case 'custom':
         if (!empty($start_date) && !empty($end_date)) {
-            $date_clause = "AND i.created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
+            $date_clause = "AND created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
             $period_text = "From " . date('M j, Y', strtotime($start_date)) . " to " . date('M j, Y', strtotime($end_date));
         }
         break;
@@ -80,7 +80,7 @@ $stats_query = "SELECT
                 SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high_issues,
                 SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium_issues,
                 SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low_issues
-                FROM issues i WHERE officer_id = ? $date_clause";
+                FROM issues WHERE officer_id = ? $date_clause";
 
 $stats_stmt = $conn->prepare($stats_query);
 $stats_stmt->bind_param("i", $officer_id);
@@ -110,11 +110,11 @@ $avg_resolution_days = round($avg_time_row['avg_days'] ?? 0);
 // Electoral area breakdown
 $area_query = "SELECT 
                ea.name as area_name,
-               COUNT(i.id) as issue_count
-               FROM issues i
-               LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-               WHERE i.officer_id = ? $date_clause
-               GROUP BY i.electoral_area_id
+               COUNT(id) as issue_count
+               FROM issues
+               LEFT JOIN electoral_areas ea ON electoral_area_id = ea.id
+               WHERE officer_id = ? $date_clause
+               GROUP BY electoral_area_id
                ORDER BY issue_count DESC";
 
 $area_stmt = $conn->prepare($area_query);
@@ -133,12 +133,12 @@ while ($row = $area_result->fetch_assoc()) {
 
 // Get all issues for the detailed report table
 $issues_query = "SELECT 
-                i.id, i.title, i.description, i.location, i.severity, i.status, 
-                i.people_affected, i.created_at, i.updated_at, ea.name as electoral_area
-                FROM issues i
-                LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-                WHERE i.officer_id = ? $date_clause
-                ORDER BY i.created_at DESC";
+                id, title, description, location, severity, status, 
+                people_affected, created_at, updated_at, ea.name as electoral_area
+                FROM issues
+                LEFT JOIN electoral_areas ea ON electoral_area_id = ea.id
+                WHERE officer_id = ? $date_clause
+                ORDER BY created_at DESC";
 
 $issues_stmt = $conn->prepare($issues_query);
 $issues_stmt->bind_param("i", $officer_id);
