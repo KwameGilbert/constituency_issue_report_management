@@ -75,7 +75,6 @@ while($issue = $recent_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Field Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <style>
@@ -126,7 +125,7 @@ while($issue = $recent_result->fetch_assoc()) {
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen" x-data="{ sidebarOpen: false }">
+<body class="bg-gray-100 min-h-screen">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar component -->
         <?php include_once '../includes/sidebar.php'; ?>
@@ -136,23 +135,8 @@ while($issue = $recent_result->fetch_assoc()) {
             <!-- Header component -->
             <?php include_once '../includes/header.php'; ?>
 
-            <!-- Overlay for mobile sidebar -->
-            <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
-                @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300"
-                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"></div>
-
             <!-- Dashboard Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" x-init="
-                    setTimeout(() => {
-                        document.querySelectorAll('.staggered-item').forEach((item, index) => {
-                            setTimeout(() => {
-                                item.style.animation = 'slideInFromBottom 0.5s ease-out forwards';
-                            }, 100 * index);
-                        });
-                    }, 300);
-                  ">
+            <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" id="dashboard-content">
                 <div class="max-w-7xl mx-auto">
                     <!-- Welcome Message -->
                     <div
@@ -355,21 +339,6 @@ while($issue = $recent_result->fetch_assoc()) {
     </div>
 
     <script>
-    // AlpineJS sidebar control
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('sidebar', {
-            open: false,
-            toggle() {
-                this.open = !this.open;
-            }
-        });
-    });
-
-    // Mobile menu toggle
-    document.getElementById('mobile-menu-button').addEventListener('click', function() {
-        Alpine.store('sidebar').toggle();
-    });
-
     // Count-up animation for statistics
     document.addEventListener('DOMContentLoaded', () => {
         const countElements = document.querySelectorAll('.count-up');
@@ -394,9 +363,18 @@ while($issue = $recent_result->fetch_assoc()) {
                 }
             }, frameDuration);
         });
+
+        // Staggered animation for dashboard elements
+        setTimeout(() => {
+            document.querySelectorAll('.staggered-item').forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.animation = 'slideInFromBottom 0.5s ease-out forwards';
+                }, 100 * index);
+            });
+        }, 300);
     });
 
-    // Set up chart data with improved colors for amber theme
+    // Set up chart data
     const ctx = document.getElementById('issuesChart').getContext('2d');
     const issuesChart = new Chart(ctx, {
         type: 'doughnut',

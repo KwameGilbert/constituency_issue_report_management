@@ -9,7 +9,7 @@ $first_letter = strtoupper(substr($officer_name, 0, 1));
         <!-- Mobile Menu Toggle Button -->
         <button id="mobile-menu-button"
             class="lg:hidden text-amber-800 focus:outline-none transition-transform duration-300 ease-in-out"
-            aria-label="Toggle Menu">
+            onclick="toggleMobileSidebar()" aria-label="Toggle Menu">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />

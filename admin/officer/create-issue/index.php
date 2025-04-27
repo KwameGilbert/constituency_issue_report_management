@@ -118,6 +118,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .fade-in {
         animation: fadeIn 0.3s ease-in-out forwards;
     }
+
+    /* Custom form input styling for better visibility */
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        width: 100%;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #f59e0b !important;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    input:hover,
+    textarea:hover,
+    select:hover {
+        border-color: #f59e0b !important;
+    }
     </style>
 </head>
 
@@ -222,7 +249,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <p class="mt-1 text-sm text-gray-500">Specify the exact location of the issue
                                             (e.g., street address, landmark).</p>
                                     </div>
-
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <!-- Electoral Area -->
                                         <div>
@@ -230,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="block text-sm font-medium text-gray-700 mb-1">Electoral Area
                                                 <span class="text-red-500">*</span></label>
                                             <select name="electoral_area_id" id="electoral_area_id" required
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                                                class="h-11 w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                                                 <option value="">Select Electoral Area</option>
                                                 <?php foreach ($electoral_areas as $area): ?>
                                                 <option value="<?php echo $area['id']; ?>"
@@ -247,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="block text-sm font-medium text-gray-700 mb-1">Severity Level
                                                 <span class="text-red-500">*</span></label>
                                             <select name="severity" id="severity" required
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                                                class="h-11 w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                                                 <option value="">Select Severity</option>
                                                 <option value="critical"
                                                     <?php echo (isset($severity) && $severity === 'critical') ? 'selected' : ''; ?>>
