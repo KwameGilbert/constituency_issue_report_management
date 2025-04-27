@@ -1,26 +1,23 @@
 <?php
-// login.php - Login page specifically for field officers
 session_start();
 
-// Check if user is already logged in
-if(isset($_SESSION['officer_id'])) {
-    // Redirect directly to officer dashboard
-    header("Location: ./../dashboard");
-    exit();
+// Redirect if already logged in
+if (isset($_SESSION['officer_id']) && $_SESSION['role'] === 'field_officer') {
+    header("Location: ../dashboard/");
+    exit;
 }
 
-// Initialize variables
-$error_message = '';
-$error_type = ''; // Add error type for styling
+// Include database connection
+require_once '../../../config/db.php';
 
-// Process login form submission
+$error_message = '';
+$error_type = ''; // For styling different types of errors
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_once '../../../config/db.php';
-    
-    $email = trim($_POST['email']);
+    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
-    
-    // Validate fields
+
+    // Validation
     if (empty($email) && empty($password)) {
         $error_message = "Please enter your email and password.";
         $error_type = 'validation';
@@ -31,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "Please enter your password.";
         $error_type = 'validation';
     } else {
-        // Check if officer exists and password is correct
+        // Check if officer exists
         $query = "SELECT id, name, email, password, status FROM field_officers 
                  WHERE email = ? LIMIT 1";
         $stmt = $conn->prepare($query);
@@ -79,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conn->close();
 }
 
-// Update the error message display in HTML to use error types
+// Set error styling based on error type
 if (!empty($error_message)) {
     $error_bg_color = match($error_type) {
         'validation' => 'bg-yellow-100 border-yellow-500 text-yellow-700',

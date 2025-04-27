@@ -1,17 +1,27 @@
 <?php
-// dashboard.php - Main dashboard page for field officers
+// Start session
 session_start();
 
 // Check if user is logged in and is a field officer
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'field_officer') {
-    header("Location: ./../login");
+if(!isset($_SESSION['officer_id']) || $_SESSION['role'] !== 'field_officer') {
+    header("Location: ../login/");
     exit();
 }
 
+// Include database connection
+require_once '../../../config/db.php';
+
+// Set active page for sidebar
+$active_page = 'dashboard';
+$pageTitle = 'Dashboard';
+$basePath = '../';
+
+// Initialize sidebar state
+$sidebarOpen = false;
+
 // Fetch officer information
-require_once 'includes/db_connect.php';
-$officer_id = $_SESSION['user_id'];
-$query = "SELECT * FROM officers WHERE id = ?";
+$officer_id = $_SESSION['officer_id'];
+$query = "SELECT * FROM field_officers WHERE id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $officer_id);
 $stmt->execute();
@@ -32,8 +42,21 @@ $stats_stmt->execute();
 $stats_result = $stats_stmt->get_result();
 $stats = $stats_result->fetch_assoc();
 
+// Ensure we have stats even if the query fails
+if (!$stats) {
+    $stats = [
+        'total_issues' => 0,
+        'pending_issues' => 0,
+        'in_progress_issues' => 0,
+        'resolved_issues' => 0,
+        'critical_issues' => 0
+    ];
+}
+
 // Fetch recent issues
-$recent_query = "SELECT * FROM issues WHERE officer_id = ? ORDER BY created_at DESC LIMIT 5";
+$recent_query = "SELECT i.*, ea.name as electoral_area FROM issues i 
+                LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
+                WHERE i.officer_id = ? ORDER BY i.created_at DESC LIMIT 5";
 $recent_stmt = $conn->prepare($recent_query);
 $recent_stmt->bind_param("i", $officer_id);
 $recent_stmt->execute();
@@ -52,107 +75,152 @@ while($issue = $recent_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Field Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <style>
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .animate-pulse-slow {
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes slideInFromBottom {
+        0% {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-in {
+        animation: slideInFromBottom 0.5s ease-out forwards;
+    }
+
+    .staggered-item {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    /* Add glass morphism effect */
+    .glassmorphism {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    </style>
 </head>
 
-<body class="bg-gray-100">
-    <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <div class="bg-blue-800 text-white w-64 flex-shrink-0">
-            <div class="p-4">
-                <h2 class="text-2xl font-bold">Field Officer Portal</h2>
-                <p class="text-sm opacity-70">Constituency Issue Management</p>
-            </div>
-            <nav class="mt-8">
-                <a href="dashboard.php" class="flex items-center py-3 px-4 bg-blue-900">
-                    <i class="fas fa-tachometer-alt w-6"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="issues.php" class="flex items-center py-3 px-4 hover:bg-blue-700">
-                    <i class="fas fa-exclamation-circle w-6"></i>
-                    <span>Issue Management</span>
-                </a>
-                <a href="profile.php" class="flex items-center py-3 px-4 hover:bg-blue-700">
-                    <i class="fas fa-user w-6"></i>
-                    <span>Profile</span>
-                </a>
-                <a href="reports.php" class="flex items-center py-3 px-4 hover:bg-blue-700">
-                    <i class="fas fa-chart-bar w-6"></i>
-                    <span>Reports & Analytics</span>
-                </a>
-                <a href="logout.php" class="flex items-center py-3 px-4 hover:bg-blue-700 mt-12">
-                    <i class="fas fa-sign-out-alt w-6"></i>
-                    <span>Logout</span>
-                </a>
-            </nav>
-        </div>
+<body class="bg-gray-100 min-h-screen" x-data="{ sidebarOpen: false }">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar component -->
+        <?php include_once '../includes/sidebar.php'; ?>
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Top Header -->
-            <header class="bg-white shadow-sm z-10">
-                <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                    <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
-                    <div class="flex items-center">
-                        <span class="mr-4"><?php echo htmlspecialchars($officer['name']); ?></span>
-                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
-                            <?php echo strtoupper(substr($officer['name'], 0, 1)); ?>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <!-- Header component -->
+            <?php include_once '../includes/header.php'; ?>
+
+            <!-- Overlay for mobile sidebar -->
+            <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden"
+                @click="sidebarOpen = false" x-transition:enter="transition-opacity ease-linear duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"></div>
 
             <!-- Dashboard Content -->
-            <main class="flex-1 overflow-y-auto bg-gray-100 p-4">
+            <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6" x-init="
+                    setTimeout(() => {
+                        document.querySelectorAll('.staggered-item').forEach((item, index) => {
+                            setTimeout(() => {
+                                item.style.animation = 'slideInFromBottom 0.5s ease-out forwards';
+                            }, 100 * index);
+                        });
+                    }, 300);
+                  ">
                 <div class="max-w-7xl mx-auto">
+                    <!-- Welcome Message -->
+                    <div
+                        class="bg-gradient-to-r from-amber-600 to-amber-800 rounded-xl shadow-lg mb-8 p-6 text-white staggered-item">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="mb-4 md:mb-0">
+                                <h1 class="text-2xl font-bold">Welcome back, <?= htmlspecialchars($officer['name']) ?>!
+                                </h1>
+                                <p class="mt-1 opacity-90">Here's an overview of your constituency issues</p>
+                            </div>
+                            <a href="../create-issue/"
+                                class="inline-flex items-center px-4 py-2 bg-white text-amber-800 rounded-lg font-medium shadow hover:bg-amber-50 transition-colors duration-300">
+                                <i class="fas fa-plus mr-2"></i> Report New Issue
+                            </a>
+                        </div>
+                    </div>
+
                     <!-- Stats Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-amber-500 staggered-item hover:shadow-md transition-shadow duration-300">
                             <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-blue-100 text-blue-500 mr-4">
+                                <div class="p-3 rounded-full bg-amber-100 text-amber-600 mr-4">
                                     <i class="fas fa-clipboard-list text-xl"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Total Issues</p>
-                                    <p class="text-2xl font-semibold text-gray-900">
-                                        <?php echo $stats['total_issues']; ?></p>
+                                    <p class="text-2xl font-semibold text-gray-900 count-up"
+                                        data-target="<?= $stats['total_issues'] ?>">0</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500">
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-yellow-500 staggered-item hover:shadow-md transition-shadow duration-300">
                             <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500 mr-4">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
                                     <i class="fas fa-clock text-xl"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Pending</p>
-                                    <p class="text-2xl font-semibold text-gray-900">
-                                        <?php echo $stats['pending_issues']; ?></p>
+                                    <p class="text-2xl font-semibold text-gray-900 count-up"
+                                        data-target="<?= $stats['pending_issues'] ?>">0</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500 staggered-item hover:shadow-md transition-shadow duration-300">
                             <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-green-100 text-green-500 mr-4">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
                                     <i class="fas fa-check-circle text-xl"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Resolved</p>
-                                    <p class="text-2xl font-semibold text-gray-900">
-                                        <?php echo $stats['resolved_issues']; ?></p>
+                                    <p class="text-2xl font-semibold text-gray-900 count-up"
+                                        data-target="<?= $stats['resolved_issues'] ?>">0</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500">
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-red-500 staggered-item hover:shadow-md transition-shadow duration-300">
                             <div class="flex items-center">
-                                <div class="p-3 rounded-full bg-red-100 text-red-500 mr-4">
+                                <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
                                     <i class="fas fa-exclamation-triangle text-xl"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-600">Critical Issues</p>
-                                    <p class="text-2xl font-semibold text-gray-900">
-                                        <?php echo $stats['critical_issues']; ?></p>
+                                    <p class="text-2xl font-semibold text-gray-900 count-up"
+                                        data-target="<?= $stats['critical_issues'] ?>">0</p>
                                 </div>
                             </div>
                         </div>
@@ -160,87 +228,122 @@ while($issue = $recent_result->fetch_assoc()) {
 
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Chart -->
-                        <div class="bg-white rounded-lg shadow-sm p-6">
-                            <h2 class="text-lg font-semibold mb-4">Issues by Status</h2>
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 staggered-item hover:shadow-md transition-shadow duration-300">
+                            <h2 class="text-lg font-semibold mb-4 text-gray-800">Issues by Status</h2>
                             <div class="h-64">
                                 <canvas id="issuesChart"></canvas>
                             </div>
                         </div>
 
                         <!-- Recent Activity -->
-                        <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div
+                            class="bg-white rounded-lg shadow-sm p-6 staggered-item hover:shadow-md transition-shadow duration-300">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-semibold">Recent Issues</h2>
-                                <a href="issues.php" class="text-blue-600 text-sm hover:underline">View All</a>
+                                <h2 class="text-lg font-semibold text-gray-800">Recent Issues</h2>
+                                <a href="../issues/"
+                                    class="text-amber-600 text-sm hover:underline transition-colors duration-300">View
+                                    All</a>
                             </div>
                             <div class="space-y-4">
-                                <?php foreach ($recent_issues as $issue): ?>
-                                <div class="border-b pb-3">
+                                <?php if (empty($recent_issues)): ?>
+                                <div class="border-b pb-3 text-center py-8">
+                                    <div
+                                        class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 text-amber-600 mb-3">
+                                        <i class="fas fa-clipboard"></i>
+                                    </div>
+                                    <p class="text-gray-500">No issues reported yet</p>
+                                    <a href="../create-issue/"
+                                        class="mt-3 inline-block text-amber-600 hover:underline">Report your first
+                                        issue</a>
+                                </div>
+                                <?php else: ?>
+                                <?php foreach ($recent_issues as $index => $issue): ?>
+                                <div class="border-b pb-3 hover:bg-amber-50 p-2 rounded-lg transition-colors duration-300"
+                                    style="animation-delay: <?= ($index * 0.1) ?>s;">
                                     <div class="flex justify-between">
-                                        <a href="issue-detail.php?id=<?php echo $issue['id']; ?>"
-                                            class="font-medium text-blue-600 hover:underline">
-                                            <?php echo htmlspecialchars($issue['title']); ?>
+                                        <a href="../issue-detail/?id=<?= $issue['id'] ?>"
+                                            class="font-medium text-amber-700 hover:text-amber-900 hover:underline transition-colors duration-300">
+                                            <?= htmlspecialchars($issue['title']) ?>
                                         </a>
                                         <span class="text-sm text-gray-500">
-                                            <?php echo date('M d, Y', strtotime($issue['created_at'])); ?>
+                                            <?= date('M d, Y', strtotime($issue['created_at'])) ?>
                                         </span>
                                     </div>
                                     <div class="mt-1 flex items-center">
                                         <?php 
-                                        $status_color = 'gray';
-                                        if ($issue['status'] == 'pending') $status_color = 'yellow';
-                                        if ($issue['status'] == 'in_progress') $status_color = 'blue';
-                                        if ($issue['status'] == 'resolved') $status_color = 'green';
-                                        ?>
+                                            $status_color = 'gray';
+                                            $status_bg = 'bg-gray-100';
+                                            $status_text = 'text-gray-800';
+                                            
+                                            if ($issue['status'] == 'pending') {
+                                                $status_color = 'yellow';
+                                                $status_bg = 'bg-yellow-100';
+                                                $status_text = 'text-yellow-800';
+                                            } else if ($issue['status'] == 'in_progress') {
+                                                $status_color = 'blue';
+                                                $status_bg = 'bg-blue-100';
+                                                $status_text = 'text-blue-800';
+                                            } else if ($issue['status'] == 'resolved') {
+                                                $status_color = 'green';
+                                                $status_bg = 'bg-green-100';
+                                                $status_text = 'text-green-800';
+                                            } else if ($issue['status'] == 'rejected') {
+                                                $status_color = 'red';
+                                                $status_bg = 'bg-red-100';
+                                                $status_text = 'text-red-800';
+                                            }
+                                            ?>
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-<?php echo $status_color; ?>-100 text-<?php echo $status_color; ?>-800">
-                                            <?php echo ucfirst(str_replace('_', ' ', $issue['status'])); ?>
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $status_bg ?> <?= $status_text ?>">
+                                            <?= ucfirst(str_replace('_', ' ', $issue['status'])) ?>
                                         </span>
                                         <span class="ml-2 text-sm text-gray-500">
-                                            <?php echo htmlspecialchars($issue['electoral_area']); ?>
+                                            <?= htmlspecialchars($issue['electoral_area'] ?: 'Unassigned Area') ?>
                                         </span>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
-
-                                <?php if (empty($recent_issues)): ?>
-                                <p class="text-gray-500 text-center py-4">No recent issues found.</p>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quick Actions -->
-                    <div class="bg-white rounded-lg shadow-sm p-6 mt-8">
-                        <h2 class="text-lg font-semibold mb-4">Quick Actions</h2>
+                    <div
+                        class="bg-white rounded-lg shadow-sm p-6 mt-8 staggered-item hover:shadow-md transition-shadow duration-300">
+                        <h2 class="text-lg font-semibold mb-4 text-gray-800">Quick Actions</h2>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <a href="create-issue.php"
-                                class="flex items-center p-4 border rounded-lg hover:bg-blue-50 transition">
-                                <div class="p-3 rounded-full bg-blue-100 text-blue-500 mr-4">
+                            <a href="../create-issue/"
+                                class="flex items-center p-4 border rounded-lg hover:bg-amber-50 transition-colors duration-300 group">
+                                <div
+                                    class="p-3 rounded-full bg-amber-100 text-amber-600 mr-4 group-hover:bg-amber-200 transition-colors duration-300">
                                     <i class="fas fa-plus"></i>
                                 </div>
                                 <div>
-                                    <p class="font-medium">Report New Issue</p>
+                                    <p class="font-medium text-gray-800">Report New Issue</p>
                                     <p class="text-sm text-gray-600">Create a new constituency issue</p>
                                 </div>
                             </a>
-                            <a href="issues.php?filter=pending"
-                                class="flex items-center p-4 border rounded-lg hover:bg-blue-50 transition">
-                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500 mr-4">
+                            <a href="../issues/?status=pending"
+                                class="flex items-center p-4 border rounded-lg hover:bg-amber-50 transition-colors duration-300 group">
+                                <div
+                                    class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4 group-hover:bg-yellow-200 transition-colors duration-300">
                                     <i class="fas fa-hourglass-half"></i>
                                 </div>
                                 <div>
-                                    <p class="font-medium">View Pending Issues</p>
+                                    <p class="font-medium text-gray-800">View Pending Issues</p>
                                     <p class="text-sm text-gray-600">Check on pending issues</p>
                                 </div>
                             </a>
-                            <a href="reports.php"
-                                class="flex items-center p-4 border rounded-lg hover:bg-blue-50 transition">
-                                <div class="p-3 rounded-full bg-green-100 text-green-500 mr-4">
+                            <a href="../reports/"
+                                class="flex items-center p-4 border rounded-lg hover:bg-amber-50 transition-colors duration-300 group">
+                                <div
+                                    class="p-3 rounded-full bg-green-100 text-green-600 mr-4 group-hover:bg-green-200 transition-colors duration-300">
                                     <i class="fas fa-chart-pie"></i>
                                 </div>
                                 <div>
-                                    <p class="font-medium">Generate Reports</p>
+                                    <p class="font-medium text-gray-800">Generate Reports</p>
                                     <p class="text-sm text-gray-600">View statistics and analytics</p>
                                 </div>
                             </a>
@@ -252,7 +355,48 @@ while($issue = $recent_result->fetch_assoc()) {
     </div>
 
     <script>
-    // Set up chart data
+    // AlpineJS sidebar control
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('sidebar', {
+            open: false,
+            toggle() {
+                this.open = !this.open;
+            }
+        });
+    });
+
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+        Alpine.store('sidebar').toggle();
+    });
+
+    // Count-up animation for statistics
+    document.addEventListener('DOMContentLoaded', () => {
+        const countElements = document.querySelectorAll('.count-up');
+
+        countElements.forEach(element => {
+            const target = parseInt(element.getAttribute('data-target'), 10);
+            const duration = 1500; // Animation duration in milliseconds
+            const frameDuration = 1000 / 60; // 60fps
+            const totalFrames = Math.round(duration / frameDuration);
+            let frame = 0;
+
+            const counter = setInterval(() => {
+                frame++;
+                const progress = frame / totalFrames;
+                const currentCount = Math.round(progress * target);
+
+                if (frame === totalFrames) {
+                    element.textContent = target;
+                    clearInterval(counter);
+                } else {
+                    element.textContent = currentCount;
+                }
+            }, frameDuration);
+        });
+    });
+
+    // Set up chart data with improved colors for amber theme
     const ctx = document.getElementById('issuesChart').getContext('2d');
     const issuesChart = new Chart(ctx, {
         type: 'doughnut',
@@ -260,16 +404,17 @@ while($issue = $recent_result->fetch_assoc()) {
             labels: ['Pending', 'In Progress', 'Resolved'],
             datasets: [{
                 data: [
-                    <?php echo $stats['pending_issues']; ?>,
-                    <?php echo $stats['in_progress_issues']; ?>,
-                    <?php echo $stats['resolved_issues']; ?>
+                    <?= $stats['pending_issues']; ?>,
+                    <?= $stats['in_progress_issues']; ?>,
+                    <?= $stats['resolved_issues']; ?>
                 ],
                 backgroundColor: [
-                    '#fbbf24',
-                    '#60a5fa',
-                    '#34d399'
+                    '#FCD34D', // Amber-300
+                    '#60A5FA', // Blue-400
+                    '#10B981', // Green-500
                 ],
-                borderWidth: 0
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
         options: {
@@ -277,33 +422,36 @@ while($issue = $recent_result->fetch_assoc()) {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: 'system-ui'
+                        },
+                        padding: 20
+                    },
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    boxWidth: 10,
+                    usePointStyle: true
                 }
-            }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            },
+            cutout: '65%',
+            radius: '90%'
         }
-    });
-
-    // Add animation to stats numbers
-    const animateValue = (element, start, end, duration) => {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            element.innerHTML = Math.floor(progress * (end - start) + start);
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
-        };
-        window.requestAnimationFrame(step);
-    };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const statElements = document.querySelectorAll('.text-2xl.font-semibold');
-        statElements.forEach(element => {
-            const finalValue = parseInt(element.textContent);
-            element.textContent = '0';
-            animateValue(element, 0, finalValue, 1000);
-        });
     });
     </script>
 </body>

@@ -3,20 +3,26 @@
 session_start();
 
 // Check if user is logged in and is a field officer
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'field_officer') {
-    header("Location: login.php");
+if(!isset($_SESSION['officer_id']) || $_SESSION['role'] !== 'field_officer') {
+    header("Location: ../login/");
     exit();
 }
 
-require_once 'includes/db_connect.php';
+// Include database connection
+require_once '../../../config/db.php';
 
 // Get electoral areas for dropdown
-$areas_query = "SELECT DISTINCT name FROM electoral_areas ORDER BY name";
+$areas_query = "SELECT * FROM electoral_areas ORDER BY name";
 $areas_result = $conn->query($areas_query);
 $electoral_areas = [];
 while($area = $areas_result->fetch_assoc()) {
-    $electoral_areas[] = $area['name'];
+    $electoral_areas[] = $area;
 }
+
+// Set active page for sidebar
+$active_page = 'create-issue';
+$pageTitle = 'Report New Issue';
+$basePath = '../';
 
 // Process form submission
 $success_message = '';
@@ -214,9 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                                 <option value="">Select Electoral Area</option>
                                                 <?php foreach ($electoral_areas as $area): ?>
-                                                <option value="<?php echo htmlspecialchars($area); ?>"
-                                                    <?php echo (isset($electoral_area) && $electoral_area === $area) ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($area); ?>
+                                                <option value="<?php echo htmlspecialchars($area['name']); ?>"
+                                                    <?php echo (isset($electoral_area) && $electoral_area === $area['name']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($area['name']); ?>
                                                 </option>
                                                 <?php endforeach; ?>
                                             </select>
