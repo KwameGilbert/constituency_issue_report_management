@@ -1,0 +1,33 @@
+name: FTP Deploy
+
+# Trigger on any push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to FTP
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Check out your code so we can deploy it
+      - name: Checkout repository
+        uses: actions/checkout@v4                    # checks out your code :contentReference[oaicite:1]{index=1}
+
+      # 2) Sync files via FTP
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5    # syncs your repo over FTP :contentReference[oaicite:2]{index=2}
+        with:
+          server:   ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # optional parameters—only include if you set them as secrets:
+          port:     ${{ secrets.FTP_PORT }}
+          # protocol: ${{ secrets.FTP_PROTOCOL }}
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          local-dir: './'    # defaults to the repo root
+          exclude: |
+             .github/**
+             .gitignore
