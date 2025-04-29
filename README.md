@@ -96,10 +96,8 @@ MySQL: Database management.
 
 ## License
 
-Missing Libraries:
-
-Install required libraries (e.g., TCPDF for PDF generation).
 License
+This project is licensed under the MIT License. See the LICENSE file for details.
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 Contact
