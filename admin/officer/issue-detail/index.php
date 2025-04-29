@@ -65,18 +65,18 @@ while($history = $history_result->fetch_assoc()) {
     $status_history[] = $history;
 }
 
-// // Fetch comments
-// $comments_query = "SELECT c.*, fo.name as officer_name FROM issue_comments c 
-//                   LEFT JOIN field_officers fo ON c.officer_id = fo.id 
-//                   WHERE c.issue_id = ? ORDER BY c.created_at";
-// $comments_stmt = $conn->prepare($comments_query);
-// $comments_stmt->bind_param("i", $issue_id);
-// $comments_stmt->execute();
-// $comments_result = $comments_stmt->get_result();
-// $comments = [];
-// while($comment = $comments_result->fetch_assoc()) {
-//     $comments[] = $comment;
-// }
+// Fetch comments
+$comments_query = "SELECT c.*, fo.name as officer_name FROM issue_comments c 
+                  LEFT JOIN field_officers fo ON c.officer_id = fo.id 
+                  WHERE c.issue_id = ? ORDER BY c.created_at";
+$comments_stmt = $conn->prepare($comments_query);
+$comments_stmt->bind_param("i", $issue_id);
+$comments_stmt->execute();
+$comments_result = $comments_stmt->get_result();
+$comments = [];
+while($comment = $comments_result->fetch_assoc()) {
+    $comments[] = $comment;
+}
 ?>
 
 <!DOCTYPE html>
