@@ -8,6 +8,7 @@ on:
 
 jobs:
   deploy:
+    environment: production
     name: Deploy to FTP
     runs-on: ubuntu-latest
 
