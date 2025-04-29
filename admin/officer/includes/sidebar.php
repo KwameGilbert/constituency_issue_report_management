@@ -67,13 +67,13 @@ $active_page = $active_page ?? 'dashboard';
                             :class="{'transform rotate-180': open}"></i>
                     </button>
                     <div x-show="open" class="space-y-1 pl-12" style="display: none;">
-                        <a href="#"
+                        <a href="<?= isset($basePath) ? $basePath : '' ?>help/user-guide.php"
                             class="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-amber-700 transition-colors duration-300">
                             <i
                                 class="fas fa-book mr-3 text-gray-400 group-hover:text-amber-500 transition-colors duration-300"></i>
                             User Guide
                         </a>
-                        <a href="#"
+                        <a href="<?= isset($basePath) ? $basePath : '' ?>help/contact-support.php"
                             class="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-amber-700 transition-colors duration-300">
                             <i
                                 class="fas fa-life-ring mr-3 text-gray-400 group-hover:text-amber-500 transition-colors duration-300"></i>
@@ -171,13 +171,13 @@ $active_page = $active_page ?? 'dashboard';
                             :class="{'transform rotate-180': open}"></i>
                     </button>
                     <div x-show="open" class="space-y-1 pl-12" style="display: none;">
-                        <a href="#"
+                        <a href="<?= isset($basePath) ? $basePath : '' ?>help/user-guide.php"
                             class="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-amber-700 transition-colors duration-300">
                             <i
                                 class="fas fa-book mr-3 text-gray-400 group-hover:text-amber-500 transition-colors duration-300"></i>
                             User Guide
                         </a>
-                        <a href="#"
+                        <a href="<?= isset($basePath) ? $basePath : '' ?>help/contact-support.php"
                             class="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-amber-700 transition-colors duration-300">
                             <i
                                 class="fas fa-life-ring mr-3 text-gray-400 group-hover:text-amber-500 transition-colors duration-300"></i>
