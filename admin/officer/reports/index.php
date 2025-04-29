@@ -1,127 +1,186 @@
 <?php
-// Start session and authorize
+// Start session
 session_start();
+
+// Check if user is logged in and is a field officer
 if (!isset($_SESSION['officer_id']) || $_SESSION['role'] !== 'field_officer') {
-    header('Location: ../login/');
+    header("Location: ../login/");
     exit;
 }
 
+// Include database connection
 require_once '../../../config/db.php';
 
-// Helpers for database operations
-function fetchOne(mysqli $conn, string $sql, string $types = '', array $params = []): array {
-    $stmt = $conn->prepare($sql);
-    if ($types && $params) {
-        $stmt->bind_param($types, ...$params);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $data = $result->fetch_assoc() ?: [];
-    $stmt->close();
-    return $data;
+// Set active page and title for sidebar
+$active_page = 'reports';
+$pageTitle = 'Reports & Analytics';
+$basePath = '../';
+
+// Get officer details
+$officer_id = $_SESSION['officer_id'];
+$query = "SELECT * FROM field_officers WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $officer_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$officer = $result->fetch_assoc();
+$stmt->close();
+
+// Get time period filter
+$period = isset($_GET['period']) ? $_GET['period'] : 'all';
+$period_clause = '';
+
+switch ($period) {
+    case 'week':
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+        break;
+    case 'month':
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+        break;
+    case 'quarter':
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
+        break;
+    case 'year':
+        $period_clause = "AND issues.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+        break;
+    default:
+        $period_clause = "";
 }
 
-function fetchAll(mysqli $conn, string $sql, string $types = '', array $params = []): array {
-    $stmt = $conn->prepare($sql);
-    if ($types && $params) {
-        $stmt->bind_param($types, ...$params);
-    }
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $rows = [];
-    while ($row = $result->fetch_assoc()) {
-        $rows[] = $row;
-    }
-    $stmt->close();
-    return $rows;
+// Get summary statistics
+$stats_query = "SELECT 
+                COUNT(*) as total_issues,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_issues,
+                SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_issues,
+                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_issues,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_issues,
+                SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical_issues,
+                SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high_issues,
+                SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium_issues,
+                SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low_issues
+                FROM issues 
+                WHERE officer_id = ? $period_clause";
+
+$stats_stmt = $conn->prepare($stats_query);
+$stats_stmt->bind_param("i", $officer_id);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
+$stats = $stats_result->fetch_assoc();
+
+// Monthly trend data for line chart
+$trend_query = "SELECT 
+                DATE_FORMAT(issues.created_at, '%Y-%m') as month,
+                COUNT(*) as issue_count 
+                FROM issues 
+                WHERE officer_id = ? 
+                GROUP BY DATE_FORMAT(issues.created_at, '%Y-%m')
+                ORDER BY month ASC
+                LIMIT 12";
+
+$trend_stmt = $conn->prepare($trend_query);
+$trend_stmt->bind_param("i", $officer_id);
+$trend_stmt->execute();
+$trend_result = $trend_stmt->get_result();
+$trend_data = [];
+$trend_labels = [];
+
+while ($row = $trend_result->fetch_assoc()) {
+    $month_year = date('M Y', strtotime($row['month'] . '-01'));
+    $trend_labels[] = $month_year;
+    $trend_data[] = (int)$row['issue_count'];
 }
 
-// Build period clause
-function buildPeriodClause(string $period): string {
-    switch ($period) {
-        case 'week':    return "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
-        case 'month':   return "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
-        case 'quarter': return "AND created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)";
-        case 'year':    return "AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
-        default:        return '';
-    }
+// Electoral area breakdown data for pie chart
+$area_query = "SELECT 
+               ea.name as area_name,
+               COUNT(i.id) as issue_count
+               FROM issues i
+               LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
+               WHERE i.officer_id = ? $period_clause
+               GROUP BY i.electoral_area_id
+               ORDER BY issue_count DESC";
+
+$area_stmt = $conn->prepare($area_query);
+$area_stmt->bind_param("i", $officer_id);
+$area_stmt->execute();
+$area_result = $area_stmt->get_result();
+$area_data = [];
+$area_labels = [];
+
+while ($row = $area_result->fetch_assoc()) {
+    $area_name = $row['area_name'] ? $row['area_name'] : 'Unassigned';
+    $area_labels[] = $area_name;
+    $area_data[] = (int)$row['issue_count'];
 }
 
-// Initialize
-$officerId = (int) $_SESSION['officer_id'];
-$period    = $_GET['period'] ?? 'all';
-$periodSql = buildPeriodClause($period);
-
-// Fetch summary statistics
-$statsSql = "SELECT
-    COUNT(*) AS total,
-    SUM(status = 'pending')     AS pending,
-    SUM(status = 'in_progress') AS in_progress,
-    SUM(status = 'resolved')    AS resolved,
-    SUM(status = 'rejected')    AS rejected,
-    SUM(severity = 'critical')  AS critical,
-    SUM(severity = 'high')      AS high,
-    SUM(severity = 'medium')    AS medium,
-    SUM(severity = 'low')       AS low
-FROM issues
-WHERE officer_id = ? $periodSql";
-$stats = fetchOne($conn, $statsSql, 'i', [$officerId]);
-
-// Calculate derived metrics
-$resolutionRate      = $stats['total'] ? round($stats['resolved'] / $stats['total'] * 100) : 0;
-$avgTimeSql          = "SELECT AVG(TIMESTAMPDIFF(DAY, created_at, updated_at)) AS avg_days
-                        FROM issues
-                        WHERE officer_id = ? AND status = 'resolved' $periodSql";
-$avgTimeRow          = fetchOne($conn, $avgTimeSql, 'i', [$officerId]);
-$avgResolutionDays   = round($avgTimeRow['avg_days'] ?? 0);
-
-// Fetch trend (last 12 months)
-$trendSql = "SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS count
-             FROM issues
-             WHERE officer_id = ? $periodSql
-             GROUP BY month
-             ORDER BY month DESC
-             LIMIT 12";
-$trendRows = fetchAll($conn, $trendSql, 'i', [$officerId]);
-$trendRows = array_reverse($trendRows);
-$trendLabels = array_map(fn($r) => date('M Y', strtotime($r['month'] . '-01')), $trendRows);
-$trendData   = array_map(fn($r) => (int) $r['count'], $trendRows);
-
-// Area breakdown
-$areaSql = "SELECT ea.name AS area, COUNT(*) AS count
-            FROM issues i
-            LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-            WHERE i.officer_id = ? $periodSql
-            GROUP BY area
-            ORDER BY count DESC";
-$areaRows = fetchAll($conn, $areaSql, 'i', [$officerId]);
-$areaLabels = [];
-$areaData   = [];
-foreach ($areaRows as $r) {
-    $areaLabels[] = $r['area'] ?: 'Unassigned';
-    $areaData[]   = (int) $r['count'];
+// Resolution rate calculation
+$resolution_rate = 0;
+if ($stats['total_issues'] > 0) {
+    $resolution_rate = round(($stats['resolved_issues'] / $stats['total_issues']) * 100);
 }
 
-// Top issues
-$topSql = "SELECT title, people_affected
-           FROM issues
-           WHERE officer_id = ? AND people_affected > 0 $periodSql
-           ORDER BY people_affected DESC
-           LIMIT 5";
-$topRows = fetchAll($conn, $topSql, 'i', [$officerId]);
-$topLabels = array_map(fn($r) => mb_strimwidth($r['title'], 0, 20, '...'), $topRows);
-$topData   = array_map(fn($r) => (int) $r['people_affected'], $topRows);
+// Average resolution time
+$avg_time_query = "SELECT 
+                  AVG(TIMESTAMPDIFF(DAY, created_at, updated_at)) as avg_days
+                  FROM issues 
+                  WHERE officer_id = ? AND status = 'resolved' $period_clause";
 
-// Recent updates
-$updatesSql = "SELECT i.id, i.title, iu.status_change, iu.created_at
-               FROM issue_updates iu
-               JOIN issues i ON iu.issue_id = i.id
-               WHERE i.officer_id = ? $periodSql
-               ORDER BY iu.created_at DESC
-               LIMIT 5";
-$recentUpdates = fetchAll($conn, $updatesSql, 'i', [$officerId]);
+$avg_time_stmt = $conn->prepare($avg_time_query);
+$avg_time_stmt->bind_param("i", $officer_id);
+$avg_time_stmt->execute();
+$avg_time_result = $avg_time_stmt->get_result();
+$avg_time_row = $avg_time_result->fetch_assoc();
+$avg_resolution_days = round($avg_time_row['avg_days'] ?? 0);
+
+// Severity distribution data for horizontal bar chart
+$severity_data = [
+    $stats['critical_issues'],
+    $stats['high_issues'],
+    $stats['medium_issues'],
+    $stats['low_issues']
+];
+
+// Top issues by affected people for bar chart
+$top_issues_query = "SELECT 
+                    id, title, people_affected 
+                    FROM issues 
+                    WHERE officer_id = ? AND people_affected > 0 $period_clause
+                    ORDER BY people_affected DESC 
+                    LIMIT 5";
+
+$top_issues_stmt = $conn->prepare($top_issues_query);
+$top_issues_stmt->bind_param("i", $officer_id);
+$top_issues_stmt->execute();
+$top_issues_result = $top_issues_stmt->get_result();
+$top_issues = [];
+$top_issues_labels = [];
+$top_issues_data = [];
+
+while ($row = $top_issues_result->fetch_assoc()) {
+    $top_issues[] = $row;
+    $top_issues_labels[] = substr($row['title'], 0, 20) . (strlen($row['title']) > 20 ? '...' : '');
+    $top_issues_data[] = (int)$row['people_affected'];
+}
+
+// Recent status changes
+$recent_updates_query = "SELECT 
+                        i.id, i.title, iu.status_change, iu.created_at
+                        FROM issue_updates iu
+                        JOIN issues i ON iu.issue_id = i.id
+                        WHERE i.officer_id = ? $period_clause
+                        ORDER BY iu.created_at DESC
+                        LIMIT 5";
+
+$recent_updates_stmt = $conn->prepare($recent_updates_query);
+$recent_updates_stmt->bind_param("i", $officer_id);
+$recent_updates_stmt->execute();
+$recent_updates_result = $recent_updates_stmt->get_result();
+$recent_updates = [];
+
+while ($row = $recent_updates_result->fetch_assoc()) {
+    $recent_updates[] = $row;
+}
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
