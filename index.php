@@ -16,7 +16,6 @@ require_once 'config/db.php';
 <body>
     <?php require_once 'includes/header.php';?>
     <main class="bg-white text-gray-800">
-
         <?php 
         require_once 'includes/hero_carousel.php';
         // require_once 'includes/featured_projects.php';
@@ -29,10 +28,7 @@ require_once 'config/db.php';
         require_once 'includes/contact.php';
 ?>
     </main>
-
-
     <?php require_once 'includes/footer.php'; ?>
-
 </body>
 
 </html>

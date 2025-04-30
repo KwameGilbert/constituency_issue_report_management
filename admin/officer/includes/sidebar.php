@@ -187,7 +187,7 @@ $active_page = $active_page ?? 'dashboard';
                 </div>
 
                 <div class="pt-4 mt-4 border-t border-gray-200">
-                    <a href="<?= isset($basePath) ? $basePath : '' ?>../logout.php"
+                    <a href="<?= isset($basePath) ? $basePath : '' ?>logout.php"
                         class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-red-700 hover:bg-red-50 transition-colors duration-300">
                         <i
                             class="fas fa-sign-out-alt mr-3 flex-shrink-0 h-6 w-6 text-red-400 group-hover:text-red-500 transition-colors duration-300"></i>

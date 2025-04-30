@@ -87,7 +87,7 @@ $basePath = '../';
             <?php include_once '../includes/header.php'; ?>
 
             <!-- Main content area -->
-            <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
+            <main class="flex-1 overflow-y-auto bg-gray-100 px-2 md:p-6">
                 <div class="max-w-4xl mx-auto">
                     <!-- Action Bar -->
                     <div
