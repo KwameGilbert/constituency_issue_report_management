@@ -6,7 +6,7 @@ RewriteEngine On
 
 # Handle 404 errors
 
-ErrorDocument 404 /404.php
+ErrorDocument 404 http://swma.rf.gd/404.php
 
 # Set default character set
 
@@ -32,11 +32,11 @@ RewriteRule "(^|/)\." - [F]
 
 # Prevent hotlinking of images
 
-RewriteCond %{HTTP_REFERER} !^$
-RewriteCond %{HTTP_REFERER} !^http://(www\.)?swma\.com/ [NC]
-RewriteCond %{HTTP_REFERER} !^http://localhost/ [NC]
-RewriteCond %{REQUEST_URI} \.(jpg|jpeg|png|gif)$ [NC]
-RewriteRule \.(jpg|jpeg|png|gif)$ - [F]
+# RewriteCond %{HTTP_REFERER} !^$
+# RewriteCond %{HTTP_REFERER} !^http://(www\.)?swma\.com/ [NC]
+# RewriteCond %{HTTP_REFERER} !^http://localhost/ [NC]
+# RewriteCond %{REQUEST_URI} \.(jpg|jpeg|png|gif)$ [NC]
+# RewriteRule \.(jpg|jpeg|png|gif)$ - [F]
 
 # Keep existing rules intact if they exist
 
