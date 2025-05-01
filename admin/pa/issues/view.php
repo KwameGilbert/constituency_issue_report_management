@@ -365,7 +365,7 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                         <label for="update_text" class="block text-sm font-medium text-gray-700 mb-1">Update
                             Details</label>
                         <textarea name="update_text" id="update_text" rows="3" required
-                            class="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            class="shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
                             placeholder="Provide an update on the current status, progress, or other important information about this issue..."></textarea>
                     </div>
                     <div>
@@ -385,30 +385,58 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                 <h3 class="text-lg font-medium text-gray-900">Activity Timeline</h3>
             </div>
             <div class="p-4">
-                <?php if (count($updates) > 0 || count($comments) > 0): ?>
+                <?php 
+            // Merge updates and comments into a single array
+            $timeline = [];
+            
+            foreach ($updates as $update) {
+                $timeline[] = [
+                'type' => 'update',
+                'data' => $update,
+                'date' => $update['created_at']
+                ];
+            }
+            
+            foreach ($comments as $comment) {
+                $timeline[] = [
+                'type' => 'comment',
+                'data' => $comment,
+                'date' => $comment['created_at']
+                ];
+            }
+
+            // Sort timeline by date (newest first)
+            usort($timeline, function($a, $b) {
+                return strtotime($b['date']) - strtotime($a['date']);
+            });
+            ?>
+
+                <?php if (!empty($timeline)): ?>
                 <div class="flow-root">
                     <ul class="-mb-8">
-                        <!-- Status Updates -->
-                        <?php foreach ($updates as $index => $update): ?>
+                        <?php foreach ($timeline as $index => $item): ?>
                         <li>
                             <div class="relative pb-8">
-                                <?php if ($index !== count($updates) - 1 || count($comments) > 0): ?>
+                                <?php if ($index !== count($timeline) - 1): ?>
                                 <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200"
                                     aria-hidden="true"></span>
                                 <?php endif; ?>
+
+                                <?php if ($item['type'] === 'update'): ?>
+                                <!-- Status Update -->
                                 <div class="relative flex items-start space-x-3">
                                     <div class="relative">
-                                        <?php if ($update['officer_pic'] && file_exists("../../../" . $update['officer_pic'])): ?>
+                                        <?php if ($item['data']['officer_pic'] && file_exists("../../../" . $item['data']['officer_pic'])): ?>
                                         <div
                                             class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden ring-8 ring-white">
-                                            <img src="/<?= $update['officer_pic'] ?>" alt="Profile picture"
+                                            <img src="/<?= $item['data']['officer_pic'] ?>" alt="Profile picture"
                                                 class="h-full w-full object-cover">
                                         </div>
                                         <?php else: ?>
                                         <div
                                             class="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center ring-8 ring-white">
                                             <span class="text-white font-medium">
-                                                <?= strtoupper(substr($update['officer_name'] ?? 'U', 0, 1)) ?>
+                                                <?= strtoupper(substr($item['data']['officer_name'] ?? 'U', 0, 1)) ?>
                                             </span>
                                         </div>
                                         <?php endif; ?>
@@ -417,68 +445,51 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                                         <div>
                                             <div class="text-sm">
                                                 <span class="font-medium text-gray-900">
-                                                    <?= htmlspecialchars($update['officer_name'] ?? 'System') ?>
-                                                    <?php if ($update['user_role'] === 'pa'): ?>
-                                                    <span class="ml-1 text-xs font-normal text-gray-500">(Personal
-                                                        Assistant)</span>
-                                                    <?php elseif ($update['user_role'] === 'officer'): ?>
-                                                    <span class="ml-1 text-xs font-normal text-gray-500">(Field
-                                                        Officer)</span>
-                                                    <?php endif; ?>
+                                                    <?= htmlspecialchars($item['data']['officer_name'] ?? 'System') ?>
+                                                    <span class="ml-1 text-xs font-normal text-gray-500">
+                                                        (<?= $item['data']['user_role'] === 'pa' ? 'Personal Assistant' : 'Field Officer' ?>)
+                                                    </span>
                                                 </span>
                                             </div>
                                             <p class="mt-0.5 text-sm text-gray-500">
-                                                <?= date('M d, Y h:i A', strtotime($update['created_at'])) ?>
+                                                <?= date('M d, Y h:i A', strtotime($item['data']['created_at'])) ?>
                                             </p>
                                         </div>
                                         <div class="mt-2 text-sm text-gray-700">
-                                            <p><?= nl2br(htmlspecialchars($update['update_text'])) ?></p>
+                                            <p><?= nl2br(htmlspecialchars($item['data']['update_text'])) ?></p>
                                         </div>
-                                        <?php if ($update['status_change']): ?>
+                                        <?php if ($item['data']['status_change']): ?>
                                         <div class="mt-2">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                <?php 
-                                                $update_status = match($update['status_change']) {
-                                                    'pending' => 'bg-yellow-100 text-yellow-800',
-                                                    'under_review' => 'bg-blue-100 text-blue-800',
-                                                    'in_progress' => 'bg-purple-100 text-purple-800',
-                                                    'resolved' => 'bg-green-100 text-green-800',
-                                                    'rejected' => 'bg-red-100 text-red-800',
-                                                    default => 'bg-gray-100 text-gray-800'
-                                                };
-                                                echo $update_status;
-                                                ?>">
-                                                Status changed to: <?= formatStatus($update['status_change']) ?>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                            <?= match($item['data']['status_change']) {
+                                'pending' => 'bg-yellow-100 text-yellow-800',
+                                'under_review' => 'bg-blue-100 text-blue-800',
+                                'in_progress' => 'bg-purple-100 text-purple-800',
+                                'resolved' => 'bg-green-100 text-green-800',
+                                'rejected' => 'bg-red-100 text-red-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            } ?>">
+                                                Status changed to: <?= formatStatus($item['data']['status_change']) ?>
                                             </span>
                                         </div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
-                            </div>
-                        </li>
-                        <?php endforeach; ?>
-
-                        <!-- Comments (now shown in the timeline as well) -->
-                        <?php foreach ($comments as $index => $comment): ?>
-                        <li>
-                            <div class="relative pb-8">
-                                <?php if ($index !== count($comments) - 1): ?>
-                                <span class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-gray-200"
-                                    aria-hidden="true"></span>
-                                <?php endif; ?>
+                                <?php else: ?>
+                                <!-- Comment -->
                                 <div class="relative flex items-start space-x-3">
                                     <div class="relative">
-                                        <?php if ($comment['officer_pic'] && file_exists("../../../" . $comment['officer_pic'])): ?>
+                                        <?php if ($item['data']['officer_pic'] && file_exists("../../../" . $item['data']['officer_pic'])): ?>
                                         <div
                                             class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden ring-8 ring-white">
-                                            <img src="/<?= $comment['officer_pic'] ?>" alt="Profile picture"
+                                            <img src="/<?= $item['data']['officer_pic'] ?>" alt="Profile picture"
                                                 class="h-full w-full object-cover">
                                         </div>
                                         <?php else: ?>
                                         <div
                                             class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center ring-8 ring-white">
                                             <span class="text-white font-medium">
-                                                <?= strtoupper(substr($comment['officer_name'] ?? 'U', 0, 1)) ?>
+                                                <?= strtoupper(substr($item['data']['officer_name'] ?? 'U', 0, 1)) ?>
                                             </span>
                                         </div>
                                         <?php endif; ?>
@@ -487,21 +498,22 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                                         <div>
                                             <div class="text-sm">
                                                 <span class="font-medium text-gray-900">
-                                                    <?= htmlspecialchars($comment['officer_name'] ?? 'Unknown User') ?>
+                                                    <?= htmlspecialchars($item['data']['officer_name'] ?? 'Unknown User') ?>
                                                     <span class="ml-1 text-xs font-normal text-gray-500">(Field
                                                         Officer)</span>
                                                 </span>
                                             </div>
                                             <p class="mt-0.5 text-sm text-gray-500">
-                                                <?= date('M d, Y h:i A', strtotime($comment['created_at'])) ?>
+                                                <?= date('M d, Y h:i A', strtotime($item['data']['created_at'])) ?>
                                             </p>
                                         </div>
                                         <div class="mt-2 text-sm text-gray-700">
                                             <p class="font-medium text-xs text-gray-500 mb-1">Comment:</p>
-                                            <p><?= nl2br(htmlspecialchars($comment['comment'])) ?></p>
+                                            <p><?= nl2br(htmlspecialchars($item['data']['comment'])) ?></p>
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </li>
                         <?php endforeach; ?>
