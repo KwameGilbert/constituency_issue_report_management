@@ -1,4 +1,45 @@
 # In your .htaccess file
+
+# Enable rewriting
+
+RewriteEngine On
+
+# Handle 404 errors
+
+ErrorDocument 404 /404.php
+
+# Set default character set
+
+AddDefaultCharset UTF-8
+
+# Protect files and directories
+
+<FilesMatch "(\.(bak|config|dist|fla|inc|ini|log|psd|sh|sql|swp)|~)$">
+Order allow,deny
+Deny from all
+Satisfy All
+</FilesMatch>
+
+# Prevent directory listing
+
+Options -Indexes
+
+# Block access to hidden files and directories
+
+RewriteCond %{SCRIPT_FILENAME} -d [OR]
+RewriteCond %{SCRIPT_FILENAME} -f
+RewriteRule "(^|/)\." - [F]
+
+# Prevent hotlinking of images
+
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http://(www\.)?swma\.com/ [NC]
+RewriteCond %{HTTP_REFERER} !^http://localhost/ [NC]
+RewriteCond %{REQUEST_URI} \.(jpg|jpeg|png|gif)$ [NC]
+RewriteRule \.(jpg|jpeg|png|gif)$ - [F]
+
+# Keep existing rules intact if they exist
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteRule ^sitemap\.xml$ sitemap.php [L]

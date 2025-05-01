@@ -59,7 +59,7 @@ $stats_query = "SELECT
                 SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium_issues,
                 SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low_issues
                 FROM issues 
-                WHERE officer_id = ? $period_clause";
+                WHERE officer_id = ? {$period_clause}";
 
 $stats_stmt = $conn->prepare($stats_query);
 $stats_stmt->bind_param("i", $officer_id);
@@ -93,11 +93,11 @@ while ($row = $trend_result->fetch_assoc()) {
 // Electoral area breakdown data for pie chart
 $area_query = "SELECT 
                ea.name as area_name,
-               COUNT(i.id) as issue_count
-               FROM issues i
-               LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-               WHERE i.officer_id = ? $period_clause
-               GROUP BY i.electoral_area_id
+               COUNT(issues.id) as issue_count
+               FROM issues issues
+               LEFT JOIN electoral_areas ea ON issues.electoral_area_id = ea.id
+               WHERE issues.officer_id = ? {$period_clause}
+               GROUP BY issues.electoral_area_id
                ORDER BY issue_count DESC";
 
 $area_stmt = $conn->prepare($area_query);
@@ -164,10 +164,10 @@ while ($row = $top_issues_result->fetch_assoc()) {
 
 // Recent status changes
 $recent_updates_query = "SELECT 
-                        i.id, i.title, iu.status_change, iu.created_at
+                        issues.id, issues.title, iu.status_change, iu.created_at
                         FROM issue_updates iu
-                        JOIN issues i ON iu.issue_id = i.id
-                        WHERE i.officer_id = ? $period_clause
+                        JOIN issues issues ON iu.issue_id = issues.id
+                        WHERE issues.officer_id = ? $period_clause
                         ORDER BY iu.created_at DESC
                         LIMIT 5";
 
