@@ -196,27 +196,48 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                     </span>
                 </div>
             </div>
+            <!-- Print/Export Buttons -->
             <div class="w-full lg:w-auto flex flex-wrap gap-2 mt-4 lg:mt-0">
                 <?php if ($issue['status'] === 'pending'): ?>
                 <a href="update-status.php?id=<?= $issue_id ?>&status=under_review"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     <i class="fas fa-clipboard-check mr-2"></i> Mark as Under Review
                 </a>
+                <button type="button" onclick="openRejectModal()"
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
+                </button>
                 <?php elseif ($issue['status'] === 'under_review'): ?>
                 <a href="update-status.php?id=<?= $issue_id ?>&status=in_progress"
                     class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
                     <i class="fas fa-tasks mr-2"></i> Mark as In Progress
                 </a>
+                <button type="button" onclick="openRejectModal()"
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
+                </button>
                 <?php elseif ($issue['status'] === 'in_progress'): ?>
-                <a href="update-status.php?id=<?= $issue_id ?>&status=resolved"
+                <button type="button" onclick="openResolveModal()"
                     class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                     <i class="fas fa-check-circle mr-2"></i> Mark as Resolved
-                </a>
+                </button>
+                <button type="button" onclick="openRejectModal()"
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
+                </button>
                 <?php endif; ?>
                 <button type="button" id="printButton"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                     <i class="fas fa-print mr-2"></i> Print Details
                 </button>
+                <a href="generate-pdf.php?id=<?= $issue_id ?>" target="_blank"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    <i class="fas fa-file-pdf mr-2"></i> Generate PDF
+                </a>
+                <a href="download.php?id=<?= $issue_id ?>"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <i class="fas fa-download mr-2"></i> Download Bundle
+                </a>
             </div>
         </div>
 
@@ -532,6 +553,75 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
     </div>
 </div>
 
+<!-- Reject Issue Modal -->
+<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-medium text-gray-900">Reject Issue</h3>
+        </div>
+        <form action="update-status.php" method="POST" class="p-4">
+            <input type="hidden" name="issue_id" value="<?= $issue_id ?>">
+            <input type="hidden" name="status" value="rejected">
+
+            <div class="mb-4">
+                <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-1">
+                    Rejection Reason <span class="text-red-600">*</span>
+                </label>
+                <textarea id="rejection_reason" name="rejection_reason" rows="4" required
+                    class="shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
+                    placeholder="Please explain why this issue is being rejected..."></textarea>
+                <p class="mt-1 text-xs text-gray-500">This reason will be recorded in the system and visible to all
+                    parties involved.</p>
+            </div>
+
+            <div class="mt-5 sm:mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancelReject"
+                    class="inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Reject Issue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resolve Issue Modal -->
+<div id="resolveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg max-w-md w-full mx-4">
+        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-medium text-gray-900">Resolve Issue</h3>
+        </div>
+        <form action="update-status.php" method="POST" class="p-4">
+            <input type="hidden" name="issue_id" value="<?= $issue_id ?>">
+            <input type="hidden" name="status" value="resolved">
+
+            <div class="mb-4">
+                <label for="resolution_notes" class="block text-sm font-medium text-gray-700 mb-1">
+                    Resolution Notes <span class="text-red-600">*</span>
+                </label>
+                <textarea id="resolution_notes" name="resolution_notes" rows="4" required
+                    class="shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
+                    placeholder="Please describe how this issue was resolved..."></textarea>
+                <p class="mt-1 text-xs text-gray-500">These notes will be included in the final report and visible to all parties.</p>
+            </div>
+
+            <div class="mt-5 sm:mt-6 flex justify-end space-x-2">
+                <button type="button" id="cancelResolve"
+                    class="inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Mark as Resolved
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Image Modal -->
 <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
     <div class="max-w-4xl w-full mx-4">
@@ -570,6 +660,42 @@ document.getElementById('imageModal').addEventListener('click', function(e) {
 // Print functionality
 document.getElementById('printButton').addEventListener('click', function() {
     window.print();
+});
+
+// Modal functions for reject and resolve
+function openRejectModal() {
+    document.getElementById('rejectModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function openResolveModal() {
+    document.getElementById('resolveModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('cancelReject').addEventListener('click', function() {
+    document.getElementById('rejectModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+});
+
+document.getElementById('cancelResolve').addEventListener('click', function() {
+    document.getElementById('resolveModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+});
+
+// Close modals when clicking outside
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+});
+
+document.getElementById('resolveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
 });
 </script>
 
