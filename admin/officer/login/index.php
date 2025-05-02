@@ -7,8 +7,10 @@ if (isset($_SESSION['officer_id']) && $_SESSION['role'] === 'field_officer') {
     exit;
 }
 
-// Include database connection
+// Include database connection and email templates
 require_once '../../../config/db.php';
+require_once '../../../email-services/mail.php';
+require_once '../../../email-services/email-templates.php';
 
 $error_message = '';
 $error_type = ''; // For styling different types of errors
@@ -52,6 +54,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (!password_verify($password, $officer['password'])) {
                 $error_message = "Incorrect password. Please try again.";
                 $error_type = 'invalid_password';
+                
+                // Send failed login email notification
+                sendSecurityNotificationEmail(
+                    $officer['email'],
+                    $officer['name'],
+                    'failed_login',
+                    ['reason' => 'Incorrect password entered']
+                );
+                
             } else {
                 // Set session variables
                 $_SESSION['officer_id'] = $officer['id'];
@@ -65,6 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update_stmt->bind_param("i", $officer['id']);
                 $update_stmt->execute();
                 $update_stmt->close();
+                
+                // Store the last login time for display
+                $_SESSION['last_login'] = date('Y-m-d H:i:s');
+                
+                // Send successful login notification email
+                // We do this in the background to avoid delaying the user's login
+                sendSecurityNotificationEmail(
+                    $officer['email'],
+                    $officer['name'],
+                    'success_login'
+                );
                 
                 // Redirect to officer dashboard
                 header("Location: ../dashboard/");
