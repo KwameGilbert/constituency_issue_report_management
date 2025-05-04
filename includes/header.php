@@ -42,8 +42,6 @@
                         </div>
                     </div>
 
-
-
                     <div class="relative group">
                         <button
                             class="flex items-center px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">

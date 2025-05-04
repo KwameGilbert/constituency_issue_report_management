@@ -12,9 +12,10 @@ $items = $conn
             <!-- Hero Slide (active by default) -->
             <div class="hidden duration-700 ease-in-out absolute inset-0 transition-transform transform"
                 data-carousel-item="active">
-                <img src="assets/images/carousel/banner.jpg" class="block w-full h-full object-cover" alt="Hero Banner">
+                <img src="/assets/images/carousel/banner.jpg" class="block w-full h-full object-cover"
+                    alt="Hero Banner">
                 <div class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
-                    <img src="assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-24 mb-4">
+                    <img src="/assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-24 mb-4">
                     <h1 class="text-4xl md:text-5xl font-bold text-center">
                         Sefwi Wiawso Constituency
                     </h1>
