@@ -21,7 +21,7 @@ $posts = $conn
                 <div class="p-4">
                     <h3 class="font-bold text-lg"><?= htmlspecialchars($p['title']) ?></h3>
                     <p class="mt-2 text-sm text-gray-600"><?= htmlspecialchars($p['excerpt']) ?></p>
-                    <a href="blog/blog-post.php?slug=<?= urlencode($p['slug']) ?>"
+                    <a href="/blog/blog-post.php?slug=<?= urlencode($p['slug']) ?>"
                         class="mt-4 inline-block text-red-600 hover:underline">
                         Read more
                     </a>
