@@ -151,6 +151,3 @@ $current_page = basename(dirname($_SERVER['PHP_SELF']));
         });
     });
     </script>
-</body>
-
-</html>

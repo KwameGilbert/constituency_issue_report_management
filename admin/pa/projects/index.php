@@ -109,112 +109,115 @@ include '../includes/header.php';
 ?>
 
 <div class="p-4 sm:ml-64">
-    <!-- Page header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Constituency Projects</h1>
-        <a href="create.php" class="btn btn-success">
-            <i class="fas fa-plus-circle"></i> Add New Project
-        </a>
-    </div>
-
-    <!-- Filters card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Filter Projects</h6>
-            <?php if (isset($_GET['filter'])): ?>
-            <a href="index.php" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
-            <?php endif; ?>
+    <div class="p-4 mt-14">
+        <!-- Page header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Constituency Projects</h1>
+            <a href="create.php" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Add New Project
+            </a>
         </div>
-        <div class="card-body">
-            <form action="" method="GET" class="row">
-                <input type="hidden" name="filter" value="true">
 
-                <!-- Search box -->
-                <div class="col-md-4 mb-3">
-                    <label for="search">Search</label>
-                    <input type="text" class="form-control" id="search" name="search"
-                        placeholder="Search by title, description or location"
-                        value="<?= htmlspecialchars($search_term) ?>">
-                </div>
+        <!-- Filters card -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Filter Projects</h6>
+                <?php if (isset($_GET['filter'])): ?>
+                <a href="index.php" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
+                <?php endif; ?>
+            </div>
+            <div class="card-body">
+                <form action="" method="GET" class="row">
+                    <input type="hidden" name="filter" value="true">
 
-                <!-- Status filter -->
-                <div class="col-md-2 mb-3">
-                    <label for="status">Status</label>
-                    <select class="form-control" id="status" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="planned" <?= $status_filter === 'planned' ? 'selected' : '' ?>>Planned</option>
-                        <option value="ongoing" <?= $status_filter === 'ongoing' ? 'selected' : '' ?>>Ongoing</option>
-                        <option value="completed" <?= $status_filter === 'completed' ? 'selected' : '' ?>>Completed
-                        </option>
-                    </select>
-                </div>
+                    <!-- Search box -->
+                    <div class="col-md-4 mb-3">
+                        <label for="search">Search</label>
+                        <input type="text" class="form-control" id="search" name="search"
+                            placeholder="Search by title, description or location"
+                            value="<?= htmlspecialchars($search_term) ?>">
+                    </div>
 
-                <!-- Sector filter -->
-                <div class="col-md-2 mb-3">
-                    <label for="sector">Sector</label>
-                    <select class="form-control" id="sector" name="sector">
-                        <option value="">All Sectors</option>
-                        <?php while ($sector = $sectors_result->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($sector['sector']) ?>"
-                            <?= $sector_filter === $sector['sector'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($sector['sector']) ?>
-                        </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
+                    <!-- Status filter -->
+                    <div class="col-md-2 mb-3">
+                        <label for="status">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="planned" <?= $status_filter === 'planned' ? 'selected' : '' ?>>Planned
+                            </option>
+                            <option value="ongoing" <?= $status_filter === 'ongoing' ? 'selected' : '' ?>>Ongoing
+                            </option>
+                            <option value="completed" <?= $status_filter === 'completed' ? 'selected' : '' ?>>Completed
+                            </option>
+                        </select>
+                    </div>
 
-                <!-- Location filter -->
-                <div class="col-md-4 mb-3">
-                    <label for="location">Location</label>
-                    <select class="form-control" id="location" name="location">
-                        <option value="">All Locations</option>
-                        <?php while ($location = $locations_result->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($location['location']) ?>"
-                            <?= $location_filter === $location['location'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($location['location']) ?>
-                        </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
+                    <!-- Sector filter -->
+                    <div class="col-md-2 mb-3">
+                        <label for="sector">Sector</label>
+                        <select class="form-control" id="sector" name="sector">
+                            <option value="">All Sectors</option>
+                            <?php while ($sector = $sectors_result->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($sector['sector']) ?>"
+                                <?= $sector_filter === $sector['sector'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($sector['sector']) ?>
+                            </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
 
-                <!-- Date range -->
-                <div class="col-md-3 mb-3">
-                    <label for="date_from">From Date</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from"
-                        value="<?= htmlspecialchars($date_from) ?>">
-                </div>
+                    <!-- Location filter -->
+                    <div class="col-md-4 mb-3">
+                        <label for="location">Location</label>
+                        <select class="form-control" id="location" name="location">
+                            <option value="">All Locations</option>
+                            <?php while ($location = $locations_result->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($location['location']) ?>"
+                                <?= $location_filter === $location['location'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($location['location']) ?>
+                            </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
 
-                <div class="col-md-3 mb-3">
-                    <label for="date_to">To Date</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to"
-                        value="<?= htmlspecialchars($date_to) ?>">
-                </div>
+                    <!-- Date range -->
+                    <div class="col-md-3 mb-3">
+                        <label for="date_from">From Date</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from"
+                            value="<?= htmlspecialchars($date_from) ?>">
+                    </div>
 
-                <!-- Submit button -->
-                <div class="col-md-6 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary mr-2">
-                        <i class="fas fa-filter"></i> Apply Filters
-                    </button>
-                    <a href="index.php" class="btn btn-outline-secondary">
-                        <i class="fas fa-sync-alt"></i> Reset
-                    </a>
-                    <button type="button" class="btn btn-success ml-2" id="exportBtn">
-                        <i class="fas fa-file-export"></i> Export Results
-                    </button>
-                </div>
-            </form>
+                    <div class="col-md-3 mb-3">
+                        <label for="date_to">To Date</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to"
+                            value="<?= htmlspecialchars($date_to) ?>">
+                    </div>
+
+                    <!-- Submit button -->
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <a href="index.php" class="btn btn-outline-secondary">
+                            <i class="fas fa-sync-alt"></i> Reset
+                        </a>
+                        <button type="button" class="btn btn-success ml-2" id="exportBtn">
+                            <i class="fas fa-file-export"></i> Export Results
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Projects grid -->
-    <div class="row">
-        <?php if ($result->num_rows > 0): ?>
-        <?php while ($project = $result->fetch_assoc()): ?>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <!-- Project Status Badge -->
-                <div class="position-absolute" style="top: 10px; right: 10px;">
-                    <?php 
+        <!-- Projects grid -->
+        <div class="row">
+            <?php if ($result->num_rows > 0): ?>
+            <?php while ($project = $result->fetch_assoc()): ?>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <!-- Project Status Badge -->
+                    <div class="position-absolute" style="top: 10px; right: 10px;">
+                        <?php 
                             $status_class = match($project['status']) {
                                 'planned' => 'bg-info',
                                 'ongoing' => 'bg-warning',
@@ -222,13 +225,13 @@ include '../includes/header.php';
                                 default => 'bg-secondary'
                             };
                             ?>
-                    <span class="badge <?= $status_class ?> text-white px-3 py-2">
-                        <?= ucfirst($project['status']) ?>
-                    </span>
-                </div>
+                        <span class="badge <?= $status_class ?> text-white px-3 py-2">
+                            <?= ucfirst($project['status']) ?>
+                        </span>
+                    </div>
 
-                <!-- Project Image (thumbnail from images JSON) -->
-                <?php 
+                    <!-- Project Image (thumbnail from images JSON) -->
+                    <?php 
                         $image_url = '../../../assets/images/projects/default-project.jpg';
                         if (!empty($project['images'])) {
                             $images = json_decode($project['images'], true);
@@ -237,103 +240,104 @@ include '../includes/header.php';
                             }
                         }
                         ?>
-                <img src="<?= htmlspecialchars($image_url) ?>" class="card-img-top"
-                    alt="<?= htmlspecialchars($project['title']) ?>" style="height: 180px; object-fit: cover;">
+                    <img src="<?= htmlspecialchars($image_url) ?>" class="card-img-top"
+                        alt="<?= htmlspecialchars($project['title']) ?>" style="height: 180px; object-fit: cover;">
 
-                <div class="card-body">
-                    <h5 class="card-title text-truncate" title="<?= htmlspecialchars($project['title']) ?>">
-                        <?= htmlspecialchars($project['title']) ?>
-                    </h5>
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate" title="<?= htmlspecialchars($project['title']) ?>">
+                            <?= htmlspecialchars($project['title']) ?>
+                        </h5>
 
-                    <div class="mb-2 text-muted small">
-                        <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($project['location']) ?>
-                    </div>
+                        <div class="mb-2 text-muted small">
+                            <i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($project['location']) ?>
+                        </div>
 
-                    <div class="mb-3 text-muted small">
-                        <i class="fas fa-calendar-alt"></i>
-                        <?= date('M d, Y', strtotime($project['start_date'])) ?>
-                        <?php if ($project['end_date']): ?>
-                        - <?= date('M d, Y', strtotime($project['end_date'])) ?>
-                        <?php endif; ?>
-                    </div>
+                        <div class="mb-3 text-muted small">
+                            <i class="fas fa-calendar-alt"></i>
+                            <?= date('M d, Y', strtotime($project['start_date'])) ?>
+                            <?php if ($project['end_date']): ?>
+                            - <?= date('M d, Y', strtotime($project['end_date'])) ?>
+                            <?php endif; ?>
+                        </div>
 
-                    <p class="card-text" style="height: 4.5em; overflow: hidden;">
-                        <?= htmlspecialchars(substr($project['description'], 0, 100)) ?>...
-                    </p>
+                        <p class="card-text" style="height: 4.5em; overflow: hidden;">
+                            <?= htmlspecialchars(substr($project['description'], 0, 100)) ?>...
+                        </p>
 
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <a href="view.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-primary">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
-                        <div>
-                            <a href="edit.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-edit"></i>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <a href="view.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> View Details
                             </a>
-                            <a href="upload-photos.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-outline-info">
-                                <i class="fas fa-images"></i>
-                            </a>
+                            <div>
+                                <a href="edit.php?id=<?= $project['id'] ?>" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="upload-photos.php?id=<?= $project['id'] ?>"
+                                    class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-images"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card-footer bg-transparent">
-                    <small class="text-muted">
-                        Sector: <strong><?= htmlspecialchars($project['sector']) ?></strong>
-                    </small>
+                    <div class="card-footer bg-transparent">
+                        <small class="text-muted">
+                            Sector: <strong><?= htmlspecialchars($project['sector']) ?></strong>
+                        </small>
+                    </div>
                 </div>
             </div>
-        </div>
-        <?php endwhile; ?>
-        <?php else: ?>
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> No projects found matching your criteria.
-                <?php if (isset($_GET['filter'])): ?>
-                <a href="index.php" class="alert-link">Clear filters</a> to see all projects.
-                <?php else: ?>
-                <a href="create.php" class="alert-link">Create your first project</a>.
-                <?php endif; ?>
+            <?php endwhile; ?>
+            <?php else: ?>
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No projects found matching your criteria.
+                    <?php if (isset($_GET['filter'])): ?>
+                    <a href="index.php" class="alert-link">Clear filters</a> to see all projects.
+                    <?php else: ?>
+                    <a href="create.php" class="alert-link">Create your first project</a>.
+                    <?php endif; ?>
+                </div>
             </div>
+            <?php endif; ?>
         </div>
+
+        <!-- Pagination -->
+        <?php if ($total_pages > 1): ?>
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Previous page link -->
+                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                    <a class="page-link"
+                        href="?page=<?= $page - 1 ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>"
+                        aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Page number links -->
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                    <a class="page-link"
+                        href="?page=<?= $i ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>">
+                        <?= $i ?>
+                    </a>
+                </li>
+                <?php endfor; ?>
+
+                <!-- Next page link -->
+                <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                    <a class="page-link"
+                        href="?page=<?= $page + 1 ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>"
+                        aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
         <?php endif; ?>
     </div>
-
-    <!-- Pagination -->
-    <?php if ($total_pages > 1): ?>
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            <!-- Previous page link -->
-            <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                <a class="page-link"
-                    href="?page=<?= $page - 1 ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>"
-                    aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-
-            <!-- Page number links -->
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                <a class="page-link"
-                    href="?page=<?= $i ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>">
-                    <?= $i ?>
-                </a>
-            </li>
-            <?php endfor; ?>
-
-            <!-- Next page link -->
-            <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                <a class="page-link"
-                    href="?page=<?= $page + 1 ?><?= isset($_GET['filter']) ? '&' . http_build_query(array_diff_key($_GET, ['page' => ''])) : '' ?>"
-                    aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-    <?php endif; ?>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Export functionality
