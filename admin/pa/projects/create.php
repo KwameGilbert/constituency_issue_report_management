@@ -210,7 +210,7 @@ include '../includes/header.php';
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-medium text-gray-800">Project Details</h2>
             </div>
-            <form method="post" action="" class="p-6" enctype="multipart/form-data">
+            <form method="post" action="" class="p-6" enctype="multipart/form-data" id="project-form">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Project Title -->
                     <div class="col-span-2">
@@ -218,7 +218,7 @@ include '../includes/header.php';
                             Project Title <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="title" id="title"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($title) ? htmlspecialchars($title) : '' ?>" required>
                         <p class="mt-1 text-xs text-gray-500">Choose a clear, descriptive title for your project</p>
                     </div>
@@ -229,7 +229,7 @@ include '../includes/header.php';
                             Project Description <span class="text-red-500">*</span>
                         </label>
                         <textarea name="description" id="description" rows="6"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             required><?= isset($description) ? htmlspecialchars($description) : '' ?></textarea>
                         <p class="mt-1 text-xs text-gray-500">Provide a detailed description of the project, its goals,
                             and impact</p>
@@ -241,7 +241,7 @@ include '../includes/header.php';
                             Electoral Area
                         </label>
                         <select name="electoral_area_id" id="electoral_area_id"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm">
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm">
                             <option value="">-- Select Electoral Area --</option>
                             <?php while ($area = $electoral_areas_result->fetch_assoc()): ?>
                             <option value="<?= $area['id'] ?>"
@@ -258,7 +258,7 @@ include '../includes/header.php';
                             Location <span class="text-red-500">*</span>
                         </label>
                         <input type="text" name="location" id="location"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($location) ? htmlspecialchars($location) : '' ?>" required>
                         <p class="mt-1 text-xs text-gray-500">Specific location where the project is implemented</p>
                     </div>
@@ -269,7 +269,7 @@ include '../includes/header.php';
                             Sector <span class="text-red-500">*</span>
                         </label>
                         <select name="sector" id="sector"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             required>
                             <option value="">-- Select Sector --</option>
                             <option value="Education"
@@ -303,7 +303,7 @@ include '../includes/header.php';
                             People Benefitted
                         </label>
                         <input type="number" name="people_benefitted" id="people_benefitted" min="0"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($people_benefitted) ? htmlspecialchars($people_benefitted) : '' ?>">
                         <p class="mt-1 text-xs text-gray-500">Estimated number of people who will benefit from this
                             project</p>
@@ -315,7 +315,7 @@ include '../includes/header.php';
                             Budget Allocation (GHS)
                         </label>
                         <input type="number" name="budget_allocation" id="budget_allocation" min="0" step="0.01"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($budget_allocation) ? htmlspecialchars($budget_allocation) : '' ?>">
                         <p class="mt-1 text-xs text-gray-500">Total budget allocated for this project</p>
                     </div>
@@ -326,7 +326,7 @@ include '../includes/header.php';
                             Status <span class="text-red-500">*</span>
                         </label>
                         <select name="status" id="status"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             required>
                             <option value="planned" <?= (isset($status) && $status == 'planned') ? 'selected' : '' ?>>
                                 Planned</option>
@@ -357,7 +357,7 @@ include '../includes/header.php';
                             Start Date <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="start_date" id="start_date"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($start_date) ? htmlspecialchars($start_date) : '' ?>" required>
                     </div>
 
@@ -367,7 +367,7 @@ include '../includes/header.php';
                             End Date
                         </label>
                         <input type="date" name="end_date" id="end_date"
-                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
+                            class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
                             value="<?= isset($end_date) ? htmlspecialchars($end_date) : '' ?>">
                         <p class="mt-1 text-xs text-gray-500">Leave blank if the project end date is not determined yet
                         </p>
@@ -375,11 +375,11 @@ include '../includes/header.php';
 
                     <!-- Project Images -->
                     <div class="col-span-2">
-                        <label for="project_images" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
                             Project Images
                         </label>
-                        <div
-                            class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div id="dropzone"
+                            class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md transition-colors duration-200">
                             <div class="space-y-1 text-center">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
                                     viewBox="0 0 48 48" aria-hidden="true">
@@ -387,20 +387,28 @@ include '../includes/header.php';
                                         d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <div class="flex text-sm text-gray-600">
+                                <div class="flex text-sm text-gray-600 justify-center">
                                     <label for="project_images"
-                                        class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                        class="relative cursor-pointer rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 mr-2">
                                         <span>Upload images</span>
                                         <input id="project_images" name="project_images[]" type="file" class="sr-only"
                                             multiple accept="image/jpeg,image/png,image/jpg">
                                     </label>
-                                    <p class="pl-1">or drag and drop</p>
+                                    <p class="">or drag and drop</p>
                                 </div>
                                 <p class="text-xs text-gray-500">
                                     PNG, JPG, JPEG up to 5MB each
                                 </p>
-                                <div id="image-preview-container" class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Preview Section -->
+                        <div id="image-preview-container" class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2 hidden" id="selected-images-title">
+                                Selected Images</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                                id="preview-grid">
+                                <!-- Image previews will be dynamically added here -->
                             </div>
                         </div>
                     </div>
@@ -410,7 +418,7 @@ include '../includes/header.php';
                         <div class="flex items-start">
                             <div class="flex items-center h-5">
                                 <input type="checkbox" name="featured" id="featured"
-                                    class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                    class="h-4 w-4 text-green-600 border border-gray-300 rounded focus:ring-green-500"
                                     <?= (isset($featured) && $featured) ? 'checked' : '' ?>>
                             </div>
                             <div class="ml-3 text-sm">
@@ -455,41 +463,92 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Image preview functionality
+    // Image preview functionality with file removal capability
     const imageInput = document.getElementById('project_images');
-    const previewContainer = document.getElementById('image-preview-container');
+    const previewContainer = document.getElementById('preview-grid');
+    const selectedImagesTitle = document.getElementById('selected-images-title');
+    const dropZone = document.getElementById('dropzone');
+    let fileList = new DataTransfer(); // To manage the FileList object
 
-    imageInput.addEventListener('change', function() {
+    function updateImagePreviews() {
         previewContainer.innerHTML = '';
 
-        if (this.files) {
-            Array.from(this.files).forEach(file => {
-                if (!file.type.match('image.*')) {
-                    return;
-                }
+        if (fileList.files.length > 0) {
+            selectedImagesTitle.classList.remove('hidden');
 
+            Array.from(fileList.files).forEach((file, index) => {
                 const reader = new FileReader();
 
                 reader.onload = function(e) {
                     const imgContainer = document.createElement('div');
-                    imgContainer.className = 'relative';
+                    imgContainer.className =
+                        'relative group bg-gray-50 rounded-lg border border-gray-300 overflow-hidden';
+
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'aspect-w-1 aspect-h-1';
 
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.className = 'h-20 w-full object-cover rounded';
+                    img.className = 'w-full h-40 object-cover';
+                    img.alt = file.name;
 
-                    imgContainer.appendChild(img);
+                    const nameOverlay = document.createElement('div');
+                    nameOverlay.className =
+                        'absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 truncate';
+                    nameOverlay.textContent = file.name;
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className =
+                        'absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    removeBtn.addEventListener('click', function() {
+                        // Remove file from DataTransfer object
+                        const newFileList = new DataTransfer();
+                        Array.from(fileList.files)
+                            .filter((_, i) => i !== index)
+                            .forEach(file => newFileList.items.add(file));
+
+                        fileList = newFileList;
+                        imageInput.files = fileList.files;
+
+                        // Update previews
+                        updateImagePreviews();
+                    });
+
+                    imgContainer.appendChild(imgWrapper);
+                    imgWrapper.appendChild(img);
+                    imgContainer.appendChild(nameOverlay);
+                    imgContainer.appendChild(removeBtn);
                     previewContainer.appendChild(imgContainer);
-                }
+                };
 
                 reader.readAsDataURL(file);
             });
+        } else {
+            selectedImagesTitle.classList.add('hidden');
+        }
+    }
+
+    imageInput.addEventListener('change', function(e) {
+        if (this.files && this.files.length > 0) {
+            // Add new files to our fileList object
+            Array.from(this.files).forEach(file => {
+                fileList.items.add(file);
+            });
+
+            // Reset the file input value so we can detect if the same file is selected again
+            this.value = '';
+
+            // Update the FileList on the input
+            imageInput.files = fileList.files;
+
+            // Update previews
+            updateImagePreviews();
         }
     });
 
     // Drag and drop functionality
-    const dropZone = document.querySelector('.border-dashed');
-
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
     });
@@ -521,15 +580,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleDrop(e) {
         const dt = e.dataTransfer;
-        const files = dt.files;
+        const droppedFiles = dt.files;
 
-        imageInput.files = files;
+        if (droppedFiles.length > 0) {
+            // Add new files to our fileList object
+            Array.from(droppedFiles).forEach(file => {
+                if (file.type.match('image.*')) {
+                    fileList.items.add(file);
+                }
+            });
 
-        // Trigger the change event manually
-        const event = new Event('change');
-        imageInput.dispatchEvent(event);
+            // Update the FileList on the input
+            imageInput.files = fileList.files;
+
+            // Update previews
+            updateImagePreviews();
+        }
     }
-});
-</script>
 
-<?php include '../includes/footer.php'; ?>
+    // Form validation before submit
+    document.getElementById('project-form').addEventListener('submit', function(e) {
+        const requiredFields = this.querySelectorAll('[required]');
+        let hasEmptyFields = false;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                hasEmptyFields = true;
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+
+        if (hasEmptyFields) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Input border focus effects
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.classList.add('ring-1', 'ring-green-500');
+        });
+
+        input.addEventListener('blur', function() {
+            this.classList.remove('ring-1', 'ring-green-500');
+        });
+    });
+});

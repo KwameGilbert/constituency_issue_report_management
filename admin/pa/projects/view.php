@@ -148,14 +148,14 @@ include '../includes/header.php';
                         <!-- Project Images Carousel -->
                         <?php if (!empty($images)): ?>
                         <div class="relative mb-6">
-                            <div id="projectCarousel" class="carousel">
-                                <div class="overflow-hidden rounded-lg h-64 md:h-80">
+                            <div id="projectCarousel" class="carousel w-full">
+                                <div class="overflow-hidden rounded-lg h-64 md:h-80 relative">
                                     <?php foreach ($images as $index => $image): ?>
-                                    <div class="carousel-item absolute opacity-0 transition-opacity duration-700 ease-in-out"
+                                    <div class="carousel-item absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out"
                                         id="carousel-item-<?= $index ?>"
                                         <?= $index === 0 ? 'style="opacity: 1"' : '' ?>>
                                         <img src="<?= htmlspecialchars($image) ?>"
-                                            class="block w-full h-full object-cover" alt="Project Image">
+                                            class="absolute inset-0 w-full h-full object-contain" alt="Project Image">
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -278,6 +278,8 @@ include '../includes/header.php';
                         </a>
                     </div>
                     <div class="p-6">
+
+
                         <!-- Fetch project updates if there is a project_updates table -->
                         <?php
                         $updates_query = "SHOW TABLES LIKE 'project_updates'";
@@ -521,7 +523,7 @@ include '../includes/header.php';
                                     <?php
                                     $start_date = new DateTime($project['start_date']);
                                     $duration = "";
-                                    
+                                
                                     if (!empty($project['end_date'])) {
                                         $end_date = new DateTime($project['end_date']);
                                         $interval = $start_date->diff($end_date);
@@ -548,10 +550,44 @@ include '../includes/header.php';
 
                             <div>
                                 <p class="text-xs font-medium text-gray-500 uppercase mb-1">Project Timeline</p>
-                                <div class="bg-gray-200 rounded-full h-2.5 mb-2">
-                                    <div class="h-2.5 rounded-full <?= $progress_color ?>"
-                                        style="width: <?= $project['progress'] ?>%"></div>
+
+                                <?php
+                                // Calculate timeline progress
+                                $start = strtotime($project['start_date']);
+                                $now = time();
+                                $end = !empty($project['end_date']) ? strtotime($project['end_date']) : null;
+                                
+                                if ($end): 
+                                    $total_duration = $end - $start;
+                                    $elapsed_duration = $now - $start;
+                                    $timeline_progress = min(100, max(0, ($elapsed_duration / $total_duration) * 100));
+                                    
+                                    // Determine color based on timeline progress
+                                    $timeline_color = 'bg-green-600';
+                                    if ($timeline_progress > 75) {
+                                        $timeline_color = 'bg-red-600';
+                                    } elseif ($timeline_progress > 50) {
+                                        $timeline_color = 'bg-yellow-600';
+                                    }
+                                ?>
+                                <div class="relative bg-gray-200 rounded-full h-2.5 mb-2 overflow-hidden">
+                                    <div class="absolute top-0 left-0 h-full <?= $timeline_color ?> transition-all duration-1000 ease-out"
+                                        style="width: <?= $timeline_progress ?>%">
+                                        <div class="absolute right-0 top-0 h-full w-1 bg-white animate-pulse"></div>
+                                    </div>
+
+                                    <!-- Timeline Indicator Icon -->
+                                    <div class="absolute -top-1 left-<?= $timeline_progress ?>% transform -translate-x-1/2 text-blue-500"
+                                        style="width: 20px;">
+                                        <i class="fas fa-flag animate-bounce"></i>
+                                    </div>
                                 </div>
+                                <?php else: ?>
+                                <div class="bg-gray-200 rounded-full h-2.5 mb-2">
+                                    <div class="h-2.5 rounded-full bg-blue-600 animate-pulse" style="width: 100%"></div>
+                                </div>
+                                <?php endif; ?>
+
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-clock mr-1"></i>
                                     <?php
@@ -694,13 +730,14 @@ include '../includes/header.php';
 </div>
 
 <!-- Delete Project Confirmation Modal -->
-<div id="deleteProjectModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title"
+<div id="deleteProjectModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title"
     role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <!-- Modal panel -->
         <div
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            class="relative inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
                     <div

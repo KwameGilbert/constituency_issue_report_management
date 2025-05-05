@@ -66,6 +66,7 @@ Project Listing
 Filter by status, electoral area, budget range, date
 Search functionality
 Project cards with key information
+
 Project Detail View
 
 Complete project information
@@ -74,6 +75,7 @@ Budget allocation details
 Beneficiary statistics
 Timeline of progress
 Assigned entities
+
 Project Creation & Editing
 
 Add new projects with comprehensive details
@@ -81,18 +83,21 @@ Upload multiple images
 Set budget allocations
 Define electoral areas and specific locations
 Estimate beneficiaries
+
 Project Updates
 
 Status updates with rich text
 Progress indicators
 Update section with optional photo uploads
 Comment system for discussion
+
 Entity Assignment
 
 Add/manage companies assigned to projects
 Track contact information
 Assign roles and responsibilities
 Monitor performance
+
 4. Employment Opportunities
 Features:
 Employment Listing
