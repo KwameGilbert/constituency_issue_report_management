@@ -341,8 +341,10 @@ include '../includes/header.php';
         <i class="fas fa-times"></i>
     </button>
 
-    <div class="max-w-4xl w-full relative">
-        <img id="lightboxImage" src="" alt="Lightbox Image" class="max-h-[80vh] mx-auto">
+    <div class="absolute inset-0" onclick="closeLightbox()"></div>
+
+    <div class="max-w-4xl w-full relative z-10" onclick="event.stopPropagation();">
+        <img id="lightboxImage" src="" alt="Lightbox Image" class="max-h-[80vh] mx-auto">>
 
         <div class="absolute inset-y-0 left-0 flex items-center">
             <button id="prevImage"
@@ -563,10 +565,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         xhr.open('POST', 'upload-photos.php?id=<?= $project_id ?>');
         xhr.send(formData);
-    });
-
-    // Set up lightbox event listeners
-    document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
+    }); // Set up lightbox event listeners
+    const closeBtn = document.getElementById('closeLightbox');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeLightbox();
+        });
+    }
     document.getElementById('prevImage').addEventListener('click', showPrevImage);
     document.getElementById('nextImage').addEventListener('click', showNextImage);
 
@@ -647,6 +653,7 @@ function openLightbox(index) {
 
 function closeLightbox() {
     lightbox.classList.add('hidden');
+    lightbox.style.display = 'none';
     document.body.style.overflow = '';
 }
 
@@ -669,18 +676,24 @@ function updateNavigationButtons() {
 }
 
 function updateLightboxNavigation() {
-    // Add keyboard navigation for lightbox
-    document.addEventListener('keydown', function(e) {
-        if (lightbox.classList.contains('hidden')) return;
+    // Remove existing keyboard event listeners to prevent duplicates
+    document.removeEventListener('keydown', lightboxKeyHandler);
 
-        if (e.key === 'Escape') {
-            closeLightbox();
-        } else if (e.key === 'ArrowLeft') {
-            showPrevImage();
-        } else if (e.key === 'ArrowRight') {
-            showNextImage();
-        }
-    });
+    // Add keyboard navigation for lightbox
+    document.addEventListener('keydown', lightboxKeyHandler);
+}
+
+// Handler function for keyboard events
+function lightboxKeyHandler(e) {
+    if (lightbox.classList.contains('hidden')) return;
+
+    if (e.key === 'Escape') {
+        closeLightbox();
+    } else if (e.key === 'ArrowLeft') {
+        showPrevImage();
+    } else if (e.key === 'ArrowRight') {
+        showNextImage();
+    }
 }
 
 // Delete image functions
