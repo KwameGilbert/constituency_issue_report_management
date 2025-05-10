@@ -158,7 +158,7 @@ include_once '../includes/header.php';
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select name="status" id="status"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                             <option value="">All Statuses</option>
                             <option value="pending" <?= $status === 'pending' ? 'selected' : '' ?>>Pending</option>
                             <option value="under_review" <?= $status === 'under_review' ? 'selected' : '' ?>>Under
@@ -174,7 +174,7 @@ include_once '../includes/header.php';
                     <div>
                         <label for="severity" class="block text-sm font-medium text-gray-700 mb-1">Severity</label>
                         <select name="severity" id="severity"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                             <option value="">All Severities</option>
                             <option value="critical" <?= $severity === 'critical' ? 'selected' : '' ?>>Critical</option>
                             <option value="high" <?= $severity === 'high' ? 'selected' : '' ?>>High</option>
@@ -188,7 +188,7 @@ include_once '../includes/header.php';
                         <label for="electoral_area" class="block text-sm font-medium text-gray-700 mb-1">Electoral
                             Area</label>
                         <select name="electoral_area" id="electoral_area"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                             <option value="">All Areas</option>
                             <?php foreach ($electoral_areas as $area): ?>
                             <option value="<?= $area['id'] ?>" <?= $electoral_area == $area['id'] ? 'selected' : '' ?>>
@@ -203,7 +203,7 @@ include_once '../includes/header.php';
                         <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                         <input type="text" name="search" id="search" value="<?= htmlspecialchars($search) ?>"
                             placeholder="Search titles, descriptions, locations..."
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                     </div>
                 </div>
 
@@ -213,20 +213,20 @@ include_once '../includes/header.php';
                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
                         <input type="date" name="start_date" id="start_date"
                             value="<?= htmlspecialchars($start_date) ?>"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                     </div>
 
                     <div>
                         <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
                         <input type="date" name="end_date" id="end_date" value="<?= htmlspecialchars($end_date) ?>"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                     </div>
 
                     <!-- Sort -->
                     <div>
                         <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
                         <select name="sort" id="sort"
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50">
+                            class="block w-full rounded-md border-gray-300 focus:border-green-500 focus:ring-green-500 sm:text-sm">
                             <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest First</option>
                             <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest First</option>
                             <option value="severity_high" <?= $sort === 'severity_high' ? 'selected' : '' ?>>Severity
@@ -243,11 +243,11 @@ include_once '../includes/header.php';
                     <!-- Filter Buttons -->
                     <div class="flex items-end gap-2">
                         <button type="submit"
-                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             <i class="fas fa-search mr-1"></i> Apply Filters
                         </button>
                         <a href="index.php"
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             <i class="fas fa-times mr-1"></i> Clear
                         </a>
                     </div>
