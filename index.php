@@ -18,7 +18,7 @@ require_once 'config/db.php';
     <main class="bg-white text-gray-800">
         <?php 
         require_once 'includes/hero_carousel.php';
-        // require_once 'includes/featured_projects.php';
+        require_once 'includes/featured_projects.php';
         require_once 'includes/blog_section.php';// Latest blog grid 
         require_once 'includes/events.php'; // Upcoming events 
         require_once 'includes/map.php'; // Leaflet map 
