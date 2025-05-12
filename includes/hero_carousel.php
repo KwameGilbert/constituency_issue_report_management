@@ -4,7 +4,7 @@ $items = $conn
   ->query("SELECT * FROM carousel_items ORDER BY position ASC")
   ->fetch_all(MYSQLI_ASSOC);
 ?>
-<section class="pb-8 bg-gray-100">
+<section class="bg-gray-100">
     <div id="hero-carousel" class="relative" data-carousel="slide" data-carousel-autoplay="true"
         data-carousel-interval="5000">
         <!-- Wrapper (Flowbite carousel structure) -->
