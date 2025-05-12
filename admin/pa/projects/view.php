@@ -38,6 +38,21 @@ if (!empty($project['images'])) {
     $images = json_decode($project['images'], true) ?: [];
 }
 
+// Fetch project updates
+$updates_query = "SHOW TABLES LIKE 'project_updates'";
+$updates_result = $conn->query($updates_query);
+$updates = [];
+if ($updates_result->num_rows > 0) {
+    $updates_query = "SELECT * FROM project_updates WHERE project_id = ? ORDER BY created_at DESC";
+    $updates_stmt = $conn->prepare($updates_query);
+    $updates_stmt->bind_param("i", $project_id);
+    $updates_stmt->execute();
+    $updates_result = $updates_stmt->get_result();
+    while ($update = $updates_result->fetch_assoc()) {
+        $updates[] = $update;
+    }
+}
+
 // Set page title
 $page_title = $project['title'] . " - Project Details";
 include '../includes/header.php';
@@ -268,111 +283,63 @@ include '../includes/header.php';
                     </div>
                 </div>
 
-                <!-- Project Updates Card -->
+                <!-- Inline Project Updates Section -->
                 <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-                    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h2 class="text-lg font-medium text-gray-800">Project Updates</h2>
-                        <a href="add-update.php?id=<?= $project_id ?>"
-                            class="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <i class="fas fa-plus-circle mr-2"></i> Add Update
-                        </a>
-                    </div>
                     <div class="p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-4">Project Updates</h2>
 
+                        <!-- Inline Update Form -->
+                        <form id="addUpdateForm" class="mb-6 bg-gray-50 p-4 rounded-lg">
+                            <input type="hidden" id="project_id" value="<?= $project_id ?>">
 
-                        <!-- Fetch project updates if there is a project_updates table -->
-                        <?php
-                        $updates_query = "SHOW TABLES LIKE 'project_updates'";
-                        $updates_result = $conn->query($updates_query);
-                        
-                        if ($updates_result->num_rows > 0) {
-                            $updates_query = "SELECT * FROM project_updates WHERE project_id = ? ORDER BY created_at DESC";
-                            $updates_stmt = $conn->prepare($updates_query);
-                            $updates_stmt->bind_param("i", $project_id);
-                            $updates_stmt->execute();
-                            $updates_result = $updates_stmt->get_result();
-                            
-                            if ($updates_result->num_rows > 0) {
-                                ?>
-                        <div class="relative">
-                            <!-- Timeline Line -->
-                            <div class="absolute left-5 top-0 h-full w-0.5 bg-gray-200"></div>
+                            <div class="mb-4">
+                                <label for="update_title" class="block text-sm font-medium text-gray-700 mb-1">Update
+                                    Title</label>
+                                <input type="text" id="update_title" name="update_title"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    placeholder="Enter update title" required>
+                            </div>
 
-                            <div class="space-y-8">
-                                <?php while ($update = $updates_result->fetch_assoc()): ?>
-                                <div class="relative pl-12">
-                                    <!-- Timeline Dot -->
-                                    <div
-                                        class="absolute left-0 top-1 bg-white border-4 border-green-500 rounded-full h-10 w-10 flex items-center justify-center">
-                                        <i class="fas fa-clipboard-check text-green-500"></i>
-                                    </div>
+                            <div class="mb-4">
+                                <label for="update_content" class="block text-sm font-medium text-gray-700 mb-1">Update
+                                    Details</label>
+                                <textarea id="update_content" name="update_content" rows="3"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    placeholder="Describe the update" required></textarea>
+                            </div>
 
-                                    <div class="bg-gray-50 rounded-lg p-4 shadow-sm">
-                                        <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-2">
-                                            <h3 class="text-lg font-medium text-gray-900">
-                                                <?= htmlspecialchars($update['title']) ?></h3>
-                                            <time
-                                                class="text-sm text-gray-500"><?= date('M d, Y', strtotime($update['created_at'])) ?></time>
-                                        </div>
-                                        <div class="prose prose-sm max-w-none text-gray-700 mb-3">
-                                            <?= nl2br(htmlspecialchars($update['description'])) ?>
-                                        </div>
+                            <div class="flex justify-end">
+                                <button type="submit" id="submitUpdate"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center">
+                                    <i class="fas fa-plus-circle mr-2"></i>
+                                    <span>Add Update</span>
+                                </button>
+                            </div>
+                        </form>
 
-                                        <?php if (!empty($update['status'])): ?>
-                                        <?php 
-                                                $update_status_class = match($update['status']) {
-                                                    'planned' => 'bg-blue-100 text-blue-800',
-                                                    'ongoing' => 'bg-yellow-100 text-yellow-800',
-                                                    'completed' => 'bg-green-100 text-green-800',
-                                                    default => 'bg-gray-100 text-gray-800'
-                                                };
-                                                ?>
+                        <!-- Updates List -->
+                        <div id="updatesContainer">
+                            <?php if (empty($updates)): ?>
+                            <div id="noUpdatesMessage" class="text-center py-8 bg-gray-50 rounded-md">
+                                <i class="fas fa-clipboard-list text-gray-400 text-4xl mb-3"></i>
+                                <p class="text-gray-500">No updates have been added to this project yet.</p>
+                            </div>
+                            <?php else: ?>
+                            <div class="space-y-4">
+                                <?php foreach ($updates as $update): ?>
+                                <div class="update-item border border-gray-200 rounded-lg p-4 bg-white">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-medium text-gray-900"><?= htmlspecialchars($update['title']) ?>
+                                        </h3>
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $update_status_class ?>">
-                                            <?= ucfirst($update['status']) ?>
-                                        </span>
-                                        <?php endif; ?>
+                                            class="text-sm text-gray-500"><?= date('M j, Y', strtotime($update['created_at'])) ?></span>
                                     </div>
+                                    <p class="mt-2 text-gray-600"><?= nl2br(htmlspecialchars($update['content'])) ?></p>
                                 </div>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </div>
+                            <?php endif; ?>
                         </div>
-                        <?php
-                            } else {
-                                ?>
-                        <div class="text-center py-10">
-                            <div
-                                class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 text-gray-400 mb-4">
-                                <i class="fas fa-clipboard-list text-2xl"></i>
-                            </div>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">No updates yet</h3>
-                            <p class="text-gray-500 mb-6">Keep stakeholders informed by adding regular updates about
-                                this project's progress.</p>
-                            <a href="add-update.php?id=<?= $project_id ?>"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
-                                <i class="fas fa-plus-circle mr-2"></i> Add First Update
-                            </a>
-                        </div>
-                        <?php
-                            }
-                        } else {
-                            ?>
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
-                                        Project updates feature is not available. The required database table does not
-                                        exist.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <?php
-                        }
-                        ?>
                     </div>
                 </div>
 
@@ -929,6 +896,135 @@ window.addEventListener('click', function(event) {
     if (event.target === removeEntityModal) {
         closeRemoveEntityModal();
     }
+});
+
+// Inline Update Form functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const addUpdateForm = document.getElementById('addUpdateForm');
+    const updatesContainer = document.getElementById('updatesContainer');
+    const noUpdatesMessage = document.getElementById('noUpdatesMessage');
+
+    addUpdateForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Disable the submit button during submission
+        const submitButton = document.getElementById('submitUpdate');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-2"></i><span>Submitting...</span>';
+
+        // Get form data
+        const projectId = document.getElementById('project_id').value;
+        const updateTitle = document.getElementById('update_title').value;
+        const updateContent = document.getElementById('update_content').value;
+
+        // Create form data for AJAX request
+        const formData = new FormData();
+        formData.append('project_id', projectId);
+        formData.append('title', updateTitle);
+        formData.append('content', updateContent);
+        formData.append('add_update', 'true');
+
+        // Send AJAX request
+        fetch('add_project_update.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear form fields
+                    addUpdateForm.reset();
+
+                    // Remove "no updates" message if it exists
+                    if (noUpdatesMessage) {
+                        noUpdatesMessage.remove();
+                    }
+
+                    // Create and add the new update to the list
+                    const newUpdate = document.createElement('div');
+                    newUpdate.className =
+                        'update-item border border-gray-200 rounded-lg p-4 bg-white';
+                    newUpdate.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-medium text-gray-900">${escapeHtml(data.update.title)}</h3>
+                        <span class="text-sm text-gray-500">${data.update.created_at}</span>
+                    </div>
+                    <p class="mt-2 text-gray-600">${escapeHtml(data.update.content).replace(/\n/g, '<br>')}</p>
+                `;
+
+                    // Check if updates container is empty
+                    if (updatesContainer.children.length === 0) {
+                        // Create a wrapper div for updates
+                        const updatesWrapper = document.createElement('div');
+                        updatesWrapper.className = 'space-y-4';
+                        updatesWrapper.appendChild(newUpdate);
+                        updatesContainer.appendChild(updatesWrapper);
+                    } else {
+                        // Add to existing updates list
+                        updatesContainer.querySelector('.space-y-4').prepend(newUpdate);
+                    }
+
+                    // Show success message
+                    showToast('success', 'Success', 'Project update added successfully');
+                } else {
+                    // Show error message
+                    showToast('error', 'Error', data.message || 'Failed to add update');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Error', 'An unexpected error occurred');
+            })
+            .finally(() => {
+                // Re-enable the submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+    });
+
+    // Helper function to escape HTML
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Toast notification functions
+    window.showToast = function(type, title, message) {
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // Set icon based on type
+        if (type === 'success') {
+            toastIcon.innerHTML = '<i class="fas fa-check-circle text-green-500 text-xl"></i>';
+        } else if (type === 'error') {
+            toastIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500 text-xl"></i>';
+        } else {
+            toastIcon.innerHTML = '<i class="fas fa-info-circle text-blue-500 text-xl"></i>';
+        }
+
+        // Set content
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+
+        // Show toast
+        toast.classList.remove('hidden');
+
+        // Auto hide after 5 seconds
+        setTimeout(hideToast, 5000);
+    };
+
+    window.hideToast = function() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('hidden');
+    };
 });
 </script>
 
