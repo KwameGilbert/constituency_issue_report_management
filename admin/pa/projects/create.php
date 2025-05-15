@@ -320,6 +320,7 @@ include '../includes/header.php';
                         <p class="mt-1 text-xs text-gray-500">Total budget allocated for this project</p>
                     </div>
 
+                    
                     <!-- Status -->
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
