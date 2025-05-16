@@ -1,5 +1,7 @@
 <?php
 session_start();
+header("Content-Type: application/json");
+// Include database connection
 require_once '../../../config/db.php';
 
 // Check if user is logged in as PA

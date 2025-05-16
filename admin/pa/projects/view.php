@@ -129,7 +129,7 @@ include '../includes/header.php';
                     class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <i class="fas fa-images mr-2"></i> Manage Photos
                 </a>
-                <a href="add-update.php?id=<?= $project_id ?>"
+                <a href="view.php?id=<?= $project_id ?>#addUpdateForm"
                     class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     <i class="fas fa-plus-circle mr-2"></i> Add Update
                 </a>
@@ -357,17 +357,17 @@ include '../includes/header.php';
                         if ($comments_result->num_rows > 0) {
                             // Add new comment form
                             ?>
-                        <form action="add-comment.php" method="POST" class="mb-6">
-                            <input type="hidden" name="project_id" value="<?= $project_id ?>">
+                        <form id="addCommentForm" class="mb-6">
+                            <input type="hidden" name="project_id" id="comment_project_id" value="<?= $project_id ?>">
                             <div class="mb-4">
                                 <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">Add a
                                     comment</label>
                                 <textarea id="comment" name="comment" rows="3"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-                                    required></textarea>
+                                    placeholder="Write your comment here..." required></textarea>
                             </div>
                             <div class="flex justify-end">
-                                <button type="submit"
+                                <button type="submit" id="submitComment"
                                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     <i class="fas fa-paper-plane mr-2"></i> Submit Comment
                                 </button>
@@ -375,23 +375,22 @@ include '../includes/header.php';
                         </form>
 
                         <div class="border-t border-gray-200 pt-6">
-                            <?php
-                            // Fetch comments
-                            $comments_query = "SELECT c.*, pa.name as author_name 
-                                              FROM project_comments c
-                                              LEFT JOIN personal_assistants pa ON c.pa_id = pa.id
-                                              WHERE c.project_id = ? 
-                                              ORDER BY c.created_at DESC";
-                            $comments_stmt = $conn->prepare($comments_query);
-                            $comments_stmt->bind_param("i", $project_id);
-                            $comments_stmt->execute();
-                            $comments_result = $comments_stmt->get_result();
-                            
-                            if ($comments_result->num_rows > 0) {
-                                ?>
-                            <div class="space-y-6">
-                                <?php while ($comment = $comments_result->fetch_assoc()): ?>
-                                <div class="flex space-x-4">
+                            <div id="commentsContainer" class="space-y-6">
+                                <?php
+                                // Fetch comments
+                                $comments_query = "SELECT c.*, pa.name as author_name 
+                                                  FROM project_comments c
+                                                  LEFT JOIN personal_assistants pa ON c.pa_id = pa.id
+                                                  WHERE c.project_id = ? 
+                                                  ORDER BY c.created_at DESC";
+                                $comments_stmt = $conn->prepare($comments_query);
+                                $comments_stmt->bind_param("i", $project_id);
+                                $comments_stmt->execute();
+                                $comments_result = $comments_stmt->get_result();
+                                
+                                if ($comments_result->num_rows > 0) {
+                                    while ($comment = $comments_result->fetch_assoc()): ?>
+                                <div class="flex space-x-4 comment-item">
                                     <div class="flex-shrink-0">
                                         <span
                                             class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200">
@@ -412,22 +411,18 @@ include '../includes/header.php';
                                         </div>
                                     </div>
                                 </div>
-                                <?php endwhile; ?>
+                                <?php endwhile; 
+                                } else { ?>
+                                <div id="noCommentsMessage" class="text-center py-8">
+                                    <span
+                                        class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-3">
+                                        <i class="far fa-comments text-gray-400"></i>
+                                    </span>
+                                    <h3 class="text-sm font-medium text-gray-900 mb-1">No comments yet</h3>
+                                    <p class="text-xs text-gray-500">Be the first to leave a comment!</p>
+                                </div>
+                                <?php } ?>
                             </div>
-                            <?php
-                            } else {
-                                ?>
-                            <div class="text-center py-8">
-                                <span
-                                    class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-3">
-                                    <i class="far fa-comments text-gray-400"></i>
-                                </span>
-                                <h3 class="text-sm font-medium text-gray-900 mb-1">No comments yet</h3>
-                                <p class="text-xs text-gray-500">Be the first to leave a comment!</p>
-                            </div>
-                            <?php
-                            }
-                            ?>
                         </div>
                         <?php
                         } else {
@@ -488,28 +483,42 @@ include '../includes/header.php';
                                 <p class="text-xs font-medium text-gray-500 uppercase mb-1">Project Duration</p>
                                 <div class="text-lg font-medium text-gray-900">
                                     <?php
-                                    $start_date = new DateTime($project['start_date']);
-                                    $duration = "";
-                                
-                                    if (!empty($project['end_date'])) {
-                                        $end_date = new DateTime($project['end_date']);
-                                        $interval = $start_date->diff($end_date);
+                                    if (!empty($project['start_date'])) {
+                                        $start = strtotime($project['start_date']);
                                         
-                                        if ($interval->y > 0) {
-                                            $duration .= $interval->y . " year" . ($interval->y > 1 ? "s" : "") . " ";
+                                        if (!empty($project['end_date'])) {
+                                            $end = strtotime($project['end_date']);
+                                            
+                                            // Calculate difference in seconds
+                                            $diff_seconds = abs($end - $start);
+                                            
+                                            // Convert to years, months, weeks, days
+                                            $years = floor($diff_seconds / (365 * 24 * 60 * 60));
+                                            $months = floor(($diff_seconds - $years * 365 * 24 * 60 * 60) / (30.5 * 24 * 60 * 60));
+                                            $weeks = floor(($diff_seconds - $years * 365 * 24 * 60 * 60 - $months * 30.5 * 24 * 60 * 60) / (7 * 24 * 60 * 60));
+                                            $days = floor(($diff_seconds - $years * 365 * 24 * 60 * 60 - $months * 30.5 * 24 * 60 * 60 - $weeks * 7 * 24 * 60 * 60) / (24 * 60 * 60));
+                                            
+                                            // Format the duration
+                                            $duration = "";
+                                            if ($years > 0) {
+                                                $duration .= $years . " year" . ($years > 1 ? "s" : "") . " ";
+                                            }
+                                            if ($months > 0) {
+                                                $duration .= $months . " month" . ($months > 1 ? "s" : "") . " ";
+                                            }
+                                            if ($weeks > 0) {
+                                                $duration .= $weeks . " week" . ($weeks > 1 ? "s" : "") . " ";
+                                            }
+                                            if ($days > 0 && $years == 0 && $months == 0) {
+                                                $duration .= $days . " day" . ($days > 1 ? "s" : "") . " ";
+                                            }
+                                            
+                                            echo trim($duration) ?: 'Same day';
+                                        } else {
+                                            echo "Ongoing";
                                         }
-                                        
-                                        if ($interval->m > 0) {
-                                            $duration .= $interval->m . " month" . ($interval->m > 1 ? "s" : "");
-                                        }
-                                        
-                                        if (empty($duration) && $interval->d > 0) {
-                                            $duration = $interval->d . " day" . ($interval->d > 1 ? "s" : "");
-                                        }
-                                        
-                                        echo $duration ?: 'Same day';
                                     } else {
-                                        echo "Ongoing";
+                                        echo "Not scheduled";
                                     }
                                     ?>
                                 </div>
@@ -1025,6 +1034,150 @@ document.addEventListener('DOMContentLoaded', function() {
         const toast = document.getElementById('toast');
         toast.classList.add('hidden');
     };
+});
+
+// Optimized comment handling code to replace the existing one
+document.addEventListener('DOMContentLoaded', function() {
+    // Get the comment form
+    const commentForm = document.getElementById('addCommentForm');
+    const commentsContainer = document.getElementById('commentsContainer');
+
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Disable submit button during submission
+            const submitButton = document.getElementById('submitComment');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML =
+                '<i class="fas fa-spinner fa-spin mr-2"></i><span>Submitting...</span>';
+
+            // Get form data
+            const projectId = document.getElementById('comment_project_id').value;
+            const commentText = document.getElementById('comment').value;
+
+            if (!commentText.trim()) {
+                showToast('error', 'Error', 'Please enter a comment');
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+                return;
+            }
+
+            // Create form data for AJAX request
+            const formData = new FormData();
+            formData.append('project_id', projectId);
+            formData.append('comment', commentText);
+            formData.append('add_comment', 'true');
+
+            // Send AJAX request
+            fetch('add-comment.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Clear the form
+                        commentForm.reset();
+
+                        // Remove no comments message if it exists
+                        const noCommentsMessage = document.getElementById('noCommentsMessage');
+                        if (noCommentsMessage) {
+                            noCommentsMessage.remove();
+                        }
+
+                        // Create and add the new comment to the list
+                        const newComment = document.createElement('div');
+                        newComment.className = 'flex space-x-4 comment-item';
+
+                        // Format the current time
+                        const now = new Date();
+                        const timeFormatted = now.toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true
+                        });
+
+                        // Add the comment HTML with proper escaping
+                        newComment.innerHTML = `
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200">
+                                <span class="text-gray-600 font-medium text-sm">${data.author_initial}</span>
+                            </span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-1">
+                                <h3 class="text-sm font-medium text-gray-900">${escapeHtml(data.author_name)}</h3>
+                                <time class="text-xs text-gray-500">${timeFormatted}</time>
+                            </div>
+                            <div class="text-sm text-gray-700 space-y-2">
+                                ${escapeHtml(commentText).replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+
+                        // Check if comments container has any comments yet
+                        if (!commentsContainer.querySelector('.space-y-6')) {
+                            // If no comments yet, create the wrapper
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'space-y-6';
+                            wrapper.appendChild(newComment);
+                            commentsContainer.appendChild(wrapper);
+                        } else {
+                            // If already has comments, prepend to the existing wrapper
+                            commentsContainer.querySelector('.space-y-6').insertBefore(
+                                newComment,
+                                commentsContainer.querySelector('.space-y-6').firstChild
+                            );
+                        }
+
+                        // Add entrance animation
+                        newComment.style.opacity = '0';
+                        newComment.style.transform = 'translateY(10px)';
+                        setTimeout(() => {
+                            newComment.style.transition =
+                                'opacity 0.3s ease, transform 0.3s ease';
+                            newComment.style.opacity = '1';
+                            newComment.style.transform = 'translateY(0)';
+                        }, 10);
+
+                        // Show success message
+                        showToast('success', 'Success', 'Comment added successfully');
+                    } else {
+                        // Show error message
+                        showToast('error', 'Error', data.message || 'Failed to add comment');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Error', 'An unexpected error occurred');
+                })
+                .finally(() => {
+                    // Re-enable the submit button
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+        });
+    }
+
+    // Helper function to escape HTML for security
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 });
 </script>
 

@@ -183,22 +183,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   WHERE id = ?";
         
         $stmt = $conn->prepare($query);
-        $stmt->bind_param("ssissdsssiissis", 
-            $title, 
-            $description, 
-            $electoral_area_id, 
-            $location, 
-            $sector, 
-            $people_benefitted, 
-            $budget_allocation,
-            $images_json,
-            $status, 
-            $featured,
-            $start_date, 
-            $end_date,
-            $progress,
-            $slug,
-            $project_id
+        // Bind parameters
+        $stmt->bind_param(
+            'ssissidssissisi',
+            $title,             // s
+            $description,       // s
+            $electoral_area_id, // i
+            $location,          // s
+            $sector,            // s
+            $people_benefitted, // i
+            $budget_allocation, // d
+            $images_json,       // s
+            $status,            // s
+            $featured,          // i
+            $start_date,        // s
+            $end_date,          // s
+            $progress,          // i
+            $slug,              // s
+            $project_id         // i
         );
         
         if ($stmt->execute()) {
@@ -436,10 +438,12 @@ include '../includes/header.php';
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
                             Start Date <span class="text-red-500">*</span>
+                            <?= !empty($project['start_date']) ? date('Y-m-d', strtotime($project['start_date'])) : '' ?>
                         </label>
                         <input type="date" name="start_date" id="start_date"
                             class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-                            value="<?= htmlspecialchars($project['start_date']) ?>" required>
+                            value="<?= !empty($project['start_date']) ? date('Y-m-d', strtotime($project['start_date'])) : '' ?>"
+                            required>
                     </div>
 
                     <!-- End Date -->
@@ -449,7 +453,8 @@ include '../includes/header.php';
                         </label>
                         <input type="date" name="end_date" id="end_date"
                             class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-                            value="<?= htmlspecialchars($project['end_date'] ?? '') ?>">
+                            value="<?= !empty($project['end_date']) ? date('Y-m-d', strtotime($project['end_date'])) : '' ?>"
+                            placeholder="Optional">
                         <p class="mt-1 text-xs text-gray-500">Leave blank if the project end date is not determined yet
                         </p>
                     </div>
