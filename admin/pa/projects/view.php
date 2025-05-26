@@ -114,7 +114,7 @@ include '../includes/header.php';
                 </button>
             </div>
         </div>
-        <?php unset($_SESSION['error']); ?>
+        <?php unset($_SESSION['error']);?>
         <?php endif; ?>
 
         <!-- Page Header Actions -->

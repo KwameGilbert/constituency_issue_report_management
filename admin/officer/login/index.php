@@ -9,8 +9,8 @@ if (isset($_SESSION['officer_id']) && $_SESSION['role'] === 'field_officer') {
 
 // Include database connection and email templates
 require_once '../../../config/db.php';
-require_once '../../../email-services/mail.php';
-require_once '../../../email-services/email-templates.php';
+// require_once '../../../email-services/mail.php';
+// require_once '../../../email-services/email-templates.php';
 
 $error_message = '';
 $error_type = ''; // For styling different types of errors
@@ -82,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Send successful login notification email
                 // We do this in the background to avoid delaying the user's login
-                sendSecurityNotificationEmail(
-                    $officer['email'],
-                    $officer['name'],
-                    'success_login'
-                );
+                // sendSecurityNotificationEmail(
+                //     $officer['email'],
+                //     $officer['name'],
+                //     'success_login'
+                // );
                 
                 // Redirect to officer dashboard
                 header("Location: ../dashboard/");

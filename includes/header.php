@@ -15,32 +15,12 @@
             </div>
             <nav id="mobile-menu" class="hidden md:block w-full md:w-auto mt-4 md:mt-0 md:flex md:items-center">
                 <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
-                    <a href="/"
+                    <!-- Reordered menu: Home, Projects, Media Center, Blog, About, Contact -->
+                    <a href="<?= $_SERVER['HTTP_HOST'] ?>"
                         class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Home</a>
 
-                    <a href="/about"
-                        class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">About
-                        Us</a>
-
-                    <div class="relative group">
-                        <button
-                            class="flex items-center px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">
-                            Departments/Units
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg z-30 hidden group-hover:block">
-                            <div class="py-1 text-gray-800">
-                                <a href="#" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Department
-                                    1</a>
-                                <a href="#" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Department
-                                    2</a>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="/projects/"
+                        class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Projects</a>
 
                     <div class="relative group">
                         <button
@@ -56,30 +36,16 @@
                             <div class="py-1 text-gray-800">
                                 <a href="photo-gallery.php"
                                     class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Photo Gallery</a>
-                                <a href="/blog/" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Blog</a>
                                 <a href="/events/"
                                     class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Events</a>
+                                <a href="/blog/" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Blog</a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="relative group">
-                        <button
-                            class="flex items-center px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">
-                            Projects
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div
-                            class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg z-30 hidden group-hover:block">
-                            <div class="py-1 text-gray-800">
-                                <a href="/projects" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">All
-                                    Projects</a>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="/about"
+                        class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">About
+                        Us</a>
 
                     <a href="/contact/"
                         class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Contact

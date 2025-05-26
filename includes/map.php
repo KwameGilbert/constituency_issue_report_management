@@ -1,7 +1,7 @@
 <section class="py-12 bg-gray-50">
     <div class="max-w-6xl mx-auto px-4">
         <h2 class="text-2xl font-semibold mb-6">Our Projects Map</h2>
-        <div id="map" class="h-96 rounded-lg" style="height: 384px;"></div>
+        <div id="map" class="h-96 rounded-lg z-[0]" style="height: 384px;"></div>
     </div>
 </section>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />

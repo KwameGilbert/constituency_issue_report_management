@@ -1,5 +1,5 @@
-<section class="py-8 w-full bg-gray-50">
-    <div class="w-full bg-white p-6 rounded-lg shadow-sm">
+<section class="p-8 w-full">
+    <div class="w-full bg-white p-6">
         <div class="flex flex-col md:flex-row md:items-center md:space-x-8">
             <!-- Left side: Text content -->
             <div class="md:w-1/2 mb-5 md:mb-0">

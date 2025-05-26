@@ -6,11 +6,9 @@ $pending_count_query = "SELECT COUNT(*) as count FROM issues WHERE status = 'pen
 $pending_count_result = $conn->query($pending_count_query);
 $pending_count = $pending_count_result->fetch_assoc()['count'];
 ?>
-
 <!-- Sidebar -->
-<aside id="default-sidebar"
-    class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0"
-    aria-label="Sidebar">
+<aside id="default-sidebar" class=" fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r
+    border-gray-200 sm:translate-x-0" aria-label="Sidebar">
     <div class="h-full px-3 pb-4 overflow-y-auto bg-white">
         <ul class="space-y-2 font-medium">
             <li>
@@ -43,22 +41,8 @@ $pending_count = $pending_count_result->fetch_assoc()['count'];
                     <span class="ml-3">Projects</span>
                 </a>
             </li>
-            <li>
-                <a href="../entities/"
-                    class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group <?= $current_page === 'entities' ? 'active-nav-link' : '' ?>">
-                    <i
-                        class="fas fa-building w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 <?= $current_page === 'entities' ? 'text-green-600' : '' ?>"></i>
-                    <span class="ml-3">Entities & Companies</span>
-                </a>
-            </li>
-            <li>
-                <a href="../employment/"
-                    class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group <?= $current_page === 'employment' ? 'active-nav-link' : '' ?>">
-                    <i
-                        class="fas fa-user-tie w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900 <?= $current_page === 'employment' ? 'text-green-600' : '' ?>"></i>
-                    <span class="ml-3">Employment</span>
-                </a>
-            </li>
+
+
             <li>
                 <a href="../reports/"
                     class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group <?= $current_page === 'reports' ? 'active-nav-link' : '' ?>">
@@ -86,7 +70,7 @@ $pending_count = $pending_count_result->fetch_assoc()['count'];
         </ul>
 
         <!-- Ghana Flag at bottom -->
-        <div class="mt-10 px-4">
+        <!-- <div class="mt-auto px-4">
             <div class="flex items-center mb-2">
                 <div class="w-full h-1 bg-red-600"></div>
             </div>
@@ -97,11 +81,12 @@ $pending_count = $pending_count_result->fetch_assoc()['count'];
                 <div class="w-full h-1 bg-green-700"></div>
             </div>
             <div class="mt-4 text-center text-xs text-gray-500">
-                <p>&copy; <?= date('Y') ?> Republic of Ghana</p>
+                <p>&copy; Republic of Ghana</p>
                 <p class="mt-1">Constituency Management System</p>
             </div>
-        </div>
+        </div> -->
     </div>
+
 </aside>
 
 <!-- Mobile sidebar toggle -->

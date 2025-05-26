@@ -19,6 +19,13 @@ while($area = $areas_result->fetch_assoc()) {
     $electoral_areas[] = $area;
 }
 
+$sup_query = "SELECT * FROM supervisors ORDER BY position";
+$sup_results = $conn->query($sup_query);
+$sups = [];
+while($sup = $sup_results->fetch_assoc()){
+    $sups[] = $sup;
+}
+
 // Set active page for sidebar
 $active_page = 'create-issue';
 $pageTitle = 'Report New Issue';
@@ -299,6 +306,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <input type="number" name="people_affected" id="people_affected" min="0"
                                             value="<?php echo isset($people_affected) ? $people_affected : ''; ?>"
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                                    </div>
+
+                                    <!-- Supervisor -->
+                                    <div>
+                                        <label for="supervisor">Supervisor</label>
+                                        <select name="supervisor" id="supervisor" required
+                                            class="h-11 w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                                            <option value="">Select Supervisor</option>
+                                            <?php foreach ($electoral_areas as $area): ?>
+                                            <option value="<?php echo $sups['id']; ?>"
+                                                <?php echo (isset($) && $electoral_area_id == $area['id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($area['name']); ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
 
                                     <!-- Photo Upload -->
