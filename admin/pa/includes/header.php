@@ -9,6 +9,7 @@ $current_page = basename(dirname($_SERVER['PHP_SELF']));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $page_title ?? 'Personal Assistant Portal' ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/tailwind.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -69,7 +70,7 @@ $current_page = basename(dirname($_SERVER['PHP_SELF']));
                         <?php endif; ?>
                     </a>
 
-                    <div class="flex items-center ml-3">
+                    <div class="flex items-center ml-3 relative">
                         <div>
                             <button type="button"
                                 class="flex text-sm bg-green-800 rounded-full focus:ring-4 focus:ring-gray-300"
@@ -98,7 +99,7 @@ $current_page = basename(dirname($_SERVER['PHP_SELF']));
                                 <?php endif; ?>
                             </button>
                         </div>
-                        <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow"
+                        <div class="z-50 hidden absolute right-0 top-full mt-2 text-base list-none bg-white divide-y divide-gray-100 rounded shadow w-48"
                             id="dropdown-user">
                             <div class="px-4 py-3">
                                 <p class="text-sm text-gray-900">

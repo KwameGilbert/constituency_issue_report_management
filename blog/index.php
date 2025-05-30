@@ -3,7 +3,6 @@ require_once '../config/db.php';
 
 // Handle filtering and search
 $search = $_GET['search'] ?? '';
-$category = $_GET['category'] ?? '';
 
 // Build WHERE clause
 $where = [];
@@ -17,12 +16,6 @@ if (!empty($search)) {
     $params[] = $search_param;
     $params[] = $search_param;
     $param_types .= 'sss';
-}
-
-if (!empty($category)) {
-    $where[] = "category = ?";
-    $params[] = $category;
-    $param_types .= 's';
 }
 
 // Pagination
@@ -58,10 +51,6 @@ $stmt->bind_param($param_types, ...$params);
 $stmt->execute();
 $posts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Fetch categories for filter
-$categories_query = "SELECT DISTINCT category FROM blog_posts WHERE category IS NOT NULL AND category != '' ORDER BY category";
-$categories = $conn->query($categories_query)->fetch_all(MYSQLI_ASSOC);
-
 // Fetch featured posts for sidebar
 $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_posts WHERE featured = 1 ORDER BY created_at DESC LIMIT 4")->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -76,7 +65,8 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
     <meta name="description" content="The latest news, articles, and updates from Sefwi Wiawso Constituency">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/main.css">
     <link rel="icon" type="image/x-icon" href="../assets/images/coat-of-arms.png">
 </head>
 
@@ -102,7 +92,7 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                         <form action="" method="GET"
                             class="space-y-4 md:space-y-0 md:flex md:flex-wrap md:gap-4 items-end">
                             <!-- Search -->
-                            <div class="md:w-1/2 lg:w-3/5">
+                            <div class="md:w-2/3">
                                 <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search
                                     Posts</label>
                                 <input type="text" name="search" id="search" value="<?= htmlspecialchars($search) ?>"
@@ -110,34 +100,16 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                                     class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
                             </div>
 
-                            <!-- Category filter -->
-                            <?php if (!empty($categories)): ?>
-                            <div class="md:w-1/3">
-                                <label for="category"
-                                    class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                <select name="category" id="category"
-                                    class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm">
-                                    <option value="">All Categories</option>
-                                    <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= htmlspecialchars($cat['category']) ?>"
-                                        <?= $cat['category'] === $category ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($cat['category']) ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <?php endif; ?>
-
                             <!-- Filter buttons -->
                             <div class="md:flex md:items-end md:gap-2">
                                 <button type="submit"
                                     class="w-full md:w-auto px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors">
                                     <i class="fas fa-search mr-2"></i> Search
                                 </button>
-                                <?php if (!empty($search) || !empty($category)): ?>
+                                <?php if (!empty($search)): ?>
                                 <a href="index.php"
                                     class="mt-2 md:mt-0 inline-block w-full md:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors text-center">
-                                    <i class="fas fa-times mr-2"></i> Clear Filters
+                                    <i class="fas fa-times mr-2"></i> Clear Search
                                 </a>
                                 <?php endif; ?>
                             </div>
@@ -146,7 +118,7 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
 
                     <!-- Blog Posts -->
                     <h2 class="text-2xl font-semibold mb-6">
-                        <?= !empty($search) || !empty($category) ? 'Search Results' : 'Latest Articles' ?>
+                        <?= !empty($search) ? 'Search Results' : 'Latest Articles' ?>
                         <span class="text-gray-500 text-lg">(<?= $total_posts ?>)</span>
                     </h2>
 
@@ -206,7 +178,7 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                             <ul class="flex">
                                 <!-- Previous page -->
                                 <?php if ($current_page > 1): ?>
-                                <a href="?page=<?= $current_page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($category) ? '&category=' . urlencode($category) : '' ?>"
+                                <a href="?page=<?= $current_page - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <i class="fas fa-chevron-left h-5 w-5"></i>
                                 </a>
@@ -223,7 +195,7 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                                 $end_page = min($total_pages, $current_page + 2);
 
                                 if ($start_page > 1) {
-                                    echo '<a href="?page=1' . (!empty($search) ? '&search=' . urlencode($search) : '') . (!empty($category) ? '&category=' . urlencode($category) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">1</a>';
+                                    echo '<a href="?page=1' . (!empty($search) ? '&search=' . urlencode($search) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">1</a>';
                                     
                                     if ($start_page > 2) {
                                         echo '<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>';
@@ -234,7 +206,7 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                                     if ($i == $current_page) {
                                         echo '<span aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-amber-500 bg-amber-50 text-sm font-medium text-amber-600">' . $i . '</span>';
                                     } else {
-                                        echo '<a href="?page=' . $i . (!empty($search) ? '&search=' . urlencode($search) : '') . (!empty($category) ? '&category=' . urlencode($category) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">' . $i . '</a>';
+                                        echo '<a href="?page=' . $i . (!empty($search) ? '&search=' . urlencode($search) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">' . $i . '</a>';
                                     }
                                 }
 
@@ -242,13 +214,13 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                                     if ($end_page < $total_pages - 1) {
                                         echo '<span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>';
                                     }
-                                    echo '<a href="?page=' . $total_pages . (!empty($search) ? '&search=' . urlencode($search) : '') . (!empty($category) ? '&category=' . urlencode($category) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">' . $total_pages . '</a>';
+                                    echo '<a href="?page=' . $total_pages . (!empty($search) ? '&search=' . urlencode($search) : '') . '" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">' . $total_pages . '</a>';
                                 }
                                 ?>
 
                                 <!-- Next page -->
                                 <?php if ($current_page < $total_pages): ?>
-                                <a href="?page=<?= $current_page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($category) ? '&category=' . urlencode($category) : '' ?>"
+                                <a href="?page=<?= $current_page + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"
                                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
                                     <i class="fas fa-chevron-right h-5 w-5"></i>
                                 </a>
@@ -271,16 +243,16 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                         </div>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No articles found</h3>
                         <p class="text-gray-500 mb-6">
-                            <?php if (!empty($search) || !empty($category)): ?>
-                            No articles match your search criteria. Try adjusting your filters.
+                            <?php if (!empty($search)): ?>
+                            No articles match your search criteria. Try adjusting your search terms.
                             <?php else: ?>
                             There are no articles published at the moment.
                             <?php endif; ?>
                         </p>
-                        <?php if (!empty($search) || !empty($category)): ?>
+                        <?php if (!empty($search)): ?>
                         <a href="index.php"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                            <i class="fas fa-times mr-2"></i> Clear Filters
+                            <i class="fas fa-times mr-2"></i> Clear Search
                         </a>
                         <?php endif; ?>
                     </div>
@@ -314,24 +286,6 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
                             </div>
                             <?php endforeach; ?>
                         </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Categories -->
-                    <?php if (!empty($categories)): ?>
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h3 class="text-lg font-semibold mb-4 pb-2 border-b">Categories</h3>
-                        <ul class="space-y-2">
-                            <?php foreach ($categories as $cat): ?>
-                            <li>
-                                <a href="?category=<?= urlencode($cat['category']) ?>"
-                                    class="flex items-center justify-between text-gray-700 hover:text-amber-600 py-1">
-                                    <span><?= htmlspecialchars($cat['category']) ?></span>
-                                    <i class="fas fa-chevron-right text-xs text-gray-400"></i>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
                     </div>
                     <?php endif; ?>
 
@@ -385,15 +339,6 @@ $featured_posts = $conn->query("SELECT id, title, slug, image_url FROM blog_post
     <?php include_once '../includes/footer.php'; ?>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-submit form when category filter changes
-        const categorySelect = document.getElementById('category');
-        if (categorySelect) {
-            categorySelect.addEventListener('change', function() {
-                this.closest('form').submit();
-            });
-        }
-    });
     </script>
 </body>
 

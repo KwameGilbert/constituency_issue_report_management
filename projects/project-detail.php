@@ -50,7 +50,8 @@ $related_projects = $related_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <title><?= htmlspecialchars($project['title']) ?> | SWMA Projects</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/main.css">
     <link rel="icon" type="image/x-icon" href="../assets/images/coat-of-arms.png">
 </head>
 

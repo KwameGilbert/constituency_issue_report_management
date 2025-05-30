@@ -92,6 +92,7 @@ if (isset($_GET['feature']) && is_numeric($_GET['feature'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog Posts Management | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
@@ -329,7 +330,7 @@ if (isset($_GET['feature']) && is_numeric($_GET['feature'])) {
     </div>
 
     <!-- Deletion confirmation modal -->
-    <div id="deleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden flex items-center justify-center z-50">
+    <div id="deleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg max-w-md w-full">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>

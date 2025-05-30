@@ -16,7 +16,7 @@
             <nav id="mobile-menu" class="hidden md:block w-full md:w-auto mt-4 md:mt-0 md:flex md:items-center">
                 <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 w-full md:w-auto">
                     <!-- Reordered menu: Home, Projects, Media Center, Blog, About, Contact -->
-                    <a href="<?= $_SERVER['HTTP_HOST'] ?>"
+                    <a href="/"
                         class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Home</a>
 
                     <a href="/projects/"
@@ -34,8 +34,7 @@
                         <div
                             class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg z-30 hidden group-hover:block">
                             <div class="py-1 text-gray-800">
-                                <a href="photo-gallery.php"
-                                    class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Photo Gallery</a>
+                                <!-- Photo Gallery removed -->
                                 <a href="/events/"
                                     class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Events</a>
                                 <a href="/blog/" class="block px-4 py-2 hover:bg-red-100 text-sm md:text-base">Blog</a>
@@ -79,8 +78,9 @@ window.addEventListener('resize', function() {
     }
 });
 
-// Mobile dropdown functionality
+// Combined dropdown functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Mobile dropdown functionality
     const dropdownButtons = document.querySelectorAll('.md:hidden button');
 
     dropdownButtons.forEach(button => {
@@ -99,10 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-});
 
-// Desktop dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
+    // Desktop dropdown functionality
     const desktopDropdowns = document.querySelectorAll('.md:block .group');
 
     desktopDropdowns.forEach(dropdown => {

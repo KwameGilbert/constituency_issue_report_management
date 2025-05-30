@@ -70,6 +70,7 @@ $carousel_items = $conn->query("SELECT id, title, image_url, link, position, cre
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carousel Management | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -258,7 +259,7 @@ $carousel_items = $conn->query("SELECT id, title, image_url, link, position, cre
     </div>
 
     <!-- Deletion confirmation modal -->
-    <div id="deleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden flex items-center justify-center z-50">
+    <div id="deleteModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden items-center justify-center z-50">
         <div class="bg-white rounded-lg max-w-md w-full">
             <div class="p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
@@ -280,10 +281,12 @@ $carousel_items = $conn->query("SELECT id, title, image_url, link, position, cre
         document.getElementById('carouselItemTitle').textContent = title;
         document.getElementById('deleteLink').href = 'index.php?delete=' + id;
         document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
     }
 
     function hideDeleteModal() {
         document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
     }
 
     // Close modal when clicking outside

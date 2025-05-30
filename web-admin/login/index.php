@@ -99,7 +99,8 @@ if (isset($_SESSION['success_message'])) {
     <meta name="description" content="Admin login page for content management">
     <title>Constituency Issue Management | Admin Login</title>
     <link rel="icon" href="../../assets/images/favicon.ico" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/main.css">
 </head>
 
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">

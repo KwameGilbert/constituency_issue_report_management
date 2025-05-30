@@ -3,13 +3,12 @@
 
 require_once __DIR__ .'/../config/db.php';             // Database connection
 
-
 // Retrieve the slug from the URL
 $slug = isset($_GET['slug']) ? $_GET['slug'] : '';
 
 // Fetch the blog post by slug
 $stmt = $conn->prepare("
-    SELECT id, title, content, image_url, created_at
+    SELECT id, title, content, image_url, created_at, updated_at
     FROM blog_posts
     WHERE slug = ?
     LIMIT 1
@@ -23,6 +22,14 @@ if (!$post) {
     require_once __DIR__ .'/../includes/footer.php';
     exit;
 }
+
+// Set default values for missing fields
+$post['author_name'] = 'Sefwi Wiawso Municipal Assembly'; // Default author
+$post['published_at'] = $post['created_at']; // Use created_at as published_at
+$post['image_alt'] = $post['title']; // Use title as image alt
+$post['author_url'] = 'https://' . $_SERVER['HTTP_HOST']; // Site URL as author URL
+$post['author_twitter'] = ''; // Empty author twitter
+$post['tags'] = []; // Empty tags array
 ?>
 <!DOCTYPE html>
 <html lang="en" itemscope itemtype="http://schema.org/Article">
@@ -61,9 +68,9 @@ if (!$post) {
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": "<?= htmlspecialchars($post['title']) ?>",
-        "image": ["<?= htmlspecialchars($post['image_url']) ?>"],
-        "datePublished": "<?= htmlspecialchars($post['published_at']) ?>",
-        "dateModified": "<?= htmlspecialchars($post['updated_at']) ?>",
+        "image": ["<?= htmlspecialchars($post['image_url'] ?? '') ?>"],
+        "datePublished": "<?= htmlspecialchars($post['created_at']) ?>",
+        "dateModified": "<?= htmlspecialchars($post['updated_at'] ?? $post['created_at']) ?>",
         "author": {
             "@type": "Person",
             "name": "<?= htmlspecialchars($post['author_name']) ?>"
@@ -87,26 +94,27 @@ if (!$post) {
     <meta property="og:description" content="<?= htmlspecialchars(mb_substr(strip_tags($post['content']), 0, 200)) ?>">
     <meta property="og:url" content="<?= 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] ?>">
     <meta property="og:site_name" content="Sefwi Wiawso Municipal Assembly">
+    <?php if (!empty($post['image_url'])): ?>
     <meta property="og:image" content="<?= htmlspecialchars($post['image_url']) ?>">
-    <meta property="og:image:alt" content="<?= htmlspecialchars($post['image_alt'] ?? $post['title']) ?>">
-    <meta property="article:published_time" content="<?= htmlspecialchars($post['published_at']) ?>">
-    <meta property="article:modified_time" content="<?= htmlspecialchars($post['updated_at']) ?>">
-    <meta property="article:author" content="<?= htmlspecialchars($post['author_url']) ?>">
-    <?php foreach($post['tags'] as $tag): ?>
-    <meta property="article:tag" content="<?= htmlspecialchars($tag) ?>">
-    <?php endforeach; ?>
+    <meta property="og:image:alt" content="<?= htmlspecialchars($post['title']) ?>">
+    <?php endif; ?>
+    <meta property="article:published_time" content="<?= htmlspecialchars($post['created_at']) ?>">
+    <meta property="article:modified_time" content="<?= htmlspecialchars($post['updated_at'] ?? $post['created_at']) ?>">
+    <meta property="article:author" content="Sefwi Wiawso Municipal Assembly">
 
     <!-- 7. TWITTER CARD -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@YourSiteHandle">
-    <meta name="twitter:creator" content="@<?= htmlspecialchars($post['author_twitter'] ?? '') ?>">
     <meta name="twitter:title" content="<?= htmlspecialchars($post['title']) ?>">
     <meta name="twitter:description" content="<?= htmlspecialchars(mb_substr(strip_tags($post['content']), 0, 200)) ?>">
+    <?php if (!empty($post['image_url'])): ?>
     <meta name="twitter:image" content="<?= htmlspecialchars($post['image_url']) ?>">
-    <meta name="twitter:image:alt" content="<?= htmlspecialchars($post['image_alt'] ?? $post['title']) ?>">
+    <meta name="twitter:image:alt" content="<?= htmlspecialchars($post['title']) ?>">
+    <?php endif; ?>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
 <body class="bg-gray-50 text-gray-900">
@@ -139,21 +147,21 @@ if (!$post) {
                     <!-- Social Icons (FontAwesome) -->
                     <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>"
                         target="_blank" class="text-blue-800 hover:text-blue-600">
-                        <i class="fa fa-facebook-square fa-lg"></i>
+                        <i class="fab fa-facebook-square fa-lg"></i>
                     </a>
                     <a href="https://twitter.com/intent/tweet?text=<?= urlencode($post['title']) ?>&url=<?= urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>"
                         target="_blank" class="text-blue-400 hover:text-blue-200">
-                        <i class="fa fa-twitter-square fa-lg"></i>
+                        <i class="fab fa-twitter-square fa-lg"></i>
                     </a>
                     <a href="https://www.linkedin.com/shareArticle?mini=true&url=<?= urlencode('https://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']) ?>&title=<?= urlencode($post['title']) ?>"
                         target="_blank" class="text-blue-700 hover:text-blue-500">
-                        <i class="fa fa-linkedin-square fa-lg"></i>
+                        <i class="fab fa-linkedin-square fa-lg"></i>
                     </a>
                 </div>
             </header>
 
             <!-- Featured Image -->
-            <?php if ($post['image_url']): ?>
+            <?php if (!empty($post['image_url'])): ?>
             <figure>
                 <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="<?= htmlspecialchars($post['title']) ?>"
                     class="w-full rounded-lg my-6" itemprop="image">
@@ -162,7 +170,7 @@ if (!$post) {
 
             <!-- Content -->
             <section class="prose max-w-none" itemprop="articleBody">
-                <?= nl2br($post['content']) ?>
+                <?= nl2br(htmlspecialchars($post['content'])) ?>
             </section>
         </article>
     </main>
@@ -194,7 +202,7 @@ $relatedPosts = $relatedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     <?php endif; ?>
                     <div class="p-4">
                         <h3 class="font-bold text-lg"><?= htmlspecialchars($related['title']) ?></h3>
-                        <p class="mt-2 text-sm text-gray-600"><?= htmlspecialchars($related['excerpt']) ?></p>
+                        <p class="mt-2 text-sm text-gray-600"><?= htmlspecialchars($related['excerpt'] ?? '') ?></p>
                         <a href="blog-post.php?slug=<?= urlencode($related['slug']) ?>"
                             class="mt-4 inline-block text-red-600 hover:underline">
                             Read more

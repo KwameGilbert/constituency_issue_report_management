@@ -9,7 +9,8 @@
         content="Biography and profile of Hon. Kofi Benteh Afful, Member of Parliament for Sefwi Wiawso.">
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/main.css">
     <!-- AOS (Animate On Scroll) -->
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>

@@ -75,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Blog Post | Admin Panel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Include TinyMCE -->
     <script src="https://cdn.tiny.cloud/1/kq54asy1zm0lhnt1x2zsqhel46zq48awgwxzw51xfjx1unf9/tinymce/6/tinymce.min.js"

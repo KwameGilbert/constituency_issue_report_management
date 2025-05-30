@@ -109,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report New Issue | Field Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
@@ -176,8 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
                 <div class="max-w-5xl mx-auto">
                     <!-- Action Bar -->
-                    <div
-                        class="bg-gradient-to-r from-amber-600 to-amber-800 rounded-xl shadow-lg mb-6 p-6 text-white fade-in">
+                    <div class="bg-amber-600 rounded-xl shadow-lg mb-6 p-6 text-white fade-in">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                             <div class="mb-4 md:mb-0">
                                 <h1 class="text-2xl font-bold">Report New Issue</h1>
@@ -314,10 +314,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <select name="supervisor" id="supervisor" required
                                             class="h-11 w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                                             <option value="">Select Supervisor</option>
-                                            <?php foreach ($electoral_areas as $area): ?>
-                                            <option value="<?php echo $sups['id']; ?>"
-                                                <?php echo (isset($) && $electoral_area_id == $area['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($area['name']); ?>
+                                            <?php foreach ($sups as $sup): ?>
+                                            <option value="<?php echo $sup['id']; ?>"
+                                                <?php echo (isset($supervisor_id) && $supervisor_id == $sup['id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($sup['position']); ?>
                                             </option>
                                             <?php endforeach; ?>
                                         </select>

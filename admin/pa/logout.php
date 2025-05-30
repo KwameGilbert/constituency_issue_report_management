@@ -21,6 +21,6 @@ if (isset($_SESSION['pa_id']) && $_SESSION['role'] === 'pa') {
 }
 
 // Redirect to login page
-header("Location: ../login/");
+header("Location: ./login/");
 exit();
 ?>
