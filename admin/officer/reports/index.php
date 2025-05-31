@@ -189,8 +189,8 @@ while ($row = $recent_updates_result->fetch_assoc()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports & Analytics | Field Officer Dashboard</title>
-     <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/assets/css/main.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -275,8 +275,7 @@ while ($row = $recent_updates_result->fetch_assoc()) {
             <main class="flex-1 overflow-y-auto bg-gray-100 p-4 md:p-6">
                 <div class="max-w-7xl mx-auto">
                     <!-- Action Bar -->
-                    <div
-                        class="bg-gradient-to-r from-amber-600 to-amber-800 rounded-xl shadow-lg mb-6 p-6 text-white fade-in">
+                    <div class="bg-amber-600 rounded-xl shadow-lg mb-6 p-6 text-white fade-in">
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                             <div class="mb-4 md:mb-0">
                                 <h1 class="text-2xl font-bold">Reports & Analytics</h1>
@@ -458,29 +457,29 @@ while ($row = $recent_updates_result->fetch_assoc()) {
                                             <?php endif; ?>
                                             <div class="relative flex space-x-3">
                                                 <div>
-                                                    <?php 
-                                                                $icon_color = 'bg-gray-400';
-                                                                $icon = 'fas fa-spinner';
-                                                                if (strpos($update['status_change'], 'pending') !== false) {
-                                                                    $icon_color = 'bg-yellow-500';
-                                                                    $icon = 'fas fa-hourglass-half';
-                                                                }
-                                                                if (strpos($update['status_change'], 'under_review') !== false) {
-                                                                    $icon_color = 'bg-purple-500';
-                                                                    $icon = 'fas fa-search';
-                                                                }
-                                                                if (strpos($update['status_change'], 'in_progress') !== false) {
-                                                                    $icon_color = 'bg-blue-500';
-                                                                    $icon = 'fas fa-cogs';
-                                                                }
-                                                                if (strpos($update['status_change'], 'resolved') !== false) {
-                                                                    $icon_color = 'bg-green-500';
-                                                                    $icon = 'fas fa-check';
-                                                                }
-                                                                if (strpos($update['status_change'], 'rejected') !== false) {
-                                                                    $icon_color = 'bg-red-500';
-                                                                    $icon = 'fas fa-times';
-                                                                }
+                                                    <?php
+                                                            $icon_color = 'bg-gray-400';
+                                                            $icon = 'fas fa-spinner';
+                                                            if (strpos($update['status_change'], 'pending') !== false) {
+                                                                $icon_color = 'bg-yellow-500';
+                                                                $icon = 'fas fa-hourglass-half';
+                                                            }
+                                                            if (strpos($update['status_change'], 'under_review') !== false) {
+                                                                $icon_color = 'bg-purple-500';
+                                                                $icon = 'fas fa-search';
+                                                            }
+                                                            if (strpos($update['status_change'], 'in_progress') !== false) {
+                                                                $icon_color = 'bg-blue-500';
+                                                                $icon = 'fas fa-cogs';
+                                                            }
+                                                            if (strpos($update['status_change'], 'resolved') !== false) {
+                                                                $icon_color = 'bg-green-500';
+                                                                $icon = 'fas fa-check';
+                                                            }
+                                                            if (strpos($update['status_change'], 'rejected') !== false) {
+                                                                $icon_color = 'bg-red-500';
+                                                                $icon = 'fas fa-times';
+                                                            }
                                                             ?>
                                                     <span
                                                         class="h-8 w-8 rounded-full <?php echo $icon_color; ?> flex items-center justify-center ring-8 ring-white">
@@ -512,7 +511,7 @@ while ($row = $recent_updates_result->fetch_assoc()) {
                         </div>
 
                         <!-- Printable Report -->
-                        <div class="bg-white rounded-lg shadow-sm p-6 staggered-item hover:shadow-md transition-shadow duration-300"
+                        <!-- <div class="bg-white rounded-lg shadow-sm p-6 staggered-item hover:shadow-md transition-shadow duration-300"
                             style="animation-delay: 1.1s;">
                             <h2 class="text-lg font-semibold text-gray-800 mb-4">Generate Report</h2>
                             <p class="text-gray-600 mb-6">Download or print detailed reports for your records and
@@ -566,7 +565,7 @@ while ($row = $recent_updates_result->fetch_assoc()) {
                                     </button>
                                 </div>
                             </form>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </main>

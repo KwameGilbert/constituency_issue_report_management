@@ -3,10 +3,11 @@ session_start();
 header("Content-Type: application/json");
 require_once '../../../config/db.php';
 
-// Check if user is logged in as PA
-if (!isset($_SESSION['pa_id']) || $_SESSION['role'] !== 'pa') {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-    exit;
+
+// Authentication check
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'super_admin') {
+    header("Location: ../login/");
+    exit();
 }
 
 $pa_id = $_SESSION['pa_id'];

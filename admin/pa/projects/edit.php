@@ -204,10 +204,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         if ($stmt->execute()) {
-            // Log the activity
-            if (function_exists('log_activity')) {
-                log_activity($pa_id, 'pa', 'update', 'project', $project_id, $title);
-            }
+            // // Log the activity
+            // if (function_exists('log_activity')) {
+            //     log_activity($pa_id, 'pa', 'update', 'project', $project_id, $title);
+            // }
             
             // Set success message and redirect
             $_SESSION['success'] = "Project has been updated successfully.";

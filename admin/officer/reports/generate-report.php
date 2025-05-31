@@ -110,11 +110,11 @@ $avg_resolution_days = round($avg_time_row['avg_days'] ?? 0);
 // Electoral area breakdown
 $area_query = "SELECT 
                ea.name as area_name,
-               COUNT(id) as issue_count
+               COUNT(issues.id) as issue_count
                FROM issues
-               LEFT JOIN electoral_areas ea ON electoral_area_id = ea.id
-               WHERE officer_id = ? $date_clause
-               GROUP BY electoral_area_id
+               LEFT JOIN electoral_areas ea ON issues.electoral_area_id = ea.id
+               WHERE issues.officer_id = ? $date_clause
+               GROUP BY issues.electoral_area_id
                ORDER BY issue_count DESC";
 
 $area_stmt = $conn->prepare($area_query);
@@ -132,13 +132,14 @@ while ($row = $area_result->fetch_assoc()) {
 }
 
 // Get all issues for the detailed report table
+// Fix the ambiguous 'id' column by specifying the table name
 $issues_query = "SELECT 
-                id, title, description, location, severity, status, 
-                people_affected, created_at, updated_at, ea.name as electoral_area
+                issues.id, issues.title, issues.description, issues.location, issues.severity, issues.status, 
+                issues.people_affected, issues.created_at, issues.updated_at, ea.name as electoral_area
                 FROM issues
-                LEFT JOIN electoral_areas ea ON electoral_area_id = ea.id
-                WHERE officer_id = ? $date_clause
-                ORDER BY created_at DESC";
+                LEFT JOIN electoral_areas ea ON issues.electoral_area_id = ea.id
+                WHERE issues.officer_id = ? $date_clause
+                ORDER BY issues.created_at DESC";
 
 $issues_stmt = $conn->prepare($issues_query);
 $issues_stmt->bind_param("i", $officer_id);
@@ -625,7 +626,7 @@ if ($report_format === 'excel') {
                 </span>
             </td>
             <td>
-                <span class="status-label status-<?php echo str_replace('_', '-', $issue['status']); ?>">
+            <span class="status-label status-<?php echo str_replace('_', '-', $issue['status']); ?>">
                     <?php echo ucfirst(str_replace('_', ' ', $issue['status'])); ?>
                 </span>
             </td>
@@ -638,20 +639,21 @@ if ($report_format === 'excel') {
     <?php endif; ?>
 
     <footer
-        style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; font-size: 12px; color: #666;">
-        <p>This report was generated from the Constituency Issue Management System.</p>
-    </footer>
+        style=" margin-top: 30px; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; font-size: 12px;
+                    color: #666;">
+                    <p>This report was generated from the Constituency Issue Management System.</p>
+                    </footer>
 
-    <script>
-    // Auto-print the report when loaded in "print" format
-    document.addEventListener('DOMContentLoaded', function() {
-        <?php if ($report_format === 'print' && !isset($error_message)): ?>
-        setTimeout(function() {
-            window.print();
-        }, 1000);
-        <?php endif; ?>
-    });
-    </script>
+                    <script>
+                    // Auto-print the report when loaded in "print" format
+                    document.addEventListener('DOMContentLoaded', function() {
+                        <?php if ($report_format === 'print' && !isset($error_message)): ?>
+                        setTimeout(function() {
+                            window.print();
+                        }, 1000);
+                        <?php endif; ?>
+                    });
+                    </script>
 </body>
 
 </html>

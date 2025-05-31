@@ -604,100 +604,127 @@ include '../includes/header.php';
                 <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                         <h2 class="text-lg font-medium text-gray-800">Assigned Entities</h2>
-                        <a href="assign-entity.php?id=<?= $project_id ?>"
+                        <button type="button" onclick="openEntityModal('add')"
                             class="inline-flex items-center px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <i class="fas fa-plus-circle mr-1"></i> Assign
-                        </a>
+                            <i class="fas fa-plus-circle mr-1"></i> Add Entity
+                        </button>
                     </div>
                     <div class="p-6">
-                        <?php
-                        $entities_query = "SHOW TABLES LIKE 'project_entities'";
-                        $entities_result = $conn->query($entities_query);
-                        
-                        if ($entities_result->num_rows > 0) {
-                            // Fetch assigned entities
-                            $entities_query = "SELECT pe.*, e.name, e.contact, e.type 
-                                              FROM project_entities pe
-                                              JOIN entities e ON pe.entity_id = e.id
-                                              WHERE pe.project_id = ?";
-                            $entities_stmt = $conn->prepare($entities_query);
-                            $entities_stmt->bind_param("i", $project_id);
-                            $entities_stmt->execute();
-                            $entities_result = $entities_stmt->get_result();
+                        <div id="entities-container">
+                            <?php
+                            // Check if project_entities table exists
+                            $entities_query = "SHOW TABLES LIKE 'entities'";
+                            $entities_result = $conn->query($entities_query);
                             
                             if ($entities_result->num_rows > 0) {
-                                ?>
-                        <div class="space-y-3">
-                            <?php while ($entity = $entities_result->fetch_assoc()): ?>
-                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="text-sm font-medium text-gray-900 mb-1">
-                                            <?= htmlspecialchars($entity['name']) ?></h3>
-                                        <p class="text-xs text-gray-500"><?= ucfirst($entity['type']) ?></p>
+                                // Fetch assigned entities
+                                $entities_query = "SELECT e.* 
+                                                  FROM entities e
+                                                  WHERE e.project_id = ?";
+                                $entities_stmt = $conn->prepare($entities_query);
+                                $entities_stmt->bind_param("i", $project_id);
+                                $entities_stmt->execute();
+                                $entities_result = $entities_stmt->get_result();
+                                
+                                if ($entities_result->num_rows > 0) {
+                                    ?>
+                            <div class="space-y-3">
+                                <?php while ($entity = $entities_result->fetch_assoc()): ?>
+                                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition entity-item"
+                                    data-entity-id="<?= $entity['id'] ?>">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="text-sm font-medium text-gray-900 mb-1">
+                                                <?= htmlspecialchars($entity['name']) ?></h3>
+                                            <p class="text-xs text-gray-500"><?= ucfirst($entity['type']) ?></p>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button type="button"
+                                                onclick="openEntityModal('edit', <?= $entity['id'] ?>)"
+                                                class="text-blue-600 hover:text-blue-800">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button"
+                                                onclick="deleteEntity(<?= $entity['id'] ?>, '<?= htmlspecialchars(addslashes($entity['name'])) ?>')"
+                                                class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div class="flex space-x-2">
-                                        <a href="../entities/view.php?id=<?= $entity['entity_id'] ?>"
-                                            class="text-blue-600 hover:text-blue-800">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="#"
-                                            onclick="confirmRemoveEntity(<?= $project_id ?>, <?= $entity['entity_id'] ?>, '<?= htmlspecialchars(addslashes($entity['name'])) ?>')"
-                                            class="text-red-600 hover:text-red-800">
-                                            <i class="fas fa-times"></i>
-                                        </a>
+
+                                    <?php if (!empty($entity['contact_person'])): ?>
+                                    <p class="text-xs text-gray-600 mt-2">
+                                        <i class="fas fa-user mr-1"></i>
+                                        <?= htmlspecialchars($entity['contact_person']) ?>
+                                    </p>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($entity['phone'])): ?>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-phone-alt mr-1"></i> <?= htmlspecialchars($entity['phone']) ?>
+                                    </p>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($entity['email'])): ?>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-envelope mr-1"></i> <?= htmlspecialchars($entity['email']) ?>
+                                    </p>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($entity['address'])): ?>
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-map-marker-alt mr-1"></i>
+                                        <span class="truncate block"><?= htmlspecialchars($entity['address']) ?></span>
                                     </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($entity['notes'])): ?>
+                                    <div class="mt-2 pt-2 border-t border-gray-100">
+                                        <p class="text-xs text-gray-500 italic">
+                                            <?= htmlspecialchars(substr($entity['notes'], 0, 100)) ?>
+                                            <?= strlen($entity['notes']) > 100 ? '...' : '' ?>
+                                        </p>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-
-                                <?php if (!empty($entity['contact'])): ?>
-                                <p class="text-xs text-gray-600 mt-2">
-                                    <i class="fas fa-phone-alt mr-1"></i> <?= htmlspecialchars($entity['contact']) ?>
-                                </p>
-                                <?php endif; ?>
-
-                                <?php if (!empty($entity['role'])): ?>
-                                <p class="text-xs text-gray-600 mt-1">
-                                    <i class="fas fa-user-tag mr-1"></i> <?= htmlspecialchars($entity['role']) ?>
-                                </p>
-                                <?php endif; ?>
+                                <?php endwhile; ?>
                             </div>
-                            <?php endwhile; ?>
-                        </div>
-                        <?php
+                            <?php
+                                } else {
+                                    ?>
+                            <div id="no-entities-message" class="text-center py-8">
+                                <span
+                                    class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-3">
+                                    <i class="fas fa-building text-gray-400"></i>
+                                </span>
+                                <h3 class="text-sm font-medium text-gray-900 mb-1">No entities assigned</h3>
+                                <p class="text-xs text-gray-500 mb-4">Assign entities that are involved in this project
+                                </p>
+                                <button onclick="openEntityModal('add')"
+                                    class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                                    <i class="fas fa-plus-circle mr-2"></i> Add Entity
+                                </button>
+                            </div>
+                            <?php
+                                }
                             } else {
                                 ?>
-                        <div class="text-center py-8">
-                            <span
-                                class="inline-flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-3">
-                                <i class="fas fa-building text-gray-400"></i>
-                            </span>
-                            <h3 class="text-sm font-medium text-gray-900 mb-1">No entities assigned</h3>
-                            <p class="text-xs text-gray-500 mb-4">Assign entities that are involved in this project</p>
-                            <a href="assign-entity.php?id=<?= $project_id ?>"
-                                class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                                <i class="fas fa-plus-circle mr-2"></i> Assign Entity
-                            </a>
-                        </div>
-                        <?php
-                            }
-                        } else {
-                            ?>
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm text-yellow-700">
-                                        Entity assignment feature is not available. The required database table does not
-                                        exist.
-                                    </p>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm text-yellow-700">
+                                            Entity feature is not available. The required database table does not exist.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
+                            <?php
+                            }
+                            ?>
                         </div>
-                        <?php
-                        }
-                        ?>
                     </div>
                 </div>
             </div>
@@ -782,6 +809,161 @@ include '../includes/header.php';
                     class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                     Cancel
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Entity Modal -->
+<div id="entityModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-modal="true" role="dialog">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <!-- Modal panel -->
+        <div class="relative bg-white rounded-lg max-w-lg w-full mx-auto shadow-xl transform transition-all">
+            <div class="absolute top-0 right-0 pt-4 pr-4">
+                <button type="button" onclick="closeEntityModal()" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Close</span>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="px-6 py-5">
+                <h3 class="text-lg font-medium text-gray-900 mb-4" id="entity-modal-title">Add New Entity</h3>
+
+                <form id="entityForm" class="space-y-4">
+                    <input type="hidden" id="entity-id" value="">
+                    <input type="hidden" id="entity-project-id" value="<?= $project_id ?>">
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <!-- Entity Name -->
+                        <div class="col-span-2">
+                            <label for="entity-name" class="block text-sm font-medium text-gray-700 mb-1">Name <span class="text-red-600">*</span></label>
+                            <input type="text" id="entity-name" name="name" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <!-- Entity Type -->
+                        <div>
+                            <label for="entity-type" class="block text-sm font-medium text-gray-700 mb-1">Type <span class="text-red-600">*</span></label>
+                            <select id="entity-type" name="type" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                                <option value="company">Company</option>
+                                <option value="individual">Individual</option>
+                                <option value="organization">Organization</option>
+                                <option value="government">Government</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Contact Person -->
+                        <div>
+                            <label for="entity-contact-person" class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                            <input type="text" id="entity-contact-person" name="contact_person"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label for="entity-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="entity-phone" name="phone"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="entity-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="entity-email" name="email"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                        </div>
+
+                        <!-- Address -->
+                        <div class="col-span-2">
+                            <label for="entity-address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <textarea id="entity-address" name="address" rows="2"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-span-2">
+                            <label for="entity-notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea id="entity-notes" name="notes" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" onclick="closeEntityModal()"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" id="entity-submit-btn"
+                            class="px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span id="entity-submit-text">Add Entity</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Entity Confirmation Modal -->
+<div id="deleteEntityModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <!-- Modal panel -->
+        <div class="relative inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Delete Entity
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500" id="delete-entity-message">
+                                Are you sure you want to delete this entity?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="confirm-delete-entity" 
+                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed right-5 bottom-5 z-50 transform transition-transform duration-300 ease-in-out hidden">
+    <div class="bg-white rounded-lg border-l-4 border-green-500 shadow-md p-4 max-w-md">
+        <div class="flex">
+            <div id="toastIcon" class="flex-shrink-0">
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 id="toastTitle" class="text-sm font-medium text-gray-900">Success</h3>
+                <p id="toastMessage" class="mt-1 text-sm text-gray-500">Operation completed successfully.</p>
+            </div>
+            <div class="ml-auto pl-3">
+                <div class="-mx-1.5 -my-1.5">
+                    <button onclick="hideToast()" class="text-gray-400 hover:text-gray-500">
+                        <span class="sr-only">Close</span>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
