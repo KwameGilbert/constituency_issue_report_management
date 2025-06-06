@@ -19,7 +19,7 @@
                     <a href="mailto:info@swma.gov.gh" class="hover:underline">info@swma.gov.gh</a><br>
                     <a href="mailto:clientservice@swma.gov.gh" class="hover:underline">clientservice@swma.gov.gh</a>
                 </div>
-                <div>Ghana Post GPS: <span class="font-medium">WG - 0002 - 7111</span></div>
+                <div>Ghana Post GPS: <span class="font-medium">WG - 0002 - 7111</span></div>
             </address>
         </div>
 
@@ -27,8 +27,8 @@
         <div>
             <h3 class="text-xl font-semibold mb-4">Working Hours</h3>
             <p class="text-sm">
-                Monday – Friday<br>
-                <span class="font-medium">08:00 AM – 05:00 PM</span>
+                Monday - Friday<br>
+                <span class="font-medium">08:00 AM - 05:00 PM</span>
             </p>
         </div>
 
@@ -42,26 +42,32 @@
         <div>
             <h3 class="text-xl font-semibold mb-4">Useful Links</h3>
             <ul class="space-y-2 text-sm">
-                <li><a href="#" class="hover:underline">Local Government Service</a></li>
-                <li><a href="#" class="hover:underline">Ghana Districts</a></li>
-                <li><a href="#" class="hover:underline">GoG Official Portal</a></li>
-                <li><a href="#" class="hover:underline">Gov. eServices Portal</a></li>
-                <li><a href="#" class="hover:underline">Gov. ePayment Portal</a></li>
-                <li><a href="#" class="hover:underline">GoG Payslip Portal</a></li>
-                <li><a href="#" class="hover:underline">Min. of Local Gov’t & Rural Dev’t</a></li>
-                <li><a href="#" class="hover:underline">Institute of Local Government Studies</a></li>
-                <li><a href="#" class="hover:underline">Public Services Commission</a></li>
-                <li><a href="#" class="hover:underline">The Presidency – Republic of Ghana</a></li>
-                <li><a href="#" class="hover:underline">Parliament of Ghana</a></li>
-                <li><a href="#" class="hover:underline">Performance Tracker</a></li>
+                <li><a href="https://lgs.gov.gh/" class="hover:underline">Local Government Service</a></li>
+                <li><a href="https://www.ghanadistricts.com/" class="hover:underline">Ghana Districts</a></li>
+                <li><a href="https://www.ghana.gov.gh/" class="hover:underline">GoG Official Portal</a></li>
+                <li><a href="https://www.eservices.gov.gh/" class="hover:underline">Gov. eServices Portal</a></li>
+                <li><a href="https://www.epay.gov.gh/" class="hover:underline">Gov. ePayment Portal</a></li>
+                <li><a href="https://payslip.gov.gh/" class="hover:underline">GoG Payslip Portal</a></li>
+                <li><a href="https://mlgrd.gov.gh/" class="hover:underline">Min. of Local Gov't & Rural Dev't</a></li>
+                <li><a href="https://ilgs.edu.gh/" class="hover:underline">Institute of Local Government Studies</a></li>
+                <li><a href="https://psc.gov.gh/" class="hover:underline">Public Services Commission</a></li>
+                <li><a href="https://presidency.gov.gh/" class="hover:underline">The Presidency - Republic of Ghana</a></li>
+                <li><a href="https://parliament.gh/" class="hover:underline">Parliament of Ghana</a></li>
+                <li><a href="https://ghanaprojectstracker.gov.gh/" class="hover:underline">Performance Tracker</a></li>
             </ul>
         </div>
 
     </div>
-
     <!-- Bottom Bar -->
     <div class="mt-8 border-t border-gray-700 pt-4 text-center text-sm">
-        &copy; <?php echo date('Y'); ?> Office of the Member of Parliament - Hon. Kofi Benteh Afful. All rights
+        &copy; <?php echo date('Y'); ?> Office of the MP, Sefwi Wiawso Constituency - Hon. Kofi Benteh Afful. All rights
         reserved.
+    </div>
+    <!-- Floating Action Button for Mobile Reports -->
+    <div class="md:hidden fixed bottom-6 right-6 z-50">
+        <a href="/report/index.php" class="flex items-center justify-center h-14 w-14 rounded-full bg-amber-600 text-white shadow-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+            <span class="sr-only">Report an Issue</span>
+            <i class="fas fa-exclamation-circle text-xl"></i>
+        </a>
     </div>
 </footer>

@@ -24,6 +24,7 @@ require_once 'config/db.php';
         require_once 'includes/events.php'; // Upcoming events 
         require_once 'includes/map.php'; // Leaflet map 
         require_once 'includes/faq.php'; // FAQ accordion 
+        require_once 'includes/report.php'; // Report an issue section
         require_once 'includes/vision_mission.php';
         require_once 'includes/newsletter.php'; // Newsletter form 
         require_once 'includes/contact.php';

@@ -2,8 +2,7 @@
 // Start session
 session_start();
 
-// Check if user is logged in as a PA
-if (isset($_SESSION['pa_id']) && $_SESSION['role'] === 'pa') {
+
     // Clear all session variables
     $_SESSION = array();
     
@@ -18,7 +17,7 @@ if (isset($_SESSION['pa_id']) && $_SESSION['role'] === 'pa') {
     
     // Destroy the session
     session_destroy();
-}
+
 
 // Redirect to login page
 header("Location: ./login/");
