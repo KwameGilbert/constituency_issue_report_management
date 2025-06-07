@@ -63,7 +63,7 @@ $first_letter = strtoupper(substr($officer_name, 0, 1));
                         <i class="fas fa-cog mr-2"></i> Settings
                     </a>
                     <div class="border-t border-gray-100 my-1"></div>
-                    <a href="<?= isset($basePath) ? $basePath : '' ?>../logout.php"
+                    <a href="/admin/officer/logout.php"
                         class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </a>

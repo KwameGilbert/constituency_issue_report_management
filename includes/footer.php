@@ -58,16 +58,32 @@
         </div>
 
     </div>
-    <!-- Bottom Bar -->
-    <div class="mt-8 border-t border-gray-700 pt-4 text-center text-sm">
-        &copy; <?php echo date('Y'); ?> Office of the MP, Sefwi Wiawso Constituency - Hon. Kofi Benteh Afful. All rights
-        reserved.
-    </div>
+  
     <!-- Floating Action Button for Mobile Reports -->
     <div class="md:hidden fixed bottom-6 right-6 z-50">
         <a href="/report/index.php" class="flex items-center justify-center h-14 w-14 rounded-full bg-amber-600 text-white shadow-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
             <span class="sr-only">Report an Issue</span>
             <i class="fas fa-exclamation-circle text-xl"></i>
         </a>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="mt-8 border-t border-gray-700 pt-4 text-center text-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
+                <div>
+                    &copy; <?php echo date('Y'); ?> Office of the MP, Sefwi Wiawso Constituency - Hon. Kofi Benteh Afful. All rights reserved.
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span>Designed & Developed by</span>
+                    <a href="tel:+233541436414" class="text-amber-400 hover:text-amber-300 font-medium transition-colors flex items-center">
+                        <span>Nolex-Prime IT and Training Services</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </footer>

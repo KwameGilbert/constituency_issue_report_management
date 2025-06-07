@@ -232,7 +232,7 @@ if (!empty($error_message)) {
                             <p class="mt-1 text-sm"><?= $error_message ?></p>
                             <?php if (in_array($error_type, ['inactive', 'suspended'])): ?>
                             <p class="mt-2 text-sm">
-                                <a href="mailto:support@localgov.gh" class="underline hover:text-gray-900">Contact
+                                <a href="tell:233541436414" class="underline hover:text-gray-900">Contact
                                     support for assistance</a>
                             </p>
                             <?php endif; ?>
@@ -254,7 +254,7 @@ if (!empty($error_message)) {
                                     </div>
                                     <input type="email" name="email" id="email" required
                                         class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                                        placeholder="pa@localgov.gh">
+                                        placeholder="pa@kofibenteh.com">
                                 </div>
                             </div>
 
@@ -287,10 +287,10 @@ if (!empty($error_message)) {
                                         Remember me
                                     </label>
                                 </div>
-                                <a href="forgot-password.php"
+                                <!-- <a href="forgot-password.php"
                                     class="text-sm font-medium text-green-600 hover:text-green-500">
                                     Forgot your password?
-                                </a>
+                                </a> -->
                             </div>
                         </div>
                     </div>
@@ -307,15 +307,22 @@ if (!empty($error_message)) {
                 <!-- Support Contact -->
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">Having trouble logging in? Contact IT support:</p>
-                    <p class="text-sm font-medium text-green-600">support@localgov.gh | 030 222 3344</p>
+                    <p class="text-sm font-medium text-green-600">054 143 6414 | 055 080 7914</p>
                 </div>
 
-                <!-- Footer with Government Info -->
-                <div class="mt-8 text-center text-gray-600 text-sm">
-                    <p>Government of Ghana</p>
-                    <p class="mt-1">Ministry of Local Government and Rural Development</p>
-                    <p class="mt-4 text-xs">&copy; <?php echo date('Y'); ?> Republic of Ghana. All rights reserved.</p>
+                <!-- Developer Credit -->
+                <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+                    <p class="text-xs text-gray-500">
+                        Designed & Developed by
+                        <a href="tel:+233541436414" class="font-medium text-green-600 hover:text-green-700 inline-flex items-center">
+                            Nolex-Prime IT and Training Services
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    </p>
                 </div>
+               
             </div>
         </div>
     </div>

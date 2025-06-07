@@ -112,11 +112,6 @@ include_once '../includes/header.php';
                         <?= htmlspecialchars($pa_info['office_location']) ?? 'Head Office' ?>
                     </p>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-500"><?= date('l, F j, Y') ?></p>
-                    <p class="text-xs text-gray-400 mt-1">Last login:
-                        <?= isset($_SESSION['last_login']) ? $_SESSION['last_login'] : 'First login' ?></p>
-                </div>
             </div>
         </div>
 

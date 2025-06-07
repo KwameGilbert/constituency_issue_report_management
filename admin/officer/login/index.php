@@ -37,13 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         if ($result->num_rows === 0) {
             $error_message = "No account found with this email address.";
             $error_type = 'not_found';
         } else {
             $officer = $result->fetch_assoc();
-            
+
             // Check account status first
             if ($officer['status'] === 'inactive') {
                 $error_message = "Your account is currently inactive. Please contact the administrator.";
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (!password_verify($password, $officer['password'])) {
                 $error_message = "Incorrect password. Please try again.";
                 $error_type = 'invalid_password';
-                
+
                 // Send failed login email notification
                 sendSecurityNotificationEmail(
                     $officer['email'],
@@ -62,24 +62,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'failed_login',
                     ['reason' => 'Incorrect password entered']
                 );
-                
             } else {
                 // Set session variables
                 $_SESSION['officer_id'] = $officer['id'];
                 $_SESSION['officer_name'] = $officer['name'];
                 $_SESSION['email'] = $officer['email'];
                 $_SESSION['role'] = 'field_officer';
-                
+
                 // Update last login timestamp
                 $update_query = "UPDATE field_officers SET last_login = NOW() WHERE id = ?";
                 $update_stmt = $conn->prepare($update_query);
                 $update_stmt->bind_param("i", $officer['id']);
                 $update_stmt->execute();
                 $update_stmt->close();
-                
+
                 // Store the last login time for display
                 $_SESSION['last_login'] = date('Y-m-d H:i:s');
-                
+
                 // Send successful login notification email
                 // We do this in the background to avoid delaying the user's login
                 // sendSecurityNotificationEmail(
@@ -87,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 //     $officer['name'],
                 //     'success_login'
                 // );
-                
+
                 // Redirect to officer dashboard
                 header("Location: ../dashboard/");
                 exit();
@@ -100,14 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Set error styling based on error type
 if (!empty($error_message)) {
-    $error_bg_color = match($error_type) {
+    $error_bg_color = match ($error_type) {
         'validation' => 'bg-yellow-100 border-yellow-500 text-yellow-700',
         'not_found' => 'bg-red-100 border-red-500 text-red-700',
         'inactive', 'suspended' => 'bg-orange-100 border-orange-500 text-orange-700',
         'invalid_password' => 'bg-red-100 border-red-500 text-red-700',
         default => 'bg-red-100 border-red-500 text-red-700'
     };
-    $error_icon = match($error_type) {
+    $error_icon = match ($error_type) {
         'validation' => 'fa-exclamation-triangle',
         'not_found' => 'fa-user-times',
         'inactive', 'suspended' => 'fa-lock',
@@ -124,36 +123,36 @@ if (!empty($error_message)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Field Officer Login - Constituency Issue Management System</title>
-     <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="/assets/css/main.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-    .ghana-colors {
-        background: linear-gradient(to bottom, #ce1126 33%, #fcd116 33%, #fcd116 66%, #006b3f 66%);
-    }
-
-    .ghana-flag-border {
-        border-top: 4px solid #ce1126;
-        border-right: 4px solid #fcd116;
-        border-bottom: 4px solid #006b3f;
-        border-left: 4px solid #000;
-    }
-
-    @keyframes pulse-subtle {
-
-        0%,
-        100% {
-            box-shadow: 0 0 0 0 rgba(0, 107, 63, 0.4);
+        .ghana-colors {
+            background: linear-gradient(to bottom, #ce1126 33%, #fcd116 33%, #fcd116 66%, #006b3f 66%);
         }
 
-        50% {
-            box-shadow: 0 0 15px 0 rgba(0, 107, 63, 0.7);
+        .ghana-flag-border {
+            border-top: 4px solid #ce1126;
+            border-right: 4px solid #fcd116;
+            border-bottom: 4px solid #006b3f;
+            border-left: 4px solid #000;
         }
-    }
 
-    .pulse-animation {
-        animation: pulse-subtle 3s infinite;
-    }
+        @keyframes pulse-subtle {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 107, 63, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 15px 0 rgba(0, 107, 63, 0.7);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse-subtle 3s infinite;
+        }
     </style>
 </head>
 
@@ -237,30 +236,30 @@ if (!empty($error_message)) {
                 </div>
 
                 <?php if (!empty($error_message)): ?>
-                <div class="mb-6 border-l-4 <?= $error_bg_color ?> p-4 rounded-md" role="alert">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas <?= $error_icon ?> text-2xl"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium"><?= match($error_type) {
-                                'validation' => 'Form Validation Error',
-                                'not_found' => 'Account Not Found',
-                                'inactive' => 'Account Inactive',
-                                'suspended' => 'Account Suspended',
-                                'invalid_password' => 'Authentication Failed',
-                                default => 'Error'
-                            } ?></h3>
-                            <p class="mt-1 text-sm"><?= $error_message ?></p>
-                            <?php if (in_array($error_type, ['inactive', 'suspended'])): ?>
-                            <p class="mt-2 text-sm">
-                                <a href="mailto:support@localgov.gh" class="underline hover:text-gray-900">Contact
-                                    support for assistance</a>
-                            </p>
-                            <?php endif; ?>
+                    <div class="mb-6 border-l-4 <?= $error_bg_color ?> p-4 rounded-md" role="alert">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas <?= $error_icon ?> text-2xl"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium"><?= match ($error_type) {
+                                                                    'validation' => 'Form Validation Error',
+                                                                    'not_found' => 'Account Not Found',
+                                                                    'inactive' => 'Account Inactive',
+                                                                    'suspended' => 'Account Suspended',
+                                                                    'invalid_password' => 'Authentication Failed',
+                                                                    default => 'Error'
+                                                                } ?></h3>
+                                <p class="mt-1 text-sm"><?= $error_message ?></p>
+                                <?php if (in_array($error_type, ['inactive', 'suspended'])): ?>
+                                    <p class="mt-2 text-sm">
+                                        <a href="mailto:support@localgov.gh" class="underline hover:text-gray-900">Contact
+                                            support for assistance</a>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endif; ?>
 
                 <form action="<?= $_SERVER['PHP_SELF']; ?>" method="POST" class="space-y-6">
@@ -276,7 +275,7 @@ if (!empty($error_message)) {
                                     </div>
                                     <input type="email" name="email" id="email" required
                                         class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                                        placeholder="officer@localgov.gh">
+                                        placeholder="officer@kofibenteh.com">
                                 </div>
                             </div>
 
@@ -329,35 +328,41 @@ if (!empty($error_message)) {
                 <!-- Support Contact -->
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">Having trouble logging in? Contact IT support:</p>
-                    <p class="text-sm font-medium text-green-600">support@localgov.gh | 030 222 3344</p>
+                    <p class="text-sm font-medium text-green-600">054 143 6414 | 055 080 7914</p>
                 </div>
 
-                <!-- Footer with Government Info -->
-                <div class="mt-8 text-center text-gray-600 text-sm">
-                    <p>Government of Ghana</p>
-                    <p class="mt-1">Ministry of Local Government and Rural Development</p>
-                    <p class="mt-4 text-xs">&copy; <?php echo date('Y'); ?> Republic of Ghana. All rights reserved.</p>
+                <!-- Developer Credit -->
+                <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+                    <p class="text-xs text-gray-500">
+                        Designed & Developed by
+                        <a href="tel:+233541436414" class="font-medium text-green-600 hover:text-green-700 inline-flex items-center">
+                            Nolex-Prime IT and Training Services
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    // Toggle password visibility
-    document.getElementById('togglePassword').addEventListener('click', function() {
-        const passwordInput = document.getElementById('password');
-        const icon = this.querySelector('i');
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
 
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            passwordInput.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    });
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
     </script>
 </body>
 

@@ -308,21 +308,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
                                     </div>
 
-                                    <!-- Supervisor -->
-                                    <div>
-                                        <label for="supervisor">Supervisor</label>
-                                        <select name="supervisor" id="supervisor" required
-                                            class="h-11 w-full rounded-md border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500">
-                                            <option value="">Select Supervisor</option>
-                                            <?php foreach ($sups as $sup): ?>
-                                            <option value="<?php echo $sup['id']; ?>"
-                                                <?php echo (isset($supervisor_id) && $supervisor_id == $sup['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($sup['position']); ?>
-                                            </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-
                                     <!-- Photo Upload -->
                                     <div>
                                         <label for="photos" class="block text-sm font-medium text-gray-700 mb-1">Photo
