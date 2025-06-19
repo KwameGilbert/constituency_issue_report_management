@@ -1,6 +1,24 @@
 -- Constituency Issue Reporting & Development System Schema
 -- Using INT PRIMARY KEYS with AUTO_INCREMENT
 
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    email VARCHAR(100),
+    password VARCHAR(255),
+    role ENUM('mp', 'mce', 'pa', 'officer', 'agent', 'admin'),
+    phone VARCHAR(50),
+    profile_image TEXT,
+    electoral_area INT,
+    department VARCHAR(255),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
+    FOREIGN KEY (electoral_area) REFERENCES electoral_areas(id) ON DELETE SET NULL
+);
+
 CREATE TABLE web_admins (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL,
@@ -60,14 +78,6 @@ CREATE TABLE carousel_items (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE constituents (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
-    phone VARCHAR(50),
-    location VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
 
 CREATE TABLE contact_messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -77,6 +87,15 @@ CREATE TABLE contact_messages (
     subject VARCHAR(255),
     message TEXT,
     status ENUM('pending', 'reviewed') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE constituents (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    phone VARCHAR(50),
+    location VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -126,23 +145,6 @@ CREATE TABLE issue_subsectors (
     FOREIGN KEY (sector_id) REFERENCES issue_sectors(id) ON DELETE CASCADE
 );
 
-CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
-    email VARCHAR(100),
-    password VARCHAR(255),
-    role ENUM('mp', 'mce', 'pa', 'officer', 'agent', 'admin'),
-    phone VARCHAR(50),
-    profile_image TEXT,
-    electoral_area INT,
-    department VARCHAR(255),
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    last_login TIMESTAMP NULL,
-    FOREIGN KEY (electoral_area) REFERENCES electoral_areas(id) ON DELETE SET NULL
-);
-
 CREATE TABLE issues (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
@@ -185,6 +187,18 @@ CREATE TABLE issues (
     FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL,
     FOREIGN KEY (supervisor_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+CREATE TABLE issue_history_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    issue_id INT,
+    user_id INT,
+    action TEXT,
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 
 CREATE TABLE projects (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -263,17 +277,6 @@ CREATE TABLE idea_bank (
     reviewed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (submitted_by) REFERENCES constituents(id) ON DELETE SET NULL
-);
-
-CREATE TABLE issue_history_logs (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    issue_id INT,
-    user_id INT,
-    action TEXT,
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE project_history_logs (

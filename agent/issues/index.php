@@ -25,7 +25,7 @@ $issues = [
       ],
     
       [
-    
+
         'id' => 2,
     
         'title' => 'Water Shortage in North Hills',
