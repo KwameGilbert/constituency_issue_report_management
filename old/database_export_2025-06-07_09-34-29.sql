@@ -21,7 +21,6 @@ CREATE TABLE `admins` (
 INSERT INTO `admins` VALUES("1","admin","admin@example.com","$2y$10$BI0nuZNSrk4moymqOgAkherMn8M9g3LQKhFvYEJXTqHbiVdG0SkSi","System","Administrator","super_admin","active","2025-05-10 13:59:53","","2025-04-23 11:36:27","2025-06-02 07:24:54");
 
 
-
 DROP TABLE IF EXISTS `admins_activity_log`;
 
 CREATE TABLE `admins_activity_log` (

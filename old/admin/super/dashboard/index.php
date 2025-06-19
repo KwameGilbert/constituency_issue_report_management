@@ -91,8 +91,8 @@ foreach ($monthly_stats as $stat) {
 }
 
 // Calculate resolution rate
-$resolution_rate = ($issues_stats['total_issues'] > 0) 
-    ? round(($issues_stats['resolved_issues'] / $issues_stats['total_issues']) * 100, 1) 
+$resolution_rate = ($issues_stats['total_issues'] > 0)
+    ? round(($issues_stats['resolved_issues'] / $issues_stats['total_issues']) * 100, 1)
     : 0;
 
 $page_title = "Dashboard - MP Admin Portal";
@@ -115,8 +115,7 @@ include_once '../includes/header.php';
                 </div>
                 <div class="text-right">
                     <p class="text-sm text-gray-500"><?= date('l, F j, Y') ?></p>
-                    <p class="text-xs text-gray-400 mt-1">Last login:
-                        <?= isset($_SESSION['last_login']) ? $_SESSION['last_login'] : 'First login' ?></p>
+
                 </div>
             </div>
         </div>
@@ -293,27 +292,27 @@ include_once '../includes/header.php';
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <?php if ($recent_activity_result->num_rows > 0): ?>
-                        <?php while ($issue = $recent_activity_result->fetch_assoc()): ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div>
-                                        <a href="../issue-detail/?id=<?= $issue['id'] ?>"
-                                            class="text-sm font-medium text-gray-900 hover:text-green-600">
-                                            <?= htmlspecialchars($issue['title']) ?>
-                                        </a>
-                                        <div class="text-xs text-gray-500">ID: <?= $issue['id'] ?></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">
-                                    <?= htmlspecialchars($issue['electoral_area'] ?? 'N/A') ?>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php 
-                                        $status_class = match($issue['status']) {
+                            <?php while ($issue = $recent_activity_result->fetch_assoc()): ?>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div>
+                                                <a href="../issues/view.php?id=<?= $issue['id'] ?>"
+                                                    class="text-sm font-medium text-gray-900 hover:text-green-600">
+                                                    <?= htmlspecialchars($issue['title']) ?>
+                                                </a>
+                                                <div class="text-xs text-gray-500">ID: <?= $issue['id'] ?></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">
+                                            <?= htmlspecialchars($issue['electoral_area'] ?? 'N/A') ?>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php
+                                        $status_class = match ($issue['status']) {
                                             'pending' => 'bg-yellow-100 text-yellow-800',
                                             'under_review' => 'bg-blue-100 text-blue-800',
                                             'in_progress' => 'bg-purple-100 text-purple-800',
@@ -321,7 +320,7 @@ include_once '../includes/header.php';
                                             'rejected' => 'bg-red-100 text-red-800',
                                             default => 'bg-gray-100 text-gray-800'
                                         };
-                                        $status_text = match($issue['status']) {
+                                        $status_text = match ($issue['status']) {
                                             'pending' => 'Pending',
                                             'under_review' => 'Under Review',
                                             'in_progress' => 'In Progress',
@@ -330,14 +329,14 @@ include_once '../includes/header.php';
                                             default => 'Unknown'
                                         };
                                         ?>
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
-                                    <?= $status_text ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php
-                                        $severity_class = match($issue['severity']) {
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
+                                            <?= $status_text ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php
+                                        $severity_class = match ($issue['severity']) {
                                             'critical' => 'bg-red-100 text-red-800',
                                             'high' => 'bg-orange-100 text-orange-800',
                                             'medium' => 'bg-yellow-100 text-yellow-800',
@@ -346,25 +345,25 @@ include_once '../includes/header.php';
                                         };
                                         $severity_text = ucfirst($issue['severity']);
                                         ?>
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $severity_class ?>">
-                                    <?= $severity_text ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <?= htmlspecialchars($issue['officer_name'] ?? 'Unassigned') ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <?= date('M d, Y', strtotime($issue['created_at'])) ?>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
+                                        <span
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $severity_class ?>">
+                                            <?= $severity_text ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= htmlspecialchars($issue['officer_name'] ?? 'Unassigned') ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <?= date('M d, Y', strtotime($issue['created_at'])) ?>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
                         <?php else: ?>
-                        <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                No recent activity found.
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    No recent activity found.
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -431,162 +430,162 @@ include_once '../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// Monthly trends chart
-const monthlyTrendsChart = new Chart(
-    document.getElementById('monthlyTrendsChart'), {
-        type: 'line',
-        data: {
-            labels: <?= json_encode($monthly_labels) ?>,
-            datasets: [{
-                    label: 'Issues Reported',
-                    data: <?= json_encode($monthly_issues) ?>,
-                    borderColor: 'rgb(79, 70, 229)',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                },
-                {
-                    label: 'Issues Resolved',
-                    data: <?= json_encode($monthly_resolved) ?>,
-                    borderColor: 'rgb(16, 185, 129)',
-                    backgroundColor: 'transparent',
-                    tension: 0.3
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                }
+    // Monthly trends chart
+    const monthlyTrendsChart = new Chart(
+        document.getElementById('monthlyTrendsChart'), {
+            type: 'line',
+            data: {
+                labels: <?= json_encode($monthly_labels) ?>,
+                datasets: [{
+                        label: 'Issues Reported',
+                        data: <?= json_encode($monthly_issues) ?>,
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Issues Resolved',
+                        data: <?= json_encode($monthly_resolved) ?>,
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'transparent',
+                        tension: 0.3
+                    }
+                ]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
                     }
                 }
             }
         }
-    }
-);
+    );
 
-// Status distribution chart
-const statusDistributionChart = new Chart(
-    document.getElementById('statusDistributionChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Pending', 'Under Review', 'In Progress', 'Resolved', 'Rejected'],
-            datasets: [{
-                data: [
-                    <?= $issues_stats['pending_issues'] ?>,
-                    <?= $issues_stats['under_review_issues'] ?>,
-                    <?= $issues_stats['in_progress_issues'] ?>,
-                    <?= $issues_stats['resolved_issues'] ?>,
-                    <?= $issues_stats['rejected_issues'] ?>
-                ],
-                backgroundColor: [
-                    'rgb(251, 191, 36)', // amber-400
-                    'rgb(59, 130, 246)', // blue-500
-                    'rgb(139, 92, 246)', // purple-500
-                    'rgb(16, 185, 129)', // green-500
-                    'rgb(239, 68, 68)' // red-500
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
+    // Status distribution chart
+    const statusDistributionChart = new Chart(
+        document.getElementById('statusDistributionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Under Review', 'In Progress', 'Resolved', 'Rejected'],
+                datasets: [{
+                    data: [
+                        <?= $issues_stats['pending_issues'] ?>,
+                        <?= $issues_stats['under_review_issues'] ?>,
+                        <?= $issues_stats['in_progress_issues'] ?>,
+                        <?= $issues_stats['resolved_issues'] ?>,
+                        <?= $issues_stats['rejected_issues'] ?>
+                    ],
+                    backgroundColor: [
+                        'rgb(251, 191, 36)', // amber-400
+                        'rgb(59, 130, 246)', // blue-500
+                        'rgb(139, 92, 246)', // purple-500
+                        'rgb(16, 185, 129)', // green-500
+                        'rgb(239, 68, 68)' // red-500
+                    ]
+                }]
             },
-            cutout: '60%'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                },
+                cutout: '60%'
+            }
         }
-    }
-);
+    );
 
-// Severity distribution chart
-const severityDistributionChart = new Chart(
-    document.getElementById('severityDistributionChart'), {
-        type: 'pie',
-        data: {
-            labels: ['Critical', 'High', 'Medium', 'Low'],
-            datasets: [{
-                data: [
-                    <?= $issues_stats['critical_issues'] ?>,
-                    <?= $issues_stats['high_severity_issues'] ?>,
-                    <?= $issues_stats['medium_severity_issues'] ?>,
-                    <?= $issues_stats['low_severity_issues'] ?>
-                ],
-                backgroundColor: [
-                    'rgb(239, 68, 68)', // red-500
-                    'rgb(249, 115, 22)', // orange-500
-                    'rgb(251, 191, 36)', // amber-400
-                    'rgb(16, 185, 129)' // green-500
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
+    // Severity distribution chart
+    const severityDistributionChart = new Chart(
+        document.getElementById('severityDistributionChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [
+                        <?= $issues_stats['critical_issues'] ?>,
+                        <?= $issues_stats['high_severity_issues'] ?>,
+                        <?= $issues_stats['medium_severity_issues'] ?>,
+                        <?= $issues_stats['low_severity_issues'] ?>
+                    ],
+                    backgroundColor: [
+                        'rgb(239, 68, 68)', // red-500
+                        'rgb(249, 115, 22)', // orange-500
+                        'rgb(251, 191, 36)', // amber-400
+                        'rgb(16, 185, 129)' // green-500
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
                 }
             }
         }
-    }
-);
+    );
 
-// Electoral areas chart
-const electoralAreasChart = new Chart(
-    document.getElementById('electoralAreasChart'), {
-        type: 'bar',
-        data: {
-            labels: [
-                <?php foreach ($electoral_areas_stats as $area): ?> "<?= addslashes($area['name']) ?>",
-                <?php endforeach; ?>
-            ],
-            datasets: [{
-                label: 'Number of Issues',
-                data: [
-                    <?php foreach ($electoral_areas_stats as $area): ?>
-                    <?= $area['issue_count'] ?>,
+    // Electoral areas chart
+    const electoralAreasChart = new Chart(
+        document.getElementById('electoralAreasChart'), {
+            type: 'bar',
+            data: {
+                labels: [
+                    <?php foreach ($electoral_areas_stats as $area): ?> "<?= addslashes($area['name']) ?>",
                     <?php endforeach; ?>
                 ],
-                backgroundColor: 'rgba(0, 107, 63, 0.6)',
-                borderColor: 'rgb(0, 107, 63)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0
-                    }
-                }
+                datasets: [{
+                    label: 'Number of Issues',
+                    data: [
+                        <?php foreach ($electoral_areas_stats as $area): ?>
+                            <?= $area['issue_count'] ?>,
+                        <?php endforeach; ?>
+                    ],
+                    backgroundColor: 'rgba(0, 107, 63, 0.6)',
+                    borderColor: 'rgb(0, 107, 63)',
+                    borderWidth: 1
+                }]
             },
-            plugins: {
-                legend: {
-                    display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
             }
         }
-    }
-);
+    );
 </script>
 
 <?php include_once '../includes/footer.php'; ?>

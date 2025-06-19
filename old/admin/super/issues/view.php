@@ -2,7 +2,7 @@
 session_start();
 
 // Authentication check
-if (!isset($_SESSION['pa_id']) || $_SESSION['role'] !== 'pa') {
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'super_admin') {
     header("Location: ../login/");
     exit();
 }
@@ -26,11 +26,15 @@ $query = "SELECT
             fo.name as officer_name,
             fo.email as officer_email,
             fo.phone as officer_phone,
-            s.name as supervisor_name
+            s.name as supervisor_name,
+            c.name as constituent_name,
+            c.email as constituent_email,
+            c.phone as constituent_phone
           FROM issues i
           LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
           LEFT JOIN field_officers fo ON i.officer_id = fo.id
           LEFT JOIN field_officers s ON i.supervisor_id = s.id
+          LEFT JOIN constituents c ON i.constituent_id = c.id
           WHERE i.id = ?";
 
 $stmt = $conn->prepare($query);
@@ -96,7 +100,7 @@ $updates_query = "SELECT
                   WHERE iu.issue_id = ? 
                   ORDER BY iu.created_at DESC";
 $updates_stmt = $conn->prepare($updates_query);
-$pa_id = $_SESSION['pa_id'];
+$pa_id = $_SESSION['admin_id'];
 $updates_stmt->bind_param("iiiiii", $pa_id, $pa_id, $pa_id, $pa_id, $pa_id, $issue_id);
 $updates_stmt->execute();
 $updates_result = $updates_stmt->get_result();
@@ -198,34 +202,6 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
             </div>
             <!-- Print/Export Buttons -->
             <div class="w-full lg:w-auto flex flex-wrap gap-2 mt-4 lg:mt-0">
-                <?php if ($issue['status'] === 'pending'): ?>
-                <a href="update-status.php?id=<?= $issue_id ?>&status=under_review"
-                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <i class="fas fa-clipboard-check mr-2"></i> Mark as Under Review
-                </a>
-                <button type="button" onclick="openRejectModal()"
-                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
-                </button>
-                <?php elseif ($issue['status'] === 'under_review'): ?>
-                <a href="update-status.php?id=<?= $issue_id ?>&status=in_progress"
-                    class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
-                    <i class="fas fa-tasks mr-2"></i> Mark as In Progress
-                </a>
-                <button type="button" onclick="openRejectModal()"
-                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
-                </button>
-                <?php elseif ($issue['status'] === 'in_progress'): ?>
-                <button type="button" onclick="openResolveModal()"
-                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                    <i class="fas fa-check-circle mr-2"></i> Mark as Resolved
-                </button>
-                <button type="button" onclick="openRejectModal()"
-                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                    <i class="fas fa-times-circle mr-2"></i> Reject Issue
-                </button>
-                <?php endif; ?>
                 <button type="button" id="printButton"
                     class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                     <i class="fas fa-print mr-2"></i> Print Details
@@ -280,21 +256,50 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                             <span class="text-gray-900"><?= date('M d, Y', strtotime($issue['resolved_at'])) ?></span>
                         </div>
                         <?php endif; ?>
-                        <div class="border-t border-gray-200 pt-4 mt-4">
-                            <h4 class="text-sm font-medium text-gray-700 mb-2">Field Officer Information</h4>
-                            <p class="text-gray-900 font-medium">
-                                <?= htmlspecialchars($issue['officer_name'] ?? 'Not assigned') ?></p>
-                            <?php if ($issue['officer_email']): ?>
-                            <p class="text-gray-600 text-sm mt-1">
-                                <i class="fas fa-envelope mr-1"></i> <?= htmlspecialchars($issue['officer_email']) ?>
-                            </p>
-                            <?php endif; ?>
-                            <?php if ($issue['officer_phone']): ?>
-                            <p class="text-gray-600 text-sm mt-1">
-                                <i class="fas fa-phone mr-1"></i> <?= htmlspecialchars($issue['officer_phone']) ?>
-                            </p>
-                            <?php endif; ?>
-                        </div>
+
+                      
+<div class="border-t border-gray-200 pt-4 mt-4">
+    <?php if ($issue['officer_id']): ?>
+        <!-- Show Field Officer Information -->
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Field Officer Information</h4>
+        <p class="text-gray-900 font-medium">
+            <?= htmlspecialchars($issue['officer_name'] ?? 'Not assigned') ?></p>
+        <?php if ($issue['officer_email']): ?>
+        <p class="text-gray-600 text-sm mt-1">
+            <i class="fas fa-envelope mr-1"></i> <?= htmlspecialchars($issue['officer_email']) ?>
+        </p>
+        <?php endif; ?>
+        <?php if ($issue['officer_phone']): ?>
+        <p class="text-gray-600 text-sm mt-1">
+            <i class="fas fa-phone mr-1"></i> <?= htmlspecialchars($issue['officer_phone']) ?>
+        </p>
+        <?php endif; ?>
+    <?php elseif ($issue['constituent_id']): ?>
+        <!-- Show Constituent Information -->
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Reported By</h4>
+        <p class="text-gray-900 font-medium">
+            <?= htmlspecialchars($issue['constituent_name'] ?? 'Unknown Constituent') ?></p>
+        <?php if (isset($issue['constituent_email'])): ?>
+        <p class="text-gray-600 text-sm mt-1">
+            <i class="fas fa-envelope mr-1"></i> <?= htmlspecialchars($issue['constituent_email']) ?>
+        </p>
+        <?php endif; ?>
+        <?php if (isset($issue['constituent_phone'])): ?>
+        <p class="text-gray-600 text-sm mt-1">
+            <i class="fas fa-phone mr-1"></i> <?= htmlspecialchars($issue['constituent_phone']) ?>
+        </p>
+        <?php endif; ?>
+        <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-info-circle mr-1"></i> This issue was reported directly by a constituent
+        </p>
+    <?php else: ?>
+        <!-- No officer or constituent assigned -->
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Field Officer Information</h4>
+        <p class="text-gray-900 font-medium">Not assigned</p>
+    <?php endif; ?>
+</div>
+
+
                         <?php if ($issue['supervisor_name']): ?>
                         <div class="border-t border-gray-200 pt-4 mt-4">
                             <h4 class="text-sm font-medium text-gray-700 mb-2">Supervisor</h4>
@@ -372,33 +377,6 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
                 </div>
             </div>
         </div>
-
-        <!-- Add Status Update Form (at the top of timeline) -->
-        <?php if ($issue['status'] !== 'resolved' && $issue['status'] !== 'rejected'): ?>
-        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Add Status Update</h3>
-            </div>
-            <div class="p-4">
-                <form action="../issue-detail/add-status-update.php" method="POST" class="space-y-4">
-                    <input type="hidden" name="issue_id" value="<?= $issue_id ?>">
-                    <div>
-                        <label for="update_text" class="block text-sm font-medium text-gray-700 mb-1">Update
-                            Details</label>
-                        <textarea name="update_text" id="update_text" rows="3" required
-                            class="shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
-                            placeholder="Provide an update on the current status, progress, or other important information about this issue..."></textarea>
-                    </div>
-                    <div>
-                        <button type="submit"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                            <i class="fas fa-plus-circle mr-2"></i> Add Status Update
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <!-- Combined Updates and Comments Timeline -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -553,75 +531,6 @@ if (isset($_GET['update_added']) && $_GET['update_added'] == 1) {
     </div>
 </div>
 
-<!-- Reject Issue Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg max-w-md w-full mx-4">
-        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-lg font-medium text-gray-900">Reject Issue</h3>
-        </div>
-        <form action="update-status.php" method="POST" class="p-4">
-            <input type="hidden" name="issue_id" value="<?= $issue_id ?>">
-            <input type="hidden" name="status" value="rejected">
-
-            <div class="mb-4">
-                <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-1">
-                    Rejection Reason <span class="text-red-600">*</span>
-                </label>
-                <textarea id="rejection_reason" name="rejection_reason" rows="4" required
-                    class="shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
-                    placeholder="Please explain why this issue is being rejected..."></textarea>
-                <p class="mt-1 text-xs text-gray-500">This reason will be recorded in the system and visible to all
-                    parties involved.</p>
-            </div>
-
-            <div class="mt-5 sm:mt-6 flex justify-end space-x-2">
-                <button type="button" id="cancelReject"
-                    class="inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    Cancel
-                </button>
-                <button type="submit"
-                    class="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                    Reject Issue
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Resolve Issue Modal -->
-<div id="resolveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg max-w-md w-full mx-4">
-        <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-lg font-medium text-gray-900">Resolve Issue</h3>
-        </div>
-        <form action="update-status.php" method="POST" class="p-4">
-            <input type="hidden" name="issue_id" value="<?= $issue_id ?>">
-            <input type="hidden" name="status" value="resolved">
-
-            <div class="mb-4">
-                <label for="resolution_notes" class="block text-sm font-medium text-gray-700 mb-1">
-                    Resolution Notes <span class="text-red-600">*</span>
-                </label>
-                <textarea id="resolution_notes" name="resolution_notes" rows="4" required
-                    class="shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-2 border-gray-300 rounded-md p-2"
-                    placeholder="Please describe how this issue was resolved..."></textarea>
-                <p class="mt-1 text-xs text-gray-500">These notes will be included in the final report and visible to all parties.</p>
-            </div>
-
-            <div class="mt-5 sm:mt-6 flex justify-end space-x-2">
-                <button type="button" id="cancelResolve"
-                    class="inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                    Cancel
-                </button>
-                <button type="submit"
-                    class="inline-flex justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Mark as Resolved
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Image Modal -->
 <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
     <div class="max-w-4xl w-full mx-4">
@@ -660,42 +569,6 @@ document.getElementById('imageModal').addEventListener('click', function(e) {
 // Print functionality
 document.getElementById('printButton').addEventListener('click', function() {
     window.print();
-});
-
-// Modal functions for reject and resolve
-function openRejectModal() {
-    document.getElementById('rejectModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function openResolveModal() {
-    document.getElementById('resolveModal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-document.getElementById('cancelReject').addEventListener('click', function() {
-    document.getElementById('rejectModal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-});
-
-document.getElementById('cancelResolve').addEventListener('click', function() {
-    document.getElementById('resolveModal').classList.add('hidden');
-    document.body.style.overflow = 'auto';
-});
-
-// Close modals when clicking outside
-document.getElementById('rejectModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        this.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-});
-
-document.getElementById('resolveModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        this.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
 });
 </script>
 
