@@ -1,5 +1,5 @@
 <?php
-// sidebar.php - Agent Dashboard Sidebar
+// Agent Dashboard Sidebar
 
 /**
  * Renders the sidebar for the Agent dashboard.
@@ -8,16 +8,10 @@
 function renderAgentSidebar($current_page)
 {
 ?>
-    <!-- Mobile menu button -->
-    <!-- <button id="sidebarToggle" class="fixed lg:hidden top-4 left-4 w-10 h-10 rounded-xl bg-white flex items-center justify-center text-gray-700 hover:text-slate-900 z-50 shadow-sm transition-all duration-200">
-        <i class="fas fa-bars"></i>
-    </button> -->
-
-    <!-- Mobile sidebar overlay -->
-    <!-- <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 invisible lg:hidden transition-all duration-300 ease-in-out z-40"></div> -->
-
+ 
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 -translate-x-full lg:translate-x-0 z-50 transition-transform duration-300 ease-in-out">
+
         <div class="h-full flex flex-col bg-white border-r border-gray-200 shadow-sm">
             <!-- Sidebar Header -->
             <div class="p-4 border-b border-gray-100">
@@ -118,26 +112,9 @@ function renderAgentSidebar($current_page)
                     </a>
                 </div>
             </div>
+
         </div>
     </aside>
-
-    <script>
-        // Sidebar toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const toggleBtn = document.getElementById('sidebarToggle');
-
-            function toggleSidebar() {
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('opacity-0');
-                overlay.classList.toggle('invisible');
-            }
-
-            toggleBtn.addEventListener('click', toggleSidebar);
-            overlay.addEventListener('click', toggleSidebar);
-        });
-    </script>
 <?php
 }
 ?>

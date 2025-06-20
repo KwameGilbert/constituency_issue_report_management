@@ -15,9 +15,12 @@ function renderAgentHeader($pageTitle, $pageDescription = '', $actionButtons = [
         <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
             <div class="flex items-center">
                 <!-- Mobile menu hamburger button - only visible on mobile -->
-                <button id="headerSidebarToggle" class="lg:hidden mr-3 w-8 h-8 flex items-center justify-center text-gray-700 hover:text-slate-900">
+                <button id="sidebarToggle" class="lg:hidden mr-3 w-8 h-8 flex items-center justify-center text-gray-700 hover:text-slate-900">
                     <i class="fas fa-bars"></i>
                 </button>
+
+                <!-- Mobile sidebar overlay -->
+                <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 invisible lg:hidden transition-all duration-300 ease-in-out z-40"></div>
 
                 <div>
                     <h1 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($pageTitle); ?></h1>
@@ -46,24 +49,6 @@ function renderAgentHeader($pageTitle, $pageDescription = '', $actionButtons = [
             <?php endif; ?>
         </div>
     </header>
-
-    <!-- <script>
-        // Connect header hamburger button to toggle sidebar
-        document.addEventListener('DOMContentLoaded', function() {
-            const headerToggleBtn = document.getElementById('sidebarToggle');
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-
-            if (headerToggleBtn && sidebar && overlay) {
-                headerToggleBtn.addEventListener('click', function() {
-                    sidebar.classList.toggle('-translate-x-full');
-                    overlay.classList.toggle('opacity-0');
-                    overlay.classList.toggle('invisible');
-                });
-            }
-        });
-    </script> -->
-
     <script>
         // Sidebar toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -76,7 +61,7 @@ function renderAgentHeader($pageTitle, $pageDescription = '', $actionButtons = [
                 overlay.classList.toggle('opacity-0');
                 overlay.classList.toggle('invisible');
             }
-            
+
             toggleBtn.addEventListener('click', toggleSidebar);
             overlay.addEventListener('click', toggleSidebar);
         });
