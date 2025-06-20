@@ -1,198 +1,93 @@
 <?php
 // issues.php - Agent Issues Management Page
 include __DIR__ . '/../components/sidebar.php';
+include __DIR__ . '/../components/header.php';
+// include_once __DIR__ . '/../login/session_check.php';
+
 $current_page = 'issues';
 
 // Dummy data for demonstration
 $issues = [
-
-      [
-    
+    [
         'id' => 1,
-    
         'title' => 'Potholes on High Street',
-    
         'category' => 'Roads',
-    
         'status' => 'pending',
-    
         'location' => 'Central Business District',
-    
-        'submitted_at' => '2025-06-15',
-    
+        'submitted_at' => '2023-06-15',
         'description' => 'Large potholes making driving difficult and dangerous on High Street near the market.'
-    
-      ],
-    
-      [
-
+    ],
+    [
         'id' => 2,
-    
         'title' => 'Water Shortage in North Hills',
-    
         'category' => 'Water',
-    
         'status' => 'approved',
-    
         'location' => 'North Hills Residential',
-    
-        'submitted_at' => '2025-06-10',
-    
+        'submitted_at' => '2023-06-10',
         'description' => 'Intermittent water supply for the past week, affecting daily chores.'
-    
-      ],
-    
-      [
-    
+    ],
+    [
         'id' => 3,
-    
         'title' => 'Broken Streetlight at Park Entrance',
-    
         'category' => 'Electricity',
-    
         'status' => 'resolved',
-    
         'location' => 'Community Park',
-    
-        'submitted_at' => '2025-06-01',
-    
+        'submitted_at' => '2023-06-01',
         'description' => 'Streetlight at the main entrance of Community Park has been out for several nights.'
-    
-      ],
-    
-      [
-    
+    ],
+    [
         'id' => 4,
-    
         'title' => 'Illegal Dumping in Riverfront Area',
-    
         'category' => 'Environment',
-    
         'status' => 'pending',
-    
         'location' => 'Riverfront Pathway',
-    
-        'submitted_at' => '2025-06-18',
-    
-        'description' => 'Residents are illegally dumping waste near the river, causing pollution and foul smell.'
-    
-      ],
-    
-      [
-    
+        'submitted_at' => '2023-06-18',
+        'description' => 'Construction waste being dumped near the riverfront walking path.'
+    ],
+    [
         'id' => 5,
-    
-        'title' => 'Noise Complaint from Construction Site',
-    
-        'category' => 'Construction',
-    
-        'status' => 'reviewed',
-    
-        'location' => 'New Development Zone',
-    
-        'submitted_at' => '2025-06-14',
-    
-        'description' => 'Construction noise continues late into the night, disturbing residents in the vicinity.'
-    
-      ],
-    
-      [
-    
-        'id' => 6,
-    
-        'title' => 'Lack of Public Bins in Market',
-    
-        'category' => 'Sanitation',
-    
-        'status' => 'rejected',
-    
-        'location' => 'Main Market Square',
-    
-        'submitted_at' => '2025-06-12',
-    
-        'description' => 'Insufficient public waste bins leading to litter accumulation in the market area.'
-    
-      ],
-    
-      [
-    
-        'id' => 7,
-    
-        'title' => 'Damaged Pavement on Elm Street',
-    
-        'category' => 'Roads',
-    
-        'status' => 'approved',
-    
-        'location' => 'Elm Street, Residential',
-    
-        'submitted_at' => '2025-06-05',
-    
-        'description' => 'Cracked and uneven pavement causing trip hazards, especially for elderly residents.'
-    
-      ],
-    
-      [
-    
-        'id' => 8,
-    
-        'title' => 'Blocked Drainage System',
-    
-        'category' => 'Sanitation',
-    
-        'status' => 'resolved',
-    
-        'location' => 'Maple Avenue',
-    
-        'submitted_at' => '2025-05-28',
-    
-        'description' => 'Drainage system blocked by debris, leading to minor flooding during rain.'
-    
-      ],
-    
-      [
-    
-        'id' => 9,
-    
-        'title' => 'Request for Community Library',
-    
+        'title' => 'School Playground Equipment Damaged',
         'category' => 'Education',
-    
-        'status' => 'pending',
-    
-        'location' => 'Town Center',
-    
-        'submitted_at' => '2025-06-17',
-    
-        'description' => 'Proposal for establishing a small community library to promote reading among youth.'
-    
-      ],
-    
-      [
-    
-        'id' => 10,
-    
-        'title' => 'Vandalism in Public Park',
-    
-        'category' => 'Security',
-    
-        'status' => 'reviewed',
-    
-        'location' => 'Greenwood Park',
-    
-        'submitted_at' => '2025-06-16',
-    
-        'description' => 'Graffiti and damage to park benches reported.'
-    
-      ]
-    
-    ];
+        'status' => 'rejected',
+        'location' => 'Central Elementary School',
+        'submitted_at' => '2023-06-08',
+        'description' => 'Swings and slides are damaged and pose safety risks to children.'
+    ],
+    [
+        'id' => 6,
+        'title' => 'Sewage Overflow on Main Street',
+        'category' => 'Sanitation',
+        'status' => 'approved',
+        'location' => 'Main Street Shopping District',
+        'submitted_at' => '2023-06-14',
+        'description' => 'Sewage backing up onto street near restaurant row, causing health concerns.'
+    ],
+];
 
-// Extract unique categories and statuses
+// Extract unique categories and statuses for filters
 $categories = array_unique(array_column($issues, 'category'));
 sort($categories);
 $statuses = array_unique(array_column($issues, 'status'));
 sort($statuses);
+
+// Define action buttons for the header
+$headerActionButtons = [
+    [
+        'icon' => 'fas fa-plus',
+        'label' => 'New Issue',
+        'href' => 'add_issue.php'
+    ],
+    [
+        'icon' => 'fas fa-filter',
+        'label' => 'Filter',
+        'href' => '#',
+        'class' => 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+        'id' => 'filterToggleBtn'
+    ]
+];
+
+// Get current user data for display
+$userName = $_SESSION['user_name'] ?? 'Agent';
 ?>
 
 <!DOCTYPE html>
@@ -203,7 +98,8 @@ sort($statuses);
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Issues - Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -215,149 +111,229 @@ sort($statuses);
                         success: '#10b981',
                         warning: '#f59e0b',
                         error: '#ef4444',
-                        dark: '#1f2937',
-                        light: '#f8fafc'
+                        slate: {
+                            50: '#f8fafc',
+                            900: '#0f172a',
+                        }
                     },
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif']
                     }
                 }
             }
-        };
+        }
     </script>
 </head>
 
-<body class="bg-gray-50 min-h-screen font-sans bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+<body class="bg-slate-50 min-h-screen font-sans">
     <?php renderAgentSidebar($current_page); ?>
 
-    <main class="lg:ml-60 px-3 pb-6 transition-all duration-300">
-        <!-- Header -->
-        <div class="p-3 flex justify-between items-center border-b border-gray-100 mb-4">
-            <div>
-                <h3 class="text-gray-800 font-medium text-sm">Issues</h3>
-                <p class="text-gray-600 text-xs">View and manage all issues submitted by you.</p>
-            </div>
-            <a href="add_issue.php" class="px-4 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 text-sm">
-                <i class="fas fa-plus"></i>
-                Add New Issue
-            </a>
-        </div>
+    <main class="lg:ml-64 min-h-screen transition-all duration-300">
+        <?php renderAgentHeader('Issues', 'Manage and track constituent issues', $headerActionButtons); ?>
 
-        <!-- Filters -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6 flex flex-col md:flex-row gap-4">
-            <div class="relative w-full md:w-1/2">
-                <input type="text" id="searchInput" placeholder="Search issues..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" />
-                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                    <i class="fas fa-search"></i>
+        <div class="p-4 sm:p-6">
+            <!-- Filters Section - Initially Hidden -->
+            <div id="filterSection" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-6 hidden">
+                <h2 class="text-base font-semibold text-gray-800 mb-4">Filter Issues</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <!-- Search Filter -->
+                    <div>
+                        <label for="searchInput" class="block text-xs font-medium text-gray-700 mb-2">Search</label>
+                        <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900" placeholder="Search by title or location...">
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div>
+                        <label for="categoryFilter" class="block text-xs font-medium text-gray-700 mb-2">Category</label>
+                        <select id="categoryFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900">
+                            <option value="">All Categories</option>
+                            <?php foreach ($categories as $category) : ?>
+                                <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars($category); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div>
+                        <label for="statusFilter" class="block text-xs font-medium text-gray-700 mb-2">Status</label>
+                        <select id="statusFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900">
+                            <option value="">All Statuses</option>
+                            <?php foreach ($statuses as $status) : ?>
+                                <option value="<?php echo htmlspecialchars($status); ?>"><?php echo ucfirst(htmlspecialchars($status)); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Filter Actions -->
+                <div class="flex justify-end space-x-2">
+                    <button id="resetFiltersBtn" class="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                        Reset
+                    </button>
+                    <button id="applyFiltersBtn" class="px-4 py-2 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
+                        Apply Filters
+                    </button>
                 </div>
             </div>
-            <select id="categoryFilter" class="w-full md:w-1/4 py-2 px-3 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
-                <option value="">All Categories</option>
-                <?php foreach ($categories as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <select id="statusFilter" class="w-full md:w-1/4 py-2 px-3 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
-                <option value="">All Statuses</option>
-                <?php foreach ($statuses as $stat): ?>
-                    <option value="<?= htmlspecialchars($stat) ?>"><?= htmlspecialchars($stat) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
 
-        <!-- Table -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
-            <table class="min-w-full text-sm text-left">
-                <thead class="bg-gray-100 text-xs text-gray-600 uppercase tracking-wider">
-                    <tr>
-                        <th class="px-4 py-3">ID</th>
-                        <th class="px-4 py-3">Title</th>
-                        <th class="px-4 py-3">Status</th>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Location</th>
-                        <th class="px-4 py-3 whitespace-nowrap">Submitted On</th>
-                        <th class="px-4 py-3 text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="issuesTableBody" class="divide-y divide-gray-100 bg-white">
-                    <!-- Populated by JS -->
-                </tbody>
-            </table>
+            <!-- Issues Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h2 class="text-base font-semibold text-gray-800">All Issues</h2>
+                    <div class="text-sm text-gray-500"><?php echo count($issues); ?> issues found</div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="issuesTable">
+                            <?php foreach ($issues as $issue) : ?>
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $issue['id']; ?></td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($issue['title']); ?></div>
+                                        <div class="text-xs text-gray-500 truncate max-w-xs"><?php echo htmlspecialchars($issue['description'] ?? 'No description'); ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['category']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['location']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php 
+                                            $statusClass = '';
+                                            switch ($issue['status']) {
+                                                case 'pending':
+                                                    $statusClass = 'bg-warning/10 text-warning';
+                                                    break;
+                                                case 'approved':
+                                                    $statusClass = 'bg-primary/10 text-primary';
+                                                    break;
+                                                case 'rejected':
+                                                    $statusClass = 'bg-error/10 text-error';
+                                                    break;
+                                                case 'resolved':
+                                                    $statusClass = 'bg-success/10 text-success';
+                                                    break;
+                                                default:
+                                                    $statusClass = 'bg-gray-100 text-gray-800';
+                                                    break;
+                                            }
+                                        ?>
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
+                                            <?php echo ucfirst(htmlspecialchars($issue['status'])); ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['submitted_at']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                        <a href="view_issue.php?id=<?php echo $issue['id']; ?>" class="text-primary hover:text-primary/80 font-medium mr-3">View</a>
+                                        <a href="edit_issue.php?id=<?php echo $issue['id']; ?>" class="text-gray-600 hover:text-gray-900 font-medium">Edit</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </a>
+                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </a>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing <span class="font-medium">1</span> to <span class="font-medium"><?php echo count($issues); ?></span> of <span class="font-medium"><?php echo count($issues); ?></span> results
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Previous</span>
+                                    <i class="fas fa-chevron-left text-xs"></i>
+                                </a>
+                                <a href="#" aria-current="page" class="z-10 bg-slate-900 border-slate-900 text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                    1
+                                </a>
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <span class="sr-only">Next</span>
+                                    <i class="fas fa-chevron-right text-xs"></i>
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const issues = <?= json_encode($issues) ?>;
+            // Filter toggle functionality
+            const filterToggleBtn = document.getElementById('filterToggleBtn');
+            const filterSection = document.getElementById('filterSection');
+            
+            filterToggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                filterSection.classList.toggle('hidden');
+            });
+            
+            // Filter functionality
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
             const statusFilter = document.getElementById('statusFilter');
-            const tbody = document.getElementById('issuesTableBody');
-
-            function escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, m => map[m]);
-            }
-
-            function renderTable(data) {
-                tbody.innerHTML = data.length ? '' : '<tr><td colspan="7" class="py-4 text-center text-gray-500">No issues found.</td></tr>';
-                data.forEach(issue => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="py-3 px-4 text-gray-700">${issue.id}</td>
-                            <td class="py-3 px-4 text-gray-700">${escapeHtml(issue.title)}</td>
-                            <td class="py-3 px-4">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                    ${issue.status === 'approved' ? 'bg-green-100 text-green-800' : ''}
-                                    ${issue.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
-                                    ${issue.status === 'resolved' ? 'bg-blue-100 text-blue-800' : ''}
-                                    ${issue.status === 'rejected' ? 'bg-red-100 text-red-800' : ''}
-                                    ${issue.status === 'reviewed' ? 'bg-purple-100 text-purple-800' : ''}
-                                ">
-                                    ${issue.status.charAt(0).toUpperCase() + issue.status.slice(1)}
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-gray-700">${escapeHtml(issue.category)}</td>
-                            <td class="py-3 px-4 text-gray-700">${escapeHtml(issue.location)}</td>
-                            <td class="py-3 px-4 text-gray-700">${escapeHtml(issue.submitted_at)}</td>
-                            <td class="py-3 px-4 text-center space-x-2">
-                                <button class="text-blue-600 hover:text-blue-800" title="View"><i class="fas fa-eye"></i></button>
-                                <button class="text-indigo-600 hover:text-indigo-800" title="Edit"><i class="fas fa-edit"></i></button>
-                            </td>
-                        </tr>
-                    `;
+            const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            const issuesTable = document.getElementById('issuesTable');
+            const rows = issuesTable.querySelectorAll('tr');
+            
+            // Apply filters function
+            function applyFilters() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const category = categoryFilter.value.toLowerCase();
+                const status = statusFilter.value.toLowerCase();
+                
+                rows.forEach(row => {
+                    const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                    const location = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    const rowCategory = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const rowStatus = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+                    
+                    const matchesSearch = title.includes(searchTerm) || location.includes(searchTerm);
+                    const matchesCategory = !category || rowCategory === category;
+                    const matchesStatus = !status || rowStatus.includes(status);
+                    
+                    if (matchesSearch && matchesCategory && matchesStatus) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
                 });
             }
-
-            function filterIssues() {
-                const search = searchInput.value.toLowerCase();
-                const cat = categoryFilter.value;
-                const stat = statusFilter.value;
-
-                const filtered = issues.filter(i => {
-                    const matchSearch = i.title.toLowerCase().includes(search) ||
-                        i.description.toLowerCase().includes(search) ||
-                        i.location.toLowerCase().includes(search) ||
-                        i.category.toLowerCase().includes(search);
-                    const matchCat = !cat || i.category === cat;
-                    const matchStat = !stat || i.status === stat;
-                    return matchSearch && matchCat && matchStat;
-                });
-
-                renderTable(filtered);
+            
+            // Reset filters function
+            function resetFilters() {
+                searchInput.value = '';
+                categoryFilter.selectedIndex = 0;
+                statusFilter.selectedIndex = 0;
+                rows.forEach(row => row.style.display = '');
             }
-
-            searchInput.addEventListener('input', filterIssues);
-            categoryFilter.addEventListener('change', filterIssues);
-            statusFilter.addEventListener('change', filterIssues);
-
-            renderTable(issues);
+            
+            // Event listeners
+            applyFiltersBtn.addEventListener('click', applyFilters);
+            resetFiltersBtn.addEventListener('click', resetFilters);
         });
     </script>
 </body>

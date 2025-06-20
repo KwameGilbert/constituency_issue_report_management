@@ -7,16 +7,129 @@
     <title>Agent Login - Constituency System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         'inter': ['Inter', 'sans-serif'],
-                    },
+                    }
                 }
             }
         }
+    </script>
+    <script>
+        // SweetAlert Toast Mixin
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        // Page load animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            form.style.opacity = '0';
+            form.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                form.style.transition = 'all 0.6s ease-out';
+                form.style.opacity = '1';
+                form.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Login form submission
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Get form input values
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                // Basic validation
+                if (!email || !password) {
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'Please fill in all fields'
+                    });
+                    return;
+                }
+
+                // Button elements
+                const loginBtn = document.getElementById('loginBtn');
+                const loginIcon = document.getElementById('loginIcon');
+                const loadingIcon = document.getElementById('loadingIcon');
+                const btnText = document.getElementById('btnText');
+
+                // Show loading state
+                loginBtn.disabled = true;
+                loginIcon.classList.add('hidden');
+                loadingIcon.classList.remove('hidden');
+                btnText.textContent = 'Logging in...';
+
+                // Create form data
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('password', password);
+
+                // Send login request
+                fetch('login_ajax.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Reset button state
+                        loginBtn.disabled = false;
+                        loginIcon.classList.remove('hidden');
+                        loadingIcon.classList.add('hidden');
+                        btnText.textContent = 'Sign in to your account';
+
+                        if (data.success) {
+                            // Success case
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message || 'Login successful'
+                            }).then(() => {
+                                // Redirect to dashboard
+                                window.location.href = '../dashboard/';
+                            });
+                        } else {
+                            // Error case
+                            Toast.fire({
+                                icon: 'error',
+                                title: data.message || 'Login failed'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        // Network or other error
+                        console.error('Login error:', error);
+
+                        // Reset button state
+                        loginBtn.disabled = false;
+                        loginIcon.classList.remove('hidden');
+                        loadingIcon.classList.add('hidden');
+                        btnText.textContent = 'Sign in to your account';
+
+                        // Show error message
+                        Toast.fire({
+                            icon: 'error',
+                            title: 'Connection error'
+                        });
+                    });
+            });
+        });
     </script>
 </head>
 
@@ -100,7 +213,7 @@
                 </div>
 
                 <!-- Login Form -->
-                <form id="loginForm" action="login_process.php" method="POST" class="space-y-6">
+                <form id="loginForm" class="space-y-6">
                     <!-- Email Field -->
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
@@ -141,26 +254,20 @@
                         </div>
                     </div>
 
-                    <!-- Error Message -->
-                    <div id="errorMessage" class="text-red-600 text-sm text-center p-3 bg-red-50 rounded-lg border border-red-200
-                        <?php echo isset($_GET['error']) && $_GET['error'] == 'invalid_credentials' ? '' : 'hidden'; ?>">
-                        <svg class="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Invalid email or password. Please try again.
-                    </div>
-
                     <!-- Login Button -->
-                    <button type="submit"
+                    <button type="submit" id="loginBtn"
                         class="w-full flex justify-center items-center py-3 px-4 border border-transparent
                                rounded-xl shadow-sm text-base font-medium text-white bg-slate-900
                                hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2
-                               focus:ring-slate-500 transition duration-200 ease-in-out
-                               transform hover:translate-y-[-1px] active:translate-y-0">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               focus:ring-slate-500 transition duration-200 ease-in-out">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="loginIcon">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                         </svg>
-                        Sign in to your account
+                        <svg class="w-5 h-5 mr-2 animate-spin hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="loadingIcon">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="btnText">Sign in to your account</span>
                     </button>
                 </form>
 
@@ -174,72 +281,7 @@
         </div>
     </div>
 
-    <script>
-        // Custom alert modal function
-        function alert(message) {
-            const existingModal = document.getElementById('customAlertModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
 
-            const modalHtml = `
-                <div id="customAlertModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform transition-all duration-200 scale-100">
-                        <div class="flex items-center mb-4">
-                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-900">Notification</h3>
-                        </div>
-                        <p class="text-gray-600 mb-6 leading-relaxed">${message}</p>
-                        <div class="flex justify-end">
-                            <button id="closeAlertButton" 
-                                class="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 
-                                       focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
-                                       transition duration-200 font-medium">
-                                Got it
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            // Add click handler for close button
-            document.getElementById('closeAlertButton').addEventListener('click', function() {
-                document.getElementById('customAlertModal').remove();
-            });
-
-            // Close on backdrop click
-            document.getElementById('customAlertModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.remove();
-                }
-            });
-        }
-
-        // Check for success message from PHP
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'registered') {
-            alert('Registration successful! Please log in with your credentials.');
-        }
-
-        // Add subtle animations on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            form.style.opacity = '0';
-            form.style.transform = 'translateY(20px)';
-
-            setTimeout(() => {
-                form.style.transition = 'all 0.6s ease-out';
-                form.style.opacity = '1';
-                form.style.transform = 'translateY(0)';
-            }, 100);
-        });
-    </script>
 </body>
 
 </html>
