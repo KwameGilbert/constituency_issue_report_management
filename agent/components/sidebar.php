@@ -2,16 +2,15 @@
 // Agent Dashboard Sidebar
 
 /**
+ * 
  * Renders the sidebar for the Agent dashboard.
  * @param string $current_page The identifier for the current active page to highlight in the sidebar.
  */
 function renderAgentSidebar($current_page)
 {
 ?>
- 
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 -translate-x-full lg:translate-x-0 z-50 transition-transform duration-300 ease-in-out">
-
         <div class="h-full flex flex-col bg-white border-r border-gray-200 shadow-sm">
             <!-- Sidebar Header -->
             <div class="p-4 border-b border-gray-100">
@@ -51,7 +50,7 @@ function renderAgentSidebar($current_page)
                         $pageIcon = $item['icon'];
                         $pageLabel = $item['label'];
                         echo '<li>';
-                        echo '<a href="' . $pageUrl . '" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-colors ' . $isActive . '">';
+                        echo '<a href="' . $pageUrl . '" class="flex items-center align-center px-4 py-2.5 text-sm rounded-xl transition-colors ' . $isActive . '">';
                         echo '<i class="' . $pageIcon . ' w-5 h-5 mr-3"></i>';
                         echo '<span>' . $pageLabel . '</span>';
                         echo '</a>';
@@ -112,7 +111,6 @@ function renderAgentSidebar($current_page)
                     </a>
                 </div>
             </div>
-
         </div>
     </aside>
 <?php

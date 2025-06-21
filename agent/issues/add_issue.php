@@ -2,8 +2,10 @@
 // add_issue.php
 include __DIR__ . '/../components/sidebar.php';
 include __DIR__ . '/../components/header.php';
-include_once __DIR__ . '/../../controllers/IssueController.php';
+require_once __DIR__ . '/../../config/db_connection.php';
 // include_once __DIR__ . '/../login/session_check.php';
+$database = new Database();
+$conn = $database->getConnection();
 
 // Set current page for sidebar highlighting
 $current_page = 'issues';
@@ -25,10 +27,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch data for dropdowns - these would come from your controllers
-$electoralAreas = []; // Populate from your database
-$categories = [];     // Populate from your database
-$sectors = [];        // Populate from your database
+// Fetch data for dropdowns from database
+$electoralAreas = [];
+$categories = [];
+$sectors = [];
+
+try {
+    // Fetch electoral areas
+    $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
+    $stmt->execute();
+    $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch issue categories
+    $stmt = $conn->prepare("SELECT id, name FROM issue_categories ORDER BY name");
+    $stmt->execute();
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch sectors
+    $stmt = $conn->prepare("SELECT id, name FROM issue_sectors ORDER BY name");
+    $stmt->execute();
+    $sectors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    // Log error but continue with empty arrays
+    error_log("Error fetching dropdown data: " . $e->getMessage());
+}
 
 // Define header action buttons
 $headerActionButtons = [
@@ -174,20 +196,11 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                     <input type="number" id="people_affected" name="people_affected" min="0" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" placeholder="e.g., 100">
                                 </div>
 
-                                <div>
-                                    <label for="budget_estimate" class="block text-xs font-medium text-gray-700 mb-1">Budget Estimate (GHS)</label>
-                                    <input type="number" id="budget_estimate" name="budget_estimate" step="0.01" min="0" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" placeholder="e.g., 5000.00">
-                                </div>
-                            </div>
+                             </div>
 
                             <div>
                                 <label for="additional_notes" class="block text-xs font-medium text-gray-700 mb-1">Additional Notes</label>
                                 <textarea id="additional_notes" name="additional_notes" rows="2" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs"></textarea>
-                            </div>
-
-                            <div class="flex items-center">
-                                <input type="checkbox" id="public_visibility" name="public_visibility" class="h-3 w-3 text-primary border-gray-300 rounded focus:ring-primary">
-                                <label for="public_visibility" class="ml-2 block text-xs text-gray-700">Make this issue publicly visible</label>
                             </div>
                         </div>
 
@@ -281,6 +294,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             </button>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -358,7 +372,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                 if (electoralAreaId) {
                     try {
-                        const response = await fetch(`../api/get_communities.php?electoral_area_id=${electoralAreaId}`);
+                        const response = await fetch(`../../api/get_communities.php?electoral_area_id=${electoralAreaId}`);
                         const communities = await response.json();
                         populateSelect(communitySelect, communities, 'Select Community');
                     } catch (error) {
@@ -377,7 +391,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                 if (communityId) {
                     try {
-                        const response = await fetch(`../api/get_suburbs.php?community_id=${communityId}`);
+                        const response = await fetch(`../../api/get_suburbs.php?community_id=${communityId}`);
                         const suburbs = await response.json();
                         populateSelect(suburbSelect, suburbs, 'Select Suburb (Optional)');
                     } catch (error) {
@@ -396,7 +410,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                 if (sectorId) {
                     try {
-                        const response = await fetch(`../api/get_issue_subsectors.php?sector_id=${sectorId}`);
+                        const response = await fetch(`../../api/get_issue_subsectors.php?sector_id=${sectorId}`);
                         const subsectors = await response.json();
                         populateSelect(subsectorSelect, subsectors, 'Select Subsector (Optional)');
                     } catch (error) {
