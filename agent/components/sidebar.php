@@ -36,8 +36,8 @@ function renderAgentSidebar($current_page)
                     $menuItems = [
                         'dashboard' => ['icon' => 'fas fa-chart-line', 'label' => 'Dashboard'],
                         'issues' => ['icon' => 'fas fa-file-alt', 'label' => 'Issues'],
-                        'idea_submissions' => ['icon' => 'fas fa-lightbulb', 'label' => 'Ideas'],
-                        'notifications' => ['icon' => 'fas fa-bell', 'label' => 'Notifications'],
+                        // 'idea_submissions' => ['icon' => 'fas fa-lightbulb', 'label' => 'Ideas'],
+                        // 'notifications' => ['icon' => 'fas fa-bell', 'label' => 'Notifications'],
                     ];
 
                     // Generate menu items
@@ -67,7 +67,7 @@ function renderAgentSidebar($current_page)
                     // Define account menu items
                     $accountItems = [
                         'profile_settings' => ['icon' => 'fas fa-user-cog', 'label' => 'Settings'],
-                        'export_history' => ['icon' => 'fas fa-history', 'label' => 'Exports'],
+                        // 'export_history' => ['icon' => 'fas fa-history', 'label' => 'Exports'],
                     ];
 
                     // Generate account menu items

@@ -2,22 +2,6 @@
 -- Using INT PRIMARY KEYS with AUTO_INCREMENT
 
 
-CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
-    email VARCHAR(100),
-    password VARCHAR(255),
-    role ENUM('mp', 'mce', 'pa', 'officer', 'agent', 'admin'),
-    phone VARCHAR(50),
-    profile_image TEXT,
-    electoral_area INT,
-    department VARCHAR(255),
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    last_login TIMESTAMP NULL,
-    FOREIGN KEY (electoral_area) REFERENCES electoral_areas(id) ON DELETE SET NULL
-);
 
 CREATE TABLE web_admins (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -78,7 +62,6 @@ CREATE TABLE carousel_items (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-
 CREATE TABLE contact_messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255),
@@ -89,6 +72,23 @@ CREATE TABLE contact_messages (
     status ENUM('pending', 'reviewed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    email VARCHAR(100),
+    password VARCHAR(255),
+    role ENUM('mp', 'mce', 'pa', 'officer', 'agent', 'admin'),
+    phone VARCHAR(50),
+    profile_image TEXT,
+    electoral_area INT,
+    department VARCHAR(255),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
+    FOREIGN KEY (electoral_area) REFERENCES electoral_areas(id) ON DELETE SET NULL
 );
 
 CREATE TABLE constituents (
@@ -162,10 +162,7 @@ CREATE TABLE issues (
     status_description TEXT,
     agent_id INT,
     officer_id INT,
-    pa_id INT,
-    mp_mce_id INT,
     constituent_id INT,
-    supervisor_id INT,
     people_affected INT,
     budget_estimate DECIMAL(12,2),
     resolution_notes TEXT,
@@ -182,10 +179,7 @@ CREATE TABLE issues (
     FOREIGN KEY (subsector_id) REFERENCES issue_subsectors(id) ON DELETE SET NULL,
     FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (officer_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (pa_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (mp_mce_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL,
-    FOREIGN KEY (supervisor_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE issue_history_logs (
@@ -198,6 +192,7 @@ CREATE TABLE issue_history_logs (
     FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
 
 
 CREATE TABLE projects (
