@@ -1,8 +1,8 @@
 <?php
 // issues.php - Agent Issues Management Page
-include __DIR__ . '/../components/sidebar.php';
-include __DIR__ . '/../components/header.php';
-// include_once __DIR__ . '/../login/session_check.php';
+require_once __DIR__ . '/../components/sidebar.php';
+require_once_once __DIR__ . '/../components/header.php';
+_once __DIR__ . '/../login/session_check.php';
 
 $current_page = 'issues';
 

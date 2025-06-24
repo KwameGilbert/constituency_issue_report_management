@@ -1,9 +1,9 @@
 <?php
 // add_issue.php
-include __DIR__ . '/../components/sidebar.php';
-include __DIR__ . '/../components/header.php';
+require_once __DIR__ . '/../components/sidebar.php';
+require_once __DIR__ . '/../components/header.php';
 require_once __DIR__ . '/../../config/db_connection.php';
-// include_once __DIR__ . '/../login/session_check.php';
+include_once __DIR__ . '/../login/session_check.php';
 $database = new Database();
 $conn = $database->getConnection();
 

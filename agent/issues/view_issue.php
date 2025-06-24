@@ -1,6 +1,6 @@
 <?php
-include __DIR__ . '/../components/sidebar.php';
-include __DIR__ . '/../components/header.php';
+require_once __DIR__ . '/../components/sidebar.php';
+require_once __DIR__ . '/../components/header.php';
 require_once __DIR__ . '/../../config/db_connection.php';
 
 $database = new Database();

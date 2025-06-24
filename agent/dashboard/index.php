@@ -1,11 +1,13 @@
 <?php
 // dashboard.php - Agent Dashboard Page
-
 // Include the sidebar and header function definitions
-include __DIR__ . '/../components/sidebar.php';
-include __DIR__ . '/../components/header.php';
-// include_once __DIR__ . '/../login/session_check.php';
+require_once __DIR__ . '/../components/sidebar.php';
+require_once __DIR__ . '/../components/header.php';
+require_once __DIR__ . '/../../config/db_connection.php';
+require_once __DIR__ . '/../login/session_check.php';
 
+$database = new Database();
+$conn = $database->getConnection();
 // Determine the current page for sidebar highlighting
 $current_page = 'dashboard';
 
