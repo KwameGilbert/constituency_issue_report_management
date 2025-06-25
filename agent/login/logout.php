@@ -13,8 +13,9 @@ session_destroy();
 
 // If we have user ID, log the logout
 if ($user_id) {
-    // Include database connection
-    require_once '../config/db_config.php';
+    require_once __DIR__ . '/../../config/db_connection.php';
+    $database = new Database();
+    $conn = $database->getConnection();
     
     try {
         // Get IP and user agent
@@ -24,8 +25,7 @@ if ($user_id) {
         
         // Insert logout record into audit log
         $stmt = $conn->prepare("INSERT INTO audit_logs (user_id, action, ip_address, user_agent) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $user_id, $action, $ip, $userAgent);
-        $stmt->execute();
+        $stmt->execute([$user_id, $action, $ip, $userAgent]);
     } catch (Exception $e) {
         // Just log the error, but continue with logout process
         error_log("Logout audit log error: " . $e->getMessage());
@@ -33,6 +33,6 @@ if ($user_id) {
 }
 
 // Redirect to login page with logout success message
-header("Location: login/index.php?success=logged_out");
+header("Location: ./index.php");
 exit();
 ?>

@@ -106,13 +106,97 @@ function renderAgentSidebar($current_page)
                             </p>
                         </div>
                     </div>
-                    <a href="./../login/logout.php" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                    <a href="./../login/logout.php" id="logout-link" class="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>
                 </div>
             </div>
         </div>
     </aside>
+
+    <div id="logout-modal" class="fixed inset-0 flex items-center justify-center z-[1000] bg-black bg-opacity-60
+                opacity-0 invisible transition-opacity duration-400 ease-in-out pointer-events-none font-sans antialiased text-gray-900">
+        <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm text-center
+                    transform -translate-y-5 transition-transform duration-400 ease-in-out">
+            <h2 class="text-xl font-semibold mb-3 text-gray-900">Are you sure?</h2>
+            <p class="text-sm text-gray-600 mb-6">You will be logged out from your account.</p>
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-logout" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm">
+                    Cancel
+                </button>
+                <button id="confirm-logout" class="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors font-medium text-sm">
+                    Yes, log me out!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to the elements
+        const logoutLink = document.getElementById('logout-link'); // Your logout <a> tag
+        const logoutModal = document.getElementById('logout-modal'); // The modal container
+        // const modalContent = logoutModal.querySelector('.modal-content'); // The inner modal content
+        const confirmLogoutBtn = document.getElementById('confirm-logout'); // "Yes, log me out!" button
+        const cancelLogoutBtn = document.getElementById('cancel-logout'); // "Cancel" button
+
+        // Function to show the modal with transitions
+        function showModal() {
+            logoutModal.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+            logoutModal.classList.add('opacity-100', 'visible');
+            // // Ensure content slides up when modal shows
+            // logoutModal.querySelector('.modal-content').classList.remove('-translate-y-5');
+            // logoutModal.querySelector('.modal-content').classList.add('translate-y-0');
+        }
+
+        // Function to hide the modal with transitions
+        function hideModal() {
+            logoutModal.classList.remove('opacity-100', 'visible');
+            logoutModal.classList.add('opacity-0', 'invisible', 'pointer-events-none');
+            // Ensure content slides down when modal hides
+
+            logoutModal.querySelector('.modal-content').classList.remove('translate-y-0');
+            logoutModal.querySelector('.modal-content').classList.add('-translate-y-5');
+        }
+
+        // Event listener for the logout link
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default link navigation
+                showModal(); // Show the custom modal
+            });
+        } else {
+            console.warn("Logout link not found. Custom modal script may not work as expected.");
+        }
+
+        // Event listener for the "Yes, log me out!" button
+        if (confirmLogoutBtn) {
+            confirmLogoutBtn.addEventListener('click', function() {
+                // Give a small delay for the modal to start hiding before redirecting
+                setTimeout(() => {
+                    window.location.href = logoutLink.href; // Proceed with logout
+                }, 300); // Match transition duration
+
+               
+            });
+        }
+
+        // Event listener for the "Cancel" button
+        if (cancelLogoutBtn) {
+            cancelLogoutBtn.addEventListener('click', function() {
+                hideModal(); // Just hide the modal, do not logout
+            });
+        }
+
+        // Close modal if clicking outside the modal content
+        if (logoutModal) {
+            logoutModal.addEventListener('click', function(event) {
+                // If the click target is the modal overlay itself (and not a child of modal-content)
+                if (event.target === logoutModal) {
+                    hideModal();
+                }
+            });
+        }
+    </script>
 <?php
 }
 ?>
