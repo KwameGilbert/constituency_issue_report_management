@@ -5,14 +5,14 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Check if user is logged in and is an agent
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || $_SESSION['user_role'] !== 'agent') {
+if (!isset($_SESSION['user_id'])) {
     // User is not logged in or not an agent, redirect to login page
     header("Location: ../login/index.php?error=auth_required");
     exit();
 }
 
-// Optional: Check if session has been inactive for too long (e.g., 30 minutes)
-$max_idle_time = 30 * 60; // 30 minutes in seconds
+// Optional: Check if session has been inactive for too long (e.g., 7200 minutes)
+$max_idle_time = 7200 * 60; // 7200 minutes in seconds
 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $max_idle_time)) {
     // Session has expired, destroy it and redirect to login

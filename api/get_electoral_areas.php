@@ -2,10 +2,14 @@
 // api/get_electoral_areas.php
 header('Content-Type: application/json');
 
-// In a real application, fetch from database using Lookup model
-echo json_encode([
-    ['id' => 1, 'name' => 'Adabraka'],
-    ['id' => 2, 'name' => 'Osu'],
-    ['id' => 3, 'name' => 'Labadi'],
-    ['id' => 4, 'name' => 'Cantonments']
-]);
+require_once __DIR__ . '/../config/db_connection.php';
+
+$database = new Database();
+$conn = $database->getConnection();
+
+$electoralAreas = [];
+
+$stmt = $conn->query("SELECT id, name FROM electoral_areas ORDER BY name ASC");
+$electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode($electoralAreas);

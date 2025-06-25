@@ -66,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['last_activity'] = time();
                 
                 // Update last login time
-                // Update last login time
                 $updateStmt = $conn->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?");
                 $updateStmt->bindValue(1, $user['id'], PDO::PARAM_INT);
                 $updateStmt->execute();

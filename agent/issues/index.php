@@ -1,68 +1,34 @@
 <?php
 // issues.php - Agent Issues Management Page
 require_once __DIR__ . '/../components/sidebar.php';
-require_once_once __DIR__ . '/../components/header.php';
-_once __DIR__ . '/../login/session_check.php';
+require_once __DIR__ . '/../components/header.php';
+require_once __DIR__ . '/../login/session_check.php';
+require_once __DIR__ . '/../../config/db_connection.php';
 
+$database = new Database();
+$conn = $database->getConnection();
+$agentId = $_SESSION['user_id'] ?? null;
+if (!$agentId) {
+    die("Unauthorized");
+}                                                                                                                                      
 $current_page = 'issues';
 
-// Dummy data for demonstration
-$issues = [
-    [
-        'id' => 1,
-        'title' => 'Potholes on High Street',
-        'category' => 'Roads',
-        'status' => 'pending',
-        'location' => 'Central Business District',
-        'submitted_at' => '2023-06-15',
-        'description' => 'Large potholes making driving difficult and dangerous on High Street near the market.'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Water Shortage in North Hills',
-        'category' => 'Water',
-        'status' => 'approved',
-        'location' => 'North Hills Residential',
-        'submitted_at' => '2023-06-10',
-        'description' => 'Intermittent water supply for the past week, affecting daily chores.'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Broken Streetlight at Park Entrance',
-        'category' => 'Electricity',
-        'status' => 'resolved',
-        'location' => 'Community Park',
-        'submitted_at' => '2023-06-01',
-        'description' => 'Streetlight at the main entrance of Community Park has been out for several nights.'
-    ],
-    [
-        'id' => 4,
-        'title' => 'Illegal Dumping in Riverfront Area',
-        'category' => 'Environment',
-        'status' => 'pending',
-        'location' => 'Riverfront Pathway',
-        'submitted_at' => '2023-06-18',
-        'description' => 'Construction waste being dumped near the riverfront walking path.'
-    ],
-    [
-        'id' => 5,
-        'title' => 'School Playground Equipment Damaged',
-        'category' => 'Education',
-        'status' => 'rejected',
-        'location' => 'Central Elementary School',
-        'submitted_at' => '2023-06-08',
-        'description' => 'Swings and slides are damaged and pose safety risks to children.'
-    ],
-    [
-        'id' => 6,
-        'title' => 'Sewage Overflow on Main Street',
-        'category' => 'Sanitation',
-        'status' => 'approved',
-        'location' => 'Main Street Shopping District',
-        'submitted_at' => '2023-06-14',
-        'description' => 'Sewage backing up onto street near restaurant row, causing health concerns.'
-    ],
-];
+$issuesStmt = $conn->prepare("
+    SELECT 
+        i.id,
+        i.title,
+        ic.name AS category,
+        i.status,
+        i.location,
+        DATE(i.created_at) AS submitted_at
+    FROM issues i
+    LEFT JOIN issue_categories ic ON i.category_id = ic.id
+    WHERE i.agent_id = ?
+    ORDER BY i.created_at DESC
+");
+
+$issuesStmt->execute([$agentId]);
+$issues = $issuesStmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Extract unique categories and statuses for filters
 $categories = array_unique(array_column($issues, 'category'));
@@ -141,7 +107,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         <label for="searchInput" class="block text-xs font-medium text-gray-700 mb-2">Search</label>
                         <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900" placeholder="Search by title or location...">
                     </div>
-                    
+
                     <!-- Category Filter -->
                     <div>
                         <label for="categoryFilter" class="block text-xs font-medium text-gray-700 mb-2">Category</label>
@@ -152,7 +118,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <!-- Status Filter -->
                     <div>
                         <label for="statusFilter" class="block text-xs font-medium text-gray-700 mb-2">Status</label>
@@ -164,7 +130,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Filter Actions -->
                 <div class="flex justify-end space-x-2">
                     <button id="resetFiltersBtn" class="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
@@ -182,7 +148,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                     <h2 class="text-base font-semibold text-gray-800">All Issues</h2>
                     <div class="text-sm text-gray-500"><?php echo count($issues); ?> issues found</div>
                 </div>
-                
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -207,25 +173,25 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['category']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['location']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php 
-                                            $statusClass = '';
-                                            switch ($issue['status']) {
-                                                case 'pending':
-                                                    $statusClass = 'bg-warning/10 text-warning';
-                                                    break;
-                                                case 'approved':
-                                                    $statusClass = 'bg-primary/10 text-primary';
-                                                    break;
-                                                case 'rejected':
-                                                    $statusClass = 'bg-error/10 text-error';
-                                                    break;
-                                                case 'resolved':
-                                                    $statusClass = 'bg-success/10 text-success';
-                                                    break;
-                                                default:
-                                                    $statusClass = 'bg-gray-100 text-gray-800';
-                                                    break;
-                                            }
+                                        <?php
+                                        $statusClass = '';
+                                        switch ($issue['status']) {
+                                            case 'pending':
+                                                $statusClass = 'bg-warning/10 text-warning';
+                                                break;
+                                            case 'approved':
+                                                $statusClass = 'bg-primary/10 text-primary';
+                                                break;
+                                            case 'rejected':
+                                                $statusClass = 'bg-error/10 text-error';
+                                                break;
+                                            case 'resolved':
+                                                $statusClass = 'bg-success/10 text-success';
+                                                break;
+                                            default:
+                                                $statusClass = 'bg-gray-100 text-gray-800';
+                                                break;
+                                        }
                                         ?>
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
                                             <?php echo ucfirst(htmlspecialchars($issue['status'])); ?>
@@ -241,7 +207,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
                     <div class="flex-1 flex justify-between sm:hidden">
@@ -284,12 +250,12 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             // Filter toggle functionality
             const filterToggleBtn = document.getElementById('filterToggleBtn');
             const filterSection = document.getElementById('filterSection');
-            
+
             filterToggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 filterSection.classList.toggle('hidden');
             });
-            
+
             // Filter functionality
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
@@ -298,23 +264,23 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             const applyFiltersBtn = document.getElementById('applyFiltersBtn');
             const issuesTable = document.getElementById('issuesTable');
             const rows = issuesTable.querySelectorAll('tr');
-            
+
             // Apply filters function
             function applyFilters() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const category = categoryFilter.value.toLowerCase();
                 const status = statusFilter.value.toLowerCase();
-                
+
                 rows.forEach(row => {
                     const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
                     const location = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
                     const rowCategory = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                     const rowStatus = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
-                    
+
                     const matchesSearch = title.includes(searchTerm) || location.includes(searchTerm);
                     const matchesCategory = !category || rowCategory === category;
                     const matchesStatus = !status || rowStatus.includes(status);
-                    
+
                     if (matchesSearch && matchesCategory && matchesStatus) {
                         row.style.display = '';
                     } else {
@@ -322,7 +288,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                     }
                 });
             }
-            
+
             // Reset filters function
             function resetFilters() {
                 searchInput.value = '';
@@ -330,7 +296,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                 statusFilter.selectedIndex = 0;
                 rows.forEach(row => row.style.display = '');
             }
-            
+
             // Event listeners
             applyFiltersBtn.addEventListener('click', applyFilters);
             resetFiltersBtn.addEventListener('click', resetFilters);

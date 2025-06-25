@@ -9,7 +9,7 @@ $conn = $database->getConnection();
 
 // Set current page for sidebar highlighting
 $current_page = 'issues';
-
+$agentId = $_SESSION['user_id'];
 // Initialize message variables
 $message = '';
 $message_type = '';
@@ -17,8 +17,7 @@ $message_type = '';
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Process the form submission here
-        // This would be handled by IssueController
+
         $message = "Issue submitted successfully!";
         $message_type = "success";
     } catch (Exception $e) {
@@ -37,12 +36,12 @@ try {
     $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
     $stmt->execute();
     $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Fetch issue categories
     $stmt = $conn->prepare("SELECT id, name FROM issue_categories ORDER BY name");
     $stmt->execute();
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Fetch sectors
     $stmt = $conn->prepare("SELECT id, name FROM issue_sectors ORDER BY name");
     $stmt->execute();
@@ -74,6 +73,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add New Issue - Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -114,7 +114,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             <?php endif; ?>
 
             <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-                <form id="issueForm" action="add_issue.php" method="POST">
+                <form id="issueForm">
                     <!-- Form tabs -->
                     <div class="border-b border-gray-200 mb-4">
                         <div class="flex -mb-px space-x-6">
@@ -196,7 +196,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                     <input type="number" id="people_affected" name="people_affected" min="0" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" placeholder="e.g., 100">
                                 </div>
 
-                             </div>
+                            </div>
 
                             <div>
                                 <label for="additional_notes" class="block text-xs font-medium text-gray-700 mb-1">Additional Notes</label>
@@ -220,6 +220,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
+                                    <!-- Email is optional; not marked as required -->
                                     <label for="constituent_email" class="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
                                     <input type="email" id="constituent_email" name="constituent_email" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
                                 </div>
@@ -230,7 +231,6 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                         <option value="">Select Gender</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
-                                        <option value="other">Other</option>
                                     </select>
                                 </div>
                             </div>
@@ -311,6 +311,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             const prevBtn = document.getElementById('prev-btn');
             const nextBtn = document.getElementById('next-btn');
             const submitBtn = document.getElementById('submit-btn');
+
 
             function showTab(index) {
                 tabButtons.forEach((btn, i) => {
@@ -438,6 +439,66 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
             // Show initial tab
             showTab(0);
+
+
+
+
+            // FORM SUBMISSION HANDLER
+            const issueForm = document.getElementById('issueForm');
+            issueForm.addEventListener('submit', async function(e) {
+                e.preventDefault(); // prevent traditional form submission
+
+                const formData = new FormData(issueForm);
+
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+
+                try {
+                    const response = await fetch('../../api/create_issue.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Issue submitted successfully!'
+                        });
+
+                        setTimeout(() => {
+                            issueForm.reset();
+                            window.location.href = './../dashboard/';
+                        }, 3200);
+
+                    } else {
+                        Toast.fire({
+                            icon: 'error',
+                            title: result.message || 'Failed to submit issue.'
+                        });
+                        console.error(result.error);
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Something went wrong while submitting the form.'
+                    });
+                }
+            });
+
+
+
         });
     </script>
 </body>

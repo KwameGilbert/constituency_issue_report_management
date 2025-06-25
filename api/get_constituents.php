@@ -2,8 +2,14 @@
 // api/get_constituents.php
 header('Content-Type: application/json');
 
-echo json_encode([
-    ['id' => 1, 'name' => 'John Doe', 'email' => 'john.doe@example.com'],
-    ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane.smith@example.com'],
-    ['id' => 3, 'name' => 'Peter Jones', 'email' => 'peter.jones@example.com']
-]);
+require_once __DIR__ . '/../config/db_connection.php';
+
+$database = new Database();
+$conn = $database->getConnection();
+
+$constituents = [];
+
+$stmt = $conn->query("SELECT id, name, phone AS email FROM constituents ORDER BY name ASC");
+$constituents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+echo json_encode($constituents);

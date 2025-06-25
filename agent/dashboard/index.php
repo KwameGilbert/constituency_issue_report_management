@@ -8,51 +8,162 @@ require_once __DIR__ . '/../login/session_check.php';
 
 $database = new Database();
 $conn = $database->getConnection();
+
 // Determine the current page for sidebar highlighting
 $current_page = 'dashboard';
 
-// --- Dashboard Stats Data ---
-$totalIssues = 45;
-$pendingReview = 12;
-$approved = 18;
-$rejected = 5;
-$resolved = 22;
+$agentId = $_SESSION['user_id'] ?? null;
+if (!$agentId) {
+    die("Unauthorized");
+}
 
-// Data for 'Issues by Status' Chart
+// Colors (random shades for each)
+function randomColor($base)
+{
+    $shades = [
+        'slate' => ['#64748b', '#475569', '#334155', '#1e293b'],
+        'indigo' => ['#6366f1', '#4f46e5', '#4338ca'],
+        'green' => ['#10b981', '#059669', '#047857'],
+        'yellow' => ['#f59e0b', '#d97706', '#b45309'],
+        'red' => ['#ef4444', '#dc2626', '#b91c1c'],
+        'pink' => ['#ec4899', '#db2777', '#be185d'],
+        'violet' => ['#8b5cf6', '#7c3aed', '#6d28d9'],
+        'teal' => ['#14b8a6', '#0d9488', '#0f766e'],
+    ];
+    $pool = $shades[$base] ?? $shades['slate'];
+    return $pool[array_rand($pool)];
+}
+
+// --- Issues by Status ---
+$statusStmt = $conn->prepare("SELECT status, COUNT(*) AS count FROM issues WHERE agent_id = ? GROUP BY status");
+$statusStmt->execute([$agentId]);
+$statusLabels = [];
+$statusData = [];
+$statusColors = [];
+while ($row = $statusStmt->fetch(PDO::FETCH_ASSOC)) {
+    $statusLabels[] = ucwords(str_replace('_', ' ', $row['status']));
+    $statusData[] = (int)$row['count'];
+    $statusColors[] = randomColor('slate');
+}
 $issuesByStatusData = [
-    'labels' => ['Pending', 'Approved', 'Rejected', 'Resolved'],
-    'data' => [$pendingReview, $approved, $rejected, $resolved],
-    'backgroundColor' => [
-        '#f59e0b', // warning (yellow)
-        '#6366f1', // primary (indigo)
-        '#ef4444', // red
-        '#10b981', // success (green)
-    ]
+    'labels' => $statusLabels,
+    'data' => $statusData,
+    'backgroundColor' => $statusColors,
 ];
 
-// Data for 'Issues by Category' Chart
+// --- Issues by Category ---
+$categoryStmt = $conn->prepare("SELECT ic.name AS category, COUNT(*) AS count FROM issues i JOIN issue_categories ic ON i.category_id = ic.id WHERE i.agent_id = ? GROUP BY ic.name");
+$categoryStmt->execute([$agentId]);
+$categoryLabels = [];
+$categoryData = [];
+$categoryColors = [];
+while ($row = $categoryStmt->fetch(PDO::FETCH_ASSOC)) {
+    $categoryLabels[] = $row['category'];
+    $categoryData[] = (int)$row['count'];
+    $categoryColors[] = randomColor('teal');
+}
 $issuesByCategoryData = [
-    'labels' => ['Infrastructure', 'Education', 'Health', 'Security', 'Water'],
-    'data' => [15, 12, 8, 6, 4],
-    'backgroundColor' => [
-        '#6366f1', // primary 
-        '#8b5cf6', // violet
-        '#ec4899', // pink
-        '#14b8a6', // teal
-        '#f59e0b', // yellow
-    ]
+    'labels' => $categoryLabels,
+    'data' => $categoryData,
+    'backgroundColor' => $categoryColors,
 ];
 
-// Data for 'Issues by Severity' Chart
+// --- Issues by Severity ---
+$severityStmt = $conn->prepare("SELECT severity, COUNT(*) AS count FROM issues WHERE agent_id = ? GROUP BY severity");
+$severityStmt->execute([$agentId]);
+$severityLabels = [];
+$severityData = [];
+$severityColors = [];
+while ($row = $severityStmt->fetch(PDO::FETCH_ASSOC)) {
+    $severityLabels[] = ucfirst($row['severity']);
+    $severityData[] = (int)$row['count'];
+    $severityColors[] = randomColor('red');
+}
 $issuesBySeverityData = [
-    'labels' => ['High', 'Medium', 'Low'],
-    'data' => [10, 23, 12],
-    'backgroundColor' => [
-        '#ef4444', // red
-        '#f59e0b', // yellow
-        '#10b981', // green
-    ]
+    'labels' => $severityLabels,
+    'data' => $severityData,
+    'backgroundColor' => $severityColors,
 ];
+
+// --- Dashboard Totals ---
+$countStmt = $conn->prepare("SELECT 
+    COUNT(*) AS total, 
+    SUM(status = 'pending') AS pending,
+    SUM(status = 'approved') AS approved, 
+    SUM(status = 'in_progress') AS in_progress, 
+    SUM(status = 'resolved') AS resolved, 
+    SUM(status = 'rejected') AS rejected 
+    FROM issues WHERE agent_id = ?");
+$countStmt->execute([$agentId]);
+$countRow = $countStmt->fetch(PDO::FETCH_ASSOC);
+
+$totalIssues = (int)$countRow['total'];
+$pendingReview = (int)$countRow['pending'];
+$approved = (int)$countRow['approved'];
+$inProgress = (int) $countRow['in_progress'];
+$rejected = (int)$countRow['rejected'];
+$resolved = (int)$countRow['resolved'];
+
+/**
+ * Fetches the most recent issues for the dashboard table.
+ *
+ * @param PDO $conn The PDO database connection object.
+ * @param int $limit The maximum number of issues to fetch.
+ * @return array An array of associative arrays, each representing an issue.
+ */
+function getRecentIssues(PDO $conn, int $limit = 5): array
+{
+    $stmt = $conn->prepare("
+        SELECT
+            i.id,
+            i.title,
+            i.description,
+            i.location,
+            ea.name AS electoral_area_name,
+            com.name AS community_name,
+            sub.name AS suburb_name,
+            i.status,
+            ic.name AS category_name,
+            i.created_at
+        FROM
+            issues i
+        LEFT JOIN
+            electoral_areas ea ON i.electoral_area_id = ea.id
+        LEFT JOIN
+            communities com ON i.community_id = com.id
+        LEFT JOIN
+            suburbs sub ON i.suburb_id = sub.id
+        LEFT JOIN
+            issue_categories ic ON i.category_id = ic.id
+        ORDER BY
+            i.created_at DESC
+        LIMIT :limit
+    ");
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Returns Tailwind CSS classes for an issue status badge.
+ *
+ * @param string $status The issue status (e.g., 'pending', 'approved', 'rejected', 'resolved').
+ * @return string The CSS classes for the badge.
+ */
+function getStatusBadgeClasses(string $status): string
+{
+    return match (strtolower($status)) {
+        'pending'     => 'bg-yellow-100 text-yellow-800', // warning
+        'approved'    => 'bg-indigo-100 text-indigo-800', // primary
+        'rejected'    => 'bg-red-100 text-red-800',       // red
+        'resolved'    => 'bg-green-100 text-green-800',   // success
+        'in_progress' => 'bg-blue-100 text-blue-800',     // blue
+        default       => 'bg-gray-100 text-gray-800',
+    };
+}
+
+// Fetch recent issues
+$recentIssues = getRecentIssues($conn, 5);
 
 // Get current user data for display
 $userName = $_SESSION['user_name'] ?? 'Agent';
@@ -153,15 +264,15 @@ $headerActionButtons = [
                     </div>
                 </div>
 
-                <!-- Rejected Issues Card -->
+                <!-- In Progress Issues Card -->
                 <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-error/10 rounded-lg flex items-center justify-center mr-4">
-                            <i class="fas fa-thumbs-down text-error"></i>
+                        <div class="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-spinner text-secondary"></i>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Rejected</p>
-                            <h3 class="text-xl font-bold text-gray-800"><?php echo $rejected; ?></h3>
+                            <p class="text-sm text-gray-500 font-medium">In Progress</p>
+                            <h3 class="text-xl font-bold text-gray-800"><?php echo $inProgress; ?></h3>
                         </div>
                     </div>
                 </div>
@@ -250,57 +361,64 @@ $headerActionButtons = [
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Issue
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Category
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">View</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- Sample data, replace with actual data -->
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">Broken Street Light</div>
-                                    <div class="text-xs text-gray-500">East Street, North Community</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-warning/10 text-warning">Pending</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Infrastructure</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-06-18</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="#" class="text-primary hover:text-primary/80 font-medium">View</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">Water Shortage</div>
-                                    <div class="text-xs text-gray-500">West Hills, Central Area</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary/10 text-primary">Approved</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Water</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-06-17</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="#" class="text-primary hover:text-primary/80 font-medium">View</a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">School Renovation</div>
-                                    <div class="text-xs text-gray-500">South District, Main Area</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">Resolved</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Education</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-06-15</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                    <a href="#" class="text-primary hover:text-primary/80 font-medium">View</a>
-                                </td>
-                            </tr>
+                            <?php if (empty($recentIssues)): ?>
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        No recent issues found.
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($recentIssues as $issue): ?>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($issue['title']); ?></div>
+                                            <div class="text-xs text-gray-500">
+                                                <?php
+                                                // Construct location string
+                                                $locationParts = [];
+                                                if (!empty($issue['location'])) $locationParts[] = htmlspecialchars($issue['location']);
+                                                if (!empty($issue['suburb_name'])) $locationParts[] = htmlspecialchars($issue['suburb_name']);
+                                                if (!empty($issue['community_name'])) $locationParts[] = htmlspecialchars($issue['community_name']);
+                                                if (!empty($issue['electoral_area_name'])) $locationParts[] = htmlspecialchars($issue['electoral_area_name']);
+                                                echo implode(', ', $locationParts);
+                                                ?>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo getStatusBadgeClasses($issue['status']); ?>">
+                                                <?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $issue['status']))); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo htmlspecialchars($issue['category_name'] ?? 'N/A'); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <?php echo date('Y-m-d', strtotime($issue['created_at'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                            <a href="../issues/view_issue.php?id=<?php echo $issue['id'] ?? ''; ?>" class="text-indigo-600 hover:text-indigo-900 font-medium">View</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>

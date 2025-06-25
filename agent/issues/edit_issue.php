@@ -25,98 +25,7 @@ if ($issue_id <= 0) {
     $message = "Invalid issue ID.";
     $message_type = "error";
 } else {
-    // Process form submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        try {
-            // Begin transaction
-            $conn->beginTransaction();
-
-            // Update issue data
-            $stmt = $conn->prepare("
-                UPDATE issues SET
-                    title = :title,
-                    description = :description,
-                    location = :location,
-                    electoral_area_id = :electoral_area_id,
-                    community_id = :community_id,
-                    suburb_id = :suburb_id,
-                    category_id = :category_id,
-                    sector_id = :sector_id,
-                    subsector_id = :subsector_id,
-                    type = :type,
-                    severity = :severity,
-                    people_affected = :people_affected,
-                    additional_notes = :additional_notes,
-                    updated_at = NOW()
-                WHERE id = :issue_id
-            ");
-
-            $stmt->bindParam(':title', $_POST['title']);
-            $stmt->bindParam(':description', $_POST['description']);
-            $stmt->bindParam(':location', $_POST['location']);
-            $stmt->bindParam(':electoral_area_id', $_POST['electoral_area_id']);
-            $stmt->bindParam(':community_id', $_POST['community_id']);
-            $stmt->bindParam(':suburb_id', $_POST['suburb_id'] ? $_POST['suburb_id'] : null);
-            $stmt->bindParam(':category_id', $_POST['category_id']);
-            $stmt->bindParam(':sector_id', $_POST['sector_id']);
-            $stmt->bindParam(':subsector_id', $_POST['subsector_id'] ? $_POST['subsector_id'] : null);
-            $stmt->bindParam(':type', $_POST['type']);
-            $stmt->bindParam(':severity', $_POST['severity']);
-            $stmt->bindParam(':people_affected', $_POST['people_affected']);
-            $stmt->bindParam(':additional_notes', $_POST['additional_notes']);
-            $stmt->bindParam(':issue_id', $issue_id);
-
-            $stmt->execute();
-
-            // Update constituent details if needed
-            if ($_POST['constituent_id']) {
-                $stmt = $conn->prepare("
-                    UPDATE constituents SET
-                        name = :name,
-                        phone = :phone,
-                        location = :location
-                    WHERE id = :constituent_id
-                ");
-
-                $stmt->bindParam(':name', $_POST['constituent_name']);
-                $stmt->bindParam(':phone', $_POST['constituent_phone']);
-                $stmt->bindParam(':location', $_POST['constituent_address']);
-                $stmt->bindParam(':constituent_id', $_POST['constituent_id']);
-
-                $stmt->execute();
-            }
-
-            // Add history log entry
-            $stmt = $conn->prepare("
-                INSERT INTO issue_history_logs
-                    (issue_id, user_id, action, comment, created_at)
-                VALUES
-                    (:issue_id, :user_id, :action, :comment, NOW())
-            ");
-
-            $userId = $_SESSION['user_id'] ?? 1; // Default to 1 if no session
-            $action = "Issue updated";
-            $comment = "Issue details were updated";
-
-            $stmt->bindParam(':issue_id', $issue_id);
-            $stmt->bindParam(':user_id', $userId);
-            $stmt->bindParam(':action', $action);
-            $stmt->bindParam(':comment', $comment);
-
-            $stmt->execute();
-
-            // Commit transaction
-            $conn->commit();
-
-            $message = "Issue updated successfully!";
-            $message_type = "success";
-        } catch (Exception $e) {
-            // Rollback transaction on error
-            $conn->rollBack();
-            $message = "Error: " . $e->getMessage();
-            $message_type = "error";
-        }
-    }
+    // No direct POST handling here; updates are handled via the API endpoint (update_issue.php) through AJAX.
 
     // Fetch current issue data
     try {
@@ -231,6 +140,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Issue #<?php echo $issue_id; ?> - Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -273,7 +183,6 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             <?php if ($issue) : ?>
                 <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
                     <form id="issueForm" action="edit_issue.php?id=<?php echo $issue_id; ?>" method="POST">
-                        <!-- Form tabs -->
                         <div class="border-b border-gray-200 mb-4">
                             <div class="flex -mb-px space-x-6">
                                 <button type="button" id="tab-issue" class="text-xs font-medium py-2 border-b-2 border-slate-900 text-slate-900">Issue Details</button>
@@ -282,9 +191,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             </div>
                         </div>
 
-                        <!-- Tab content -->
                         <div id="tab-content">
-                            <!-- Issue Details Tab -->
                             <div id="content-issue" class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -364,7 +271,6 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                 </div>
                             </div>
 
-                            <!-- Constituent Details Tab (hidden by default) -->
                             <div id="content-constituent" class="hidden space-y-4">
                                 <input type="hidden" name="constituent_id" value="<?php echo htmlspecialchars($issue['constituent_id'] ?? ''); ?>">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -379,13 +285,28 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                     </div>
                                 </div>
 
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="constituent_email" class="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
+                                        <input type="email" id="constituent_email" name="constituent_email" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['constituent_email'] ?? ''); ?>">
+                                    </div>
+
+                                    <div>
+                                        <label for="constituent_gender" class="block text-xs font-medium text-gray-700 mb-1">Gender</label>
+                                        <select id="constituent_gender" name="constituent_gender" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Gender</option>
+                                            <option value="male" <?php echo ($issue['constituent_gender'] ?? '') === 'male' ? 'selected' : ''; ?>>Male</option>
+                                            <option value="female" <?php echo ($issue['constituent_gender'] ?? '') === 'female' ? 'selected' : ''; ?>>Female</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label for="constituent_address" class="block text-xs font-medium text-gray-700 mb-1">Home Address</label>
                                     <input type="text" id="constituent_address" name="constituent_address" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['constituent_location'] ?? ''); ?>">
                                 </div>
                             </div>
 
-                            <!-- Location Tab (hidden by default) -->
                             <div id="content-location" class="hidden space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -597,8 +518,84 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
             // Show initial tab
             showTab(0);
+
+
+
+
+
+            // Get the form element for editing issues
+            const editIssueForm = document.getElementById('issueForm');
+
+            // Add an event listener for when the form is submitted
+            editIssueForm.addEventListener('submit', async function(e) {
+                e.preventDefault(); // Stop the default form submission behavior
+
+                // Create a FormData object from the form, which makes it easy to send form data
+                const formData = new FormData(editIssueForm);
+
+                // Initialize SweetAlert Toast for user notifications
+                const Toast = Swal.mixin({
+                    toast: true, // Display as a toast notification
+                    position: 'top-end', // Position the toast at the top-right of the screen
+                    showConfirmButton: false, // Don't show a confirmation button
+                    timer: 3000, // Hide the toast after 3 seconds
+                    timerProgressBar: true, // Show a progress bar for the timer
+                    didOpen: (toast) => {
+                        // Pause the timer when the mouse enters the toast
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        // Resume the timer when the mouse leaves the toast
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+
+                try {
+
+                    // Send the form data to the PHP API endpoint for updating issues
+                    const issueId = <?php echo json_encode($issue_id); ?>;
+                    const response = await fetch(`../../api/update_issue.php?id=${issueId}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Parse the JSON response from the server
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Show a success toast if the update was successful
+                        Toast.fire({
+                            icon: 'success',
+                            title: result.message || 'Issue updated successfully!'
+                        });
+
+                        // Redirect to the dashboard after a short delay
+                        setTimeout(() => {
+                            window.location.href = './../dashboard/';
+                        }, 3200); // Wait for the toast to be visible for a moment
+                    } else {
+                        // Show an error toast if the update failed
+                        Toast.fire({
+                            icon: 'error',
+                            title: result.message || 'Failed to update issue.'
+                        });
+                        // Log the server's error message to the console for debugging
+                        console.error(result.error);
+                    }
+                } catch (error) {
+                    // Catch any network or other unexpected errors
+                    console.error('Submission error:', error);
+                    // Show a generic error toast for unexpected issues
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Something went wrong while updating the form.'
+                    });
+                }
+            });
+
+
+
+
         });
     </script>
 </body>
 
-</html>
+</html>                    const issueId = <?php echo json_encode($issue_id); ?>;
