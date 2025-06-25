@@ -318,46 +318,16 @@ $headerActionButtons = [
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
-                <h2 class="text-base font-semibold text-gray-800 mb-4">Quick Actions</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <a href="../issues/add_issue.php" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
-                            <i class="fas fa-plus-circle text-slate-900"></i>
-                        </div>
-                        <span class="text-sm text-slate-900 font-medium">New Issue</span>
-                    </a>
-                    <a href="../issues/" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
-                            <i class="fas fa-search text-slate-900"></i>
-                        </div>
-                        <span class="text-sm text-slate-900 font-medium">Search Issues</span>
-                    </a>
-                    <a href="../issues/?filter=pending" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
-                            <i class="fas fa-tasks text-slate-900"></i>
-                        </div>
-                        <span class="text-sm text-slate-900 font-medium">Pending Tasks</span>
-                    </a>
-                    <a href="../export/" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
-                            <i class="fas fa-file-export text-slate-900"></i>
-                        </div>
-                        <span class="text-sm text-slate-900 font-medium">Export Data</span>
-                    </a>
-                </div>
-            </div>
-
             <!-- Recent Issues Section -->
-            <div class="mt-6">
+            <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-base font-semibold text-gray-800">Recent Activity</h2>
                     <a href="../issues/" class="text-sm text-primary hover:text-primary/80 transition-colors">
                         View all <i class="fas fa-arrow-right ml-1 text-xs"></i>
                     </a>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -423,6 +393,39 @@ $headerActionButtons = [
                     </table>
                 </div>
             </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mt-6">
+                <h2 class="text-base font-semibold text-gray-800 mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <a href="../issues/add_issue.php" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
+                            <i class="fas fa-plus-circle text-slate-900"></i>
+                        </div>
+                        <span class="text-sm text-slate-900 font-medium">New Issue</span>
+                    </a>
+                    <a href="../issues/" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
+                            <i class="fas fa-search text-slate-900"></i>
+                        </div>
+                        <span class="text-sm text-slate-900 font-medium">Search Issues</span>
+                    </a>
+                    <a href="../issues/?filter=pending" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
+                            <i class="fas fa-tasks text-slate-900"></i>
+                        </div>
+                        <span class="text-sm text-slate-900 font-medium">Pending Tasks</span>
+                    </a>
+                    <a href="../export/" class="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                        <div class="w-10 h-10 flex items-center justify-center bg-slate-900/10 rounded-lg mb-3">
+                            <i class="fas fa-file-export text-slate-900"></i>
+                        </div>
+                        <span class="text-sm text-slate-900 font-medium">Export Data</span>
+                    </a>
+                </div>
+            </div>
+
+
         </div>
     </main>
 

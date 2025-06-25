@@ -42,13 +42,6 @@ $headerActionButtons = [
         'icon' => 'fas fa-plus',
         'label' => 'New Issue',
         'href' => 'add_issue.php'
-    ],
-    [
-        'icon' => 'fas fa-filter',
-        'label' => 'Filter',
-        'href' => '#',
-        'class' => 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-        'id' => 'filterToggleBtn'
     ]
 ];
 
@@ -98,8 +91,8 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
         <?php renderAgentHeader('Issues', 'Manage and track constituent issues', $headerActionButtons); ?>
 
         <div class="p-4 sm:p-6">
-            <!-- Filters Section - Initially Hidden -->
-            <div id="filterSection" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-6 hidden">
+            <!-- Filters Section -->
+            <div id="filterSection" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-6">
                 <h2 class="text-base font-semibold text-gray-800 mb-4">Filter Issues</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     <!-- Search Filter -->
@@ -247,15 +240,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Filter toggle functionality
-            const filterToggleBtn = document.getElementById('filterToggleBtn');
-            const filterSection = document.getElementById('filterSection');
-
-            filterToggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                filterSection.classList.toggle('hidden');
-            });
-
+            
             // Filter functionality
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
