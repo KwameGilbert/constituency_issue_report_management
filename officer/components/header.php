@@ -36,7 +36,7 @@ function renderOfficerHeader($pageTitle, $pageDescription = '', $actionButtons =
                         $icon = $button['icon'] ?? '';
                         $label = $button['label'] ?? '';
                         $href = $button['href'] ?? '#';
-                        $btnClass = $button['class'] ?? 'bg-slate-900 text-white hover:bg-slate-800';
+                        $btnClass = $button['class'] ?? 'bg-indigo-900 text-white hover:bg-indigo-800';
                     ?>
                         <a href="<?php echo $href; ?>" class="px-4 py-2 <?php echo $btnClass; ?> text-sm rounded-xl shadow-sm transition-colors duration-200 flex items-center space-x-2">
                             <?php if ($icon) : ?>
