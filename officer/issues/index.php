@@ -13,32 +13,10 @@ if (!$agentId) {
 }
 $current_page = 'issues';
 
-$issuesStmt = $conn->prepare("
-    SELECT 
-        i.id,
-        i.title,
-        ic.name AS category,
-        i.status,
-        i.location,
-        DATE(i.created_at) AS submitted_at
-    FROM issues i
-    LEFT JOIN issue_categories ic ON i.category_id = ic.id
-    WHERE i.agent_id = ?
-    ORDER BY i.created_at DESC
-");
-
-$issuesStmt->execute([$agentId]);
-$issues = $issuesStmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Extract unique categories and statuses for filters
-$categories = array_unique(array_column($issues, 'category'));
-sort($categories);
-$statuses = array_unique(array_column($issues, 'status'));
-sort($statuses);
+require_once __DIR__ . '/getComprehensiveIssuesForTable.php';
 
 // Define action buttons for the header
 $headerActionButtons = [
-  
     [
         'icon' => 'fas fa-plus',
         'label' => 'New Issue',
@@ -71,8 +49,11 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         success: '#10b981',
                         warning: '#f59e0b',
                         error: '#ef4444',
+                        info: '#3b82f6', // Added info color for general purpose
                         slate: {
                             50: '#f8fafc',
+                            100: '#f1f5f9', // Added for subtle backgrounds
+                            200: '#e2e8f0', // Added for borders/dividers
                             900: '#0f172a',
                         }
                     },
@@ -83,6 +64,82 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             }
         }
     </script>
+    <style>
+        /* Custom styles for status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            /* px-2.5 py-0.5 */
+            border-radius: 9999px;
+            /* rounded-full */
+            font-size: 0.75rem;
+            /* text-xs */
+            font-weight: 500;
+            /* font-medium */
+            text-transform: capitalize;
+        }
+
+        /* Specific status colors */
+        .status-badge-pending {
+            background-color: #fef3c7;
+            /* yellow-100 */
+            color: #b45309;
+            /* yellow-700 */
+        }
+
+        .status-badge-in_progress {
+            background-color: #bfdbfe;
+            /* blue-200 */
+            color: #1e40af;
+            /* blue-800 */
+        }
+
+        .status-badge-resolved {
+            background-color: #d1fae5;
+            /* green-100 */
+            color: #065f46;
+            /* green-700 */
+        }
+
+        .status-badge-rejected {
+            background-color: #fee2e2;
+            /* red-100 */
+            color: #991b1b;
+            /* red-700 */
+        }
+
+        .status-badge-closed {
+            background-color: #dbeafe;
+            /* blue-100 for closed */
+            color: #1e40af;
+            /* blue-700 for closed */
+        }
+
+        .status-badge-escalated {
+            background-color: #fecaca;
+            /* red-200 */
+            color: #b91c1c;
+            /* red-800 */
+        }
+
+        /* Default status color for any undefined status */
+        .status-badge-default {
+            background-color: #e0e7ff;
+            /* indigo-100 */
+            color: #4338ca;
+            /* indigo-700 */
+        }
+
+        /* Added for better focus styles */
+        input:focus,
+        select:focus {
+            border-color: #6366f1;
+            /* primary color */
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 min-h-screen font-sans">
@@ -92,200 +149,263 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
         <?php renderOfficerHeader('Issues', 'Manage and track constituent issues', $headerActionButtons); ?>
 
         <div class="p-4 sm:p-6">
-            <!-- Filters Section -->
+
+            <!-- Filter Section -->
             <div id="filterSection" class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 mb-6">
-                <h2 class="text-base font-semibold text-gray-800 mb-4">Filter Issues</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <!-- Search Filter -->
-                    <div>
-                        <label for="searchInput" class="block text-xs font-medium text-gray-700 mb-2">Search</label>
-                        <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900" placeholder="Search by title or location...">
-                    </div>
-
-                    <!-- Category Filter -->
-                    <div>
-                        <label for="categoryFilter" class="block text-xs font-medium text-gray-700 mb-2">Category</label>
-                        <select id="categoryFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900">
-                            <option value="">All Categories</option>
-                            <?php foreach ($categories as $category) : ?>
-                                <option value="<?php echo htmlspecialchars($category); ?>"><?php echo htmlspecialchars($category); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div>
-                        <label for="statusFilter" class="block text-xs font-medium text-gray-700 mb-2">Status</label>
-                        <select id="statusFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900">
-                            <option value="">All Statuses</option>
-                            <?php foreach ($statuses as $status) : ?>
-                                <option value="<?php echo htmlspecialchars($status); ?>"><?php echo ucfirst(htmlspecialchars($status)); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Filter Actions -->
-                <div class="flex justify-end space-x-2">
-                    <button id="resetFiltersBtn" class="px-4 py-2 text-xs font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
-                        Reset
+                <h2 class="text-base font-semibold text-gray-800 mb-4 flex items-center justify-between">
+                    <span>Filter Issues</span>
+                    <button id="toggleFiltersBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1 transition-transform duration-200">
+                        <i class="fas fa-chevron-up" id="toggleIcon"></i>
                     </button>
-                    <button id="applyFiltersBtn" class="px-4 py-2 text-xs font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors">
-                        Apply Filters
-                    </button>
+                </h2>
+                <div id="filterInputsContainer" class="transition-all duration-300 ease-in-out overflow-hidden max-h-screen">
+                    <div class="grid grid-cols-1 gap-4 mb-4">
+                        <!-- Search Input (full width) -->
+                        <div>
+                            <label for="searchInput" class="block text-xs font-medium text-gray-700 mb-2">Search</label>
+                            <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary" placeholder="Search by title, description, or location...">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <?php
+                        $filters = [
+                            'Category' => $categories,
+                            'Status' => $statuses,
+                            'Type' => $types,
+                            'Sector' => $sectors,
+                            'Subsector' => $subsectors,
+                            'Electoral Area' => $electoralAreas,
+                            'Community' => $communities,
+                            'Severity' => $severities,
+                            'Agent' => $agents,
+                        ];
+                        $idMap = [
+                            'Category' => 'categoryFilter',
+                            'Status' => 'statusFilter',
+                            'Type' => 'typeFilter',
+                            'Sector' => 'sectorFilter',
+                            'Subsector' => 'subsectorFilter',
+                            'Electoral Area' => 'electoralAreaFilter',
+                            'Community' => 'communityFilter',
+                            'Severity' => 'severityFilter',
+                            'Agent' => 'agentFilter'
+                        ];
+
+                        foreach ($filters as $label => $options) {
+                            echo '<div>';
+                            echo '<label for="' . $idMap[$label] . '" class="block text-xs font-medium text-gray-700 mb-2">' . $label . '</label>';
+                            echo '<select id="' . $idMap[$label] . '" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">';
+                            echo '<option value="">All ' . $label . 's</option>';
+                            foreach ($options as $opt) {
+                                echo '<option value="' . htmlspecialchars($opt) . '">' . htmlspecialchars($opt) . '</option>';
+                            }
+                            echo '</select>';
+                            echo '</div>';
+                        }
+                        ?>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button id="resetFiltersBtn" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors duration-200">
+                            <i class="fas fa-undo mr-2"></i> Reset Filters
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Issues Table -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                    <h2 class="text-base font-semibold text-gray-800">All Issues</h2>
-                    <div class="text-sm text-gray-500"><?php echo count($issues); ?> issues found</div>
-                </div>
-
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title & Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Submitted</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="issuesTable">
-                            <?php foreach ($issues as $issue) : ?>
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $issue['id']; ?></td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($issue['title']); ?></div>
-                                        <div class="text-xs text-gray-500 truncate max-w-xs"><?php echo htmlspecialchars($issue['description'] ?? 'No description'); ?></div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['category']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['location']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <?php
-                                        $statusClass = '';
-                                        switch ($issue['status']) {
-                                            case 'pending':
-                                                $statusClass = 'bg-warning/10 text-warning';
-                                                break;
-                                            case 'approved':
-                                                $statusClass = 'bg-primary/10 text-primary';
-                                                break;
-                                            case 'rejected':
-                                                $statusClass = 'bg-error/10 text-error';
-                                                break;
-                                            case 'resolved':
-                                                $statusClass = 'bg-success/10 text-success';
-                                                break;
-                                            default:
-                                                $statusClass = 'bg-gray-100 text-gray-800';
-                                                break;
-                                        }
-                                        ?>
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $statusClass; ?>">
-                                            <?php echo ucfirst(htmlspecialchars($issue['status'])); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['submitted_at']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                        <a href="view_issue.php?id=<?php echo $issue['id']; ?>" class="text-primary hover:text-primary/80 font-medium mr-3">View</a>
-                                        <a href="edit_issue.php?id=<?php echo $issue['id']; ?>" class="text-gray-600 hover:text-gray-900 font-medium">Edit</a>
+                            <?php if (empty($issues)): ?>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
+                                        No issues found. Adjust your filters or add a new issue.
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
+                            <?php else: ?>
+                                <?php foreach ($issues as $issue):
+                                    // Determine status badge class
+                                    $statusClass = 'status-badge-default'; // Default for undefined
+                                    switch (strtolower($issue['status'])) {
+                                        case 'pending':
+                                            $statusClass = 'status-badge-pending';
+                                            break;
+                                        case 'in_progress':
+                                            $statusClass = 'status-badge-in_progress';
+                                            break;
+                                        case 'resolved':
+                                            $statusClass = 'status-badge-resolved';
+                                            break;
+                                        case 'rejected':
+                                            $statusClass = 'status-badge-rejected';
+                                            break;
+                                        case 'closed':
+                                            $statusClass = 'status-badge-closed';
+                                            break;
+                                        case 'escalated':
+                                            $statusClass = 'status-badge-escalated';
+                                            break;
+                                        default:
+                                            $statusClass = 'status-badge-default'; // Fallback
+                                            break;
+                                    }
+                                ?>
+                                    <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
+                                        data-title="<?= strtolower($issue['title']) ?>"
+                                        data-location="<?= strtolower($issue['location']) ?>"
+                                        data-category="<?= strtolower($issue['category']) ?>"
+                                        data-status="<?= strtolower($issue['status']) ?>"
+                                        data-type="<?= strtolower($issue['type']) ?>"
+                                        data-sector="<?= strtolower($issue['sector']) ?>"
+                                        data-subsector="<?= strtolower($issue['subsector']) ?>"
+                                        data-electoral-area="<?= strtolower($issue['electoral_area']) ?>"
+                                        data-community="<?= strtolower($issue['community']) ?>"
+                                        data-severity="<?= strtolower($issue['severity']) ?>"
+                                        data-agent="<?= strtolower($issue['agent']) ?>">
+                                        <td class="px-6 py-4 text-sm text-gray-500"><?= $issue['id'] ?></td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($issue['title']) ?></div>
+                                            <div class="text-xs text-gray-500 truncate w-64"><?= htmlspecialchars($issue['description']) ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500"><?= htmlspecialchars($issue['category']) ?></td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="status-badge <?= $statusClass ?>">
+                                                <?= htmlspecialchars(ucwords(str_replace("_", " ", $issue['status']))) ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500"><?= htmlspecialchars(date('M d, Y', strtotime($issue['submitted_at']))) ?></td>
+                                        <td class="px-6 py-4 text-center text-sm font-medium">
+                                            <a href="view_issue.php?id=<?= $issue['id'] ?>" class="text-primary hover:text-primary-dark mr-3">View</a>
+                                            <a href="edit_issue.php?id=<?= $issue['id'] ?>" class="text-secondary hover:text-secondary-dark">Edit</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div class="flex-1 flex justify-between sm:hidden">
-                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Previous
-                        </a>
-                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                            Next
-                        </a>
-                    </div>
-                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
-                            <p class="text-sm text-gray-700">
-                                Showing <span class="font-medium">1</span> to <span class="font-medium"><?php echo count($issues); ?></span> of <span class="font-medium"><?php echo count($issues); ?></span> results
-                            </p>
-                        </div>
-                        <div>
-                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Previous</span>
-                                    <i class="fas fa-chevron-left text-xs"></i>
-                                </a>
-                                <a href="#" aria-current="page" class="z-10 bg-slate-900 border-slate-900 text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                                    1
-                                </a>
-                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                    <span class="sr-only">Next</span>
-                                    <i class="fas fa-chevron-right text-xs"></i>
-                                </a>
-                            </nav>
-                        </div>
-                    </div>
+                <div id="noIssuesMessage" class="hidden px-6 py-10 text-center text-sm text-gray-500">
+                    No issues found matching your filters.
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
+            const filters = {
+                search: document.getElementById('searchInput'),
+                category: document.getElementById('categoryFilter'),
+                status: document.getElementById('statusFilter'),
+                type: document.getElementById('typeFilter'),
+                sector: document.getElementById('sectorFilter'),
+                subsector: document.getElementById('subsectorFilter'),
+                electoralArea: document.getElementById('electoralAreaFilter'),
+                community: document.getElementById('communityFilter'),
+                severity: document.getElementById('severityFilter'),
+                agent: document.getElementById('agentFilter')
+            };
 
-            // Filter functionality
-            const searchInput = document.getElementById('searchInput');
-            const categoryFilter = document.getElementById('categoryFilter');
-            const statusFilter = document.getElementById('statusFilter');
-            const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
-            const issuesTable = document.getElementById('issuesTable');
-            const rows = issuesTable.querySelectorAll('tr');
+            const tableBody = document.getElementById('issuesTable');
+            const tableRows = Array.from(tableBody.querySelectorAll('tr')); // Convert NodeList to Array
+            const noIssuesMessage = document.getElementById('noIssuesMessage');
 
-            // Apply filters function
-            function applyFilters() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const category = categoryFilter.value.toLowerCase();
-                const status = statusFilter.value.toLowerCase();
+            // Filter section toggle
+            const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+            const toggleIcon = document.getElementById('toggleIcon');
+            const filterInputsContainer = document.getElementById('filterInputsContainer');
 
-                rows.forEach(row => {
-                    const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const location = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-                    const rowCategory = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                    const rowStatus = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
+            let isFiltersExpanded = true; // Initial state
 
-                    const matchesSearch = title.includes(searchTerm) || location.includes(searchTerm);
-                    const matchesCategory = !category || rowCategory === category;
-                    const matchesStatus = !status || rowStatus.includes(status);
+            toggleFiltersBtn.addEventListener('click', () => {
+                isFiltersExpanded = !isFiltersExpanded;
+                if (isFiltersExpanded) {
+                    filterInputsContainer.style.maxHeight = filterInputsContainer.scrollHeight + 'px'; // Expand to full height
+                    toggleIcon.classList.remove('fa-chevron-down');
+                    toggleIcon.classList.add('fa-chevron-up');
+                } else {
+                    filterInputsContainer.style.maxHeight = '0'; // Collapse
+                    toggleIcon.classList.remove('fa-chevron-up');
+                    toggleIcon.classList.add('fa-chevron-down');
+                }
+            });
 
-                    if (matchesSearch && matchesCategory && matchesStatus) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
+            // Ensure filters are expanded initially and height is set correctly
+            filterInputsContainer.style.maxHeight = filterInputsContainer.scrollHeight + 'px'; // Set initial max-height
+
+            function normalize(text) {
+                return (text || '').toLowerCase().trim();
+            }
+
+            function filterRows() {
+                const values = Object.fromEntries(Object.entries(filters).map(([key, el]) => [key, normalize(el.value)]));
+                let visibleRowCount = 0;
+
+                tableRows.forEach(row => {
+                    const matches =
+                        (!values.search ||
+                            row.dataset.title.includes(values.search) ||
+                            row.dataset.location.includes(values.search) ||
+                            (row.querySelector('.text-xs.text-gray-500') && normalize(row.querySelector('.text-xs.text-gray-500').textContent).includes(values.search))
+                        ) &&
+                        (!values.category || row.dataset.category === values.category) &&
+                        (!values.status || row.dataset.status === values.status) &&
+                        (!values.type || row.dataset.type === values.type) &&
+                        (!values.sector || row.dataset.sector === values.sector) &&
+                        (!values.subsector || row.dataset.subsector === values.subsector) &&
+                        (!values.electoralArea || row.dataset.electoralArea === values.electoralArea) &&
+                        (!values.community || row.dataset.community === values.community) &&
+                        (!values.severity || row.dataset.severity === values.severity) &&
+                        (!values.agent || row.dataset.agent === values.agent);
+
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) {
+                        visibleRowCount++;
                     }
                 });
+
+                // Show/hide "No issues found" message
+                if (visibleRowCount === 0) {
+                    noIssuesMessage.classList.remove('hidden');
+                    tableBody.classList.add('hidden'); // Hide the actual table body
+                } else {
+                    noIssuesMessage.classList.add('hidden');
+                    tableBody.classList.remove('hidden'); // Show the actual table body
+                }
             }
 
-            // Reset filters function
-            function resetFilters() {
-                searchInput.value = '';
-                categoryFilter.selectedIndex = 0;
-                statusFilter.selectedIndex = 0;
-                rows.forEach(row => row.style.display = '');
-            }
+            // Attach event listeners to all filter inputs
+            Object.values(filters).forEach(input => {
+                if (input) { // Check if element exists before adding listener
+                    input.addEventListener('input', filterRows);
+                    input.addEventListener('change', filterRows);
+                }
+            });
 
-            // Event listeners
-            applyFiltersBtn.addEventListener('click', applyFilters);
-            resetFiltersBtn.addEventListener('click', resetFilters);
+            // Reset filters button
+            document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
+                Object.values(filters).forEach(input => {
+                    if (input) {
+                        input.value = '';
+                    }
+                });
+                filterRows(); // Apply filters after resetting
+            });
+
+            // Initial filter application in case of pre-filled values (though not expected here)
+            filterRows();
         });
     </script>
 </body>
