@@ -1,12 +1,12 @@
 <?php
 // issues.php - Agent Issues Management Page
-require_once __DIR__ . '/../components/sidebar.php';
-require_once __DIR__ . '/../components/header.php';
 require_once __DIR__ . '/../login/session_check.php';
 require_once __DIR__ . '/../../config/db_connection.php';
 
 $database = new Database();
 $conn = $database->getConnection();
+require_once __DIR__ . '/../components/sidebar.php';
+require_once __DIR__ . '/../components/header.php';
 $agentId = $_SESSION['user_id'] ?? null;
 if (!$agentId) {
     die("Unauthorized");

@@ -1,12 +1,11 @@
 <?php
+require_once __DIR__ . '/../../config/db_connection.php';
+$database = new Database();
+$conn = $database->getConnection();
 // Include the sidebar and header function definitions
 require_once __DIR__ . '/../components/sidebar.php';
 require_once __DIR__ . '/../components/header.php';
-require_once __DIR__ . '/../../config/db_connection.php';
 require_once __DIR__ . '/../login/session_check.php';
-
-$database = new Database();
-$conn = $database->getConnection();
 
 $current_page = "dashboard";
 $officerId = $_SESSION['user_id'];

@@ -1,15 +1,15 @@
 <?php
-// add_issue.php
-require_once __DIR__ . '/../components/sidebar.php';
+include_once __DIR__ . '/../login/session_check.php';
 require_once __DIR__ . '/../components/header.php';
 require_once __DIR__ . '/../../config/db_connection.php';
-include_once __DIR__ . '/../login/session_check.php';
 $database = new Database();
 $conn = $database->getConnection();
+// add_issue.php
+require_once __DIR__ . '/../components/sidebar.php';
 
 // Set current page for sidebar highlighting
 $current_page = 'issues';
-$agentId = $_SESSION['user_id'];
+$officerId = $_SESSION['user_id'];
 // Initialize message variables
 $message = '';
 $message_type = '';
@@ -62,7 +62,7 @@ $headerActionButtons = [
 ];
 
 // Get current user data for display
-$userName = $_SESSION['user_name'] ?? 'Agent';
+$userName = $_SESSION['user_name'] ?? 'Officer';
 ?>
 
 <!DOCTYPE html>
@@ -71,7 +71,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Add New Issue - Agent Dashboard</title>
+    <title>Add New Issue - Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -101,10 +101,10 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 </head>
 
 <body class="bg-slate-50 min-h-screen font-sans">
-    <?php renderAgentSidebar($current_page); ?>
+    <?php renderOfficerSidebar($current_page); ?>
 
     <main class="lg:ml-64 min-h-screen transition-all duration-300">
-        <?php renderAgentHeader('Add New Issue', 'Submit a new issue on behalf of a constituent or community', $headerActionButtons); ?>
+        <?php renderOfficerHeader('Add New Issue', 'Submit a new issue on behalf of a constituent or community', $headerActionButtons); ?>
 
         <div class="p-4 sm:p-6">
             <?php if ($message) : ?>
@@ -463,7 +463,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                 });
 
                 try {
-                    const response = await fetch('../../api/create_agent_issue.php', {
+                    const response = await fetch('../../api/create_officer_issue.php', {
                         method: 'POST',
                         body: formData
                     });

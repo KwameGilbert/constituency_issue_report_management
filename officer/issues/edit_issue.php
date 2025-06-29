@@ -1,11 +1,11 @@
 <?php
 // edit_issue.php - Edit existing issue
-include __DIR__ . '/../components/sidebar.php';
-include __DIR__ . '/../components/header.php';
+include_once __DIR__ . '/../login/session_check.php';
 require_once __DIR__ . '/../../config/db_connection.php';
-// include_once __DIR__ . '/../login/session_check.php';
 $database = new Database();
 $conn = $database->getConnection();
+include __DIR__ . '/../components/sidebar.php';
+include __DIR__ . '/../components/header.php';
 
 // Set current page for sidebar highlighting
 $current_page = 'issues';
@@ -129,7 +129,7 @@ $headerActionButtons = [
 ];
 
 // Get current user data for display
-$userName = $_SESSION['user_name'] ?? 'Agent';
+$userName = $_SESSION['user_name'] ?? 'Officer';
 ?>
 
 <!DOCTYPE html>
@@ -138,7 +138,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Issue #<?php echo $issue_id; ?> - Agent Dashboard</title>
+    <title>Edit Issue #<?php echo $issue_id; ?> - Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -168,10 +168,10 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 </head>
 
 <body class="bg-slate-50 min-h-screen font-sans">
-    <?php renderAgentSidebar($current_page); ?>
+    <?php renderOfficerSidebar($current_page); ?>
 
     <main class="lg:ml-64 min-h-screen transition-all duration-300">
-        <?php renderAgentHeader('Edit Issue #' . $issue_id, $issue['title'] ?? 'Issue not found', $headerActionButtons); ?>
+        <?php renderOfficerHeader('Edit Issue #' . $issue_id, $issue['title'] ?? 'Issue not found', $headerActionButtons); ?>
 
         <div class="p-4 sm:p-6">
             <?php if ($message) : ?>
@@ -552,7 +552,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                     // Send the form data to the PHP API endpoint for updating issues
                     const issueId = <?php echo json_encode($issue_id); ?>;
-                    const response = await fetch(`../../api/update_agent_issue.php.php?id=${issueId}`, {
+                    const response = await fetch(`../../api/update_officer_issue.php?id=${issueId}`, {
                         method: 'POST',
                         body: formData
                     });
@@ -598,4 +598,4 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     </script>
 </body>
 
-</html>
+</html>                    const issueId = <?php echo json_encode($issue_id); ?>;
