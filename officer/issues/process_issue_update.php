@@ -7,9 +7,13 @@ require_once __DIR__ . '/../../config/db_connection.php';
 $database = new Database();
 $conn = $database->getConnection();
 
-// Initialize message variables for URL redirection
-$message = '';
-$message_type = '';
+header('Content-Type: application/json'); // Set header to indicate JSON response
+
+$response = [
+    'success' => false,
+    'message' => '',
+    'issue_id' => null // Include issue_id in response for client-side use
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Sanitize and validate input data.
@@ -20,10 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_status_update = isset($_POST['new_status']);
     $is_general_update = isset($_POST['is_general_update']);
 
+    $response['issue_id'] = $issue_id; // Always set issue_id in response
+
     if (!$issue_id || !$officerId) {
-        $message = 'Invalid issue ID or user not authenticated.';
-        $message_type = 'error';
-        header("Location: view_issue.php?id=" . $issue_id . "&message=" . urlencode($message) . "&type=" . $message_type);
+        $response['message'] = 'Invalid issue ID or user not authenticated.';
+        echo json_encode($response);
         exit();
     }
 
@@ -32,20 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($is_status_update) {
             // --- Handle Status Update ---
-            $new_status = trim(filter_input(INPUT_POST, 'new_status', FILTER_DEFAULT));
+            $new_status = trim(filter_input(INPUT_POST, 'new_status', FILTER_SANITIZE_STRING));
 
             // Validate new status against allowed values to prevent invalid updates.
-            $allowed_statuses = ['pending', 'reviewed', 'approved', 'rejected', 'resolved'];
+            $allowed_statuses = ['pending', 'reviewed', 'approved', 'in_progress', 'rejected', 'resolved'];
             if (!in_array($new_status, $allowed_statuses)) {
                 throw new Exception('Invalid status provided.');
             }
 
-            // Fetch current status to ensure procedural flow if needed (e.g., cannot approve if not reviewed)
+            // Fetch current status to ensure procedural flow.
             $stmt_current_status = $conn->prepare("SELECT status FROM issues WHERE id = ?");
             $stmt_current_status->execute([$issue_id]);
             $current_issue_status = $stmt_current_status->fetchColumn();
 
-            // Example of procedural checks (add more complex logic as needed)
+            // Procedural checks for status transitions.
             $proceed_with_status_update = false;
             switch ($current_issue_status) {
                 case 'pending':
@@ -55,16 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($new_status === 'approved' || $new_status === 'rejected') $proceed_with_status_update = true;
                     break;
                 case 'approved':
-                    if ($new_status === 'resolved') $proceed_with_status_update = true;
+                    if ($new_status === 'in_progress' || $new_status === 'resolved' || $new_status === 'rejected') $proceed_with_status_update = true;
                     break;
-                // If already rejected or resolved, typically no further status changes are allowed via these buttons
+                case 'in_progress':
+                    if ($new_status === 'resolved' || $new_status === 'rejected') $proceed_with_status_update = true;
+                    break;
                 case 'rejected':
                 case 'resolved':
-                    $message = 'Issue is already ' . $current_issue_status . ' and cannot be updated via status actions.';
-                    $message_type = 'error';
-                    // We commit here to allow the previous transaction to complete for any prior actions if any, although for status only it won't be an issue
-                    $conn->commit();
-                    header("Location: view_issue.php?id=" . $issue_id . "&message=" . urlencode($message) . "&type=" . $message_type);
+                    // If already rejected or resolved, do not allow further status changes via these buttons.
+                    $response['message'] = 'Issue is already ' . $current_issue_status . ' and cannot be updated via status actions.';
+                    $conn->commit(); // Commit any prior changes
+                    echo json_encode($response);
                     exit();
             }
 
@@ -76,16 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_update_issue = $conn->prepare("UPDATE issues SET status = ?, updated_at = NOW(), resolved_at = CASE WHEN ? = 'resolved' THEN NOW() ELSE resolved_at END WHERE id = ?");
             $stmt_update_issue->execute([$new_status, $new_status, $issue_id]);
 
-            // Add a log entry for the status change.
+            // Add a log entry for the status change in the `issue_updates` table.
             $status_action_comment = "Status updated to: " . ucfirst($new_status);
             $stmt_log = $conn->prepare("
-                INSERT INTO issue_history_logs (issue_id, user_id, action, comment, created_at)
+                INSERT INTO issue_updates (issue_id, user_id, action, message, created_at)
                 VALUES (?, ?, ?, ?, NOW())
             ");
             $stmt_log->execute([$issue_id, $officerId, $status_action_comment, $status_action_comment]);
 
-            $message = 'Issue status updated to ' . ucfirst($new_status) . ' successfully.';
-            $message_type = 'success';
+            $response['success'] = true;
+            $response['message'] = 'Issue status updated to ' . ucfirst($new_status) . ' successfully.';
         } elseif ($is_general_update) {
             // --- Handle General Update (Comment/Attachments) ---
             $update_title = trim(filter_input(INPUT_POST, 'update_title', FILTER_SANITIZE_STRING));
@@ -96,9 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Update title and message are required for a general update.');
             }
 
-            // Insert into issue_history_logs for the general update.
+            // Insert into `issue_updates` for the general update.
             $stmt_log = $conn->prepare("
-                INSERT INTO issue_history_logs (issue_id, user_id, action, comment, created_at)
+                INSERT INTO issue_updates (issue_id, user_id, action, message, created_at)
                 VALUES (?, ?, ?, ?, NOW())
             ");
             $log_action = htmlspecialchars($update_title);
@@ -113,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upload_errors = [];
 
             // Helper function for file uploads
-            $handleFileUpload = function ($file_array, $issue_id, $log_id, $officerId, $conn, $upload_dir, &$errors) use (&$uploaded_files_count) {
+            $handleFileUpload = function ($file_array, $issue_id, $log_id, $officerId, $conn, $upload_dir, &$errors) {
                 if (!isset($file_array['name']) || !is_array($file_array['name'])) {
                     return; // No files to process or invalid array structure
                 }
@@ -143,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (move_uploaded_file($file_tmp_name, $target_file_path)) {
                             $file_type = in_array($file_ext, $allowed_image_types) ? 'image' : 'document';
                             $stmt_attach = $conn->prepare("
-                                INSERT INTO issue_attachments (issue_id, log_id, file_name, file_path, file_type, file_size, uploaded_by, uploaded_at)
+                                INSERT INTO issue_attachments (issue_id, update_id, file_name, file_path, file_type, file_size, uploaded_by, uploaded_at)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                             ");
                             $stmt_attach->execute([$issue_id, $log_id, $file_name, 'uploads/issue_attachments/' . $new_file_name, $file_type, $file_size, $officerId]);
@@ -166,34 +172,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $handleFileUpload($_FILES['documents'], $issue_id, $log_id, $officerId, $conn, $upload_dir, $upload_errors);
             }
 
-            $message = 'Issue update added successfully.';
-            $message_type = 'success';
+            $response['success'] = true;
+            $response['message'] = 'Issue update added successfully.';
             if (!empty($upload_errors)) {
-                $message .= ' Some files could not be uploaded: ' . implode(', ', $upload_errors);
-                $message_type = 'warning'; // Change type to warning if there are upload issues
+                $response['message'] .= ' Some files could not be uploaded: ' . implode(', ', $upload_errors);
+                // Note: success remains true, but message becomes a warning. Client-side JS can handle this.
             }
 
             // You might want to add logic here to actually notify the agent if $notify_agent is 1
             // e.g., send an email or push notification.
 
         } else {
-            // This case should ideally not be reached if forms are structured correctly
-            $message = 'No valid action specified for the update.';
-            $message_type = 'error';
+            $response['message'] = 'No valid action specified for the update.';
         }
 
         $conn->commit(); // Commit the transaction if all operations were successful
 
     } catch (Exception $e) {
         $conn->rollBack(); // Rollback on error
-        $message = 'Error processing issue update: ' . $e->getMessage();
-        $message_type = 'error';
+        $response['message'] = 'Error processing issue update: ' . $e->getMessage();
     }
 } else {
-    $message = 'Invalid request method.';
-    $message_type = 'error';
+    $response['message'] = 'Invalid request method.';
 }
 
-// Redirect back to the view_issue page with a message
-header("Location: view_issue.php?id=" . $issue_id . "&message=" . urlencode($message) . "&type=" . $message_type);
-exit();
+echo json_encode($response); // Always output JSON
