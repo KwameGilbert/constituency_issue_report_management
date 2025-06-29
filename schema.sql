@@ -1,8 +1,6 @@
 -- Constituency Issue Reporting & Development System Schema
 -- Using INT PRIMARY KEYS with AUTO_INCREMENT
 
-
-
 CREATE TABLE web_admins (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL,
@@ -191,6 +189,21 @@ CREATE TABLE issue_history_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE issue_attachments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    issue_id INT,
+    log_id INT,
+    file_name VARCHAR(255),
+    file_path VARCHAR(255),
+    file_type VARCHAR(50),
+    file_size INT,
+    uploaded_by INT,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
+    FOREIGN KEY (log_id) REFERENCES issue_history_logs(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 
