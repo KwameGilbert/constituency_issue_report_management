@@ -185,7 +185,7 @@ CREATE TABLE issue_updates (
     issue_id INT,
     user_id INT,
     action TEXT,
-    comment TEXT,
+    message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL

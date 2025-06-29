@@ -350,7 +350,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             </div>
                         </div>
 
-                        <!-- Recent Updates Section - Displays last 5 updates with attachments -->
+                        <!-- Updates Section - Displays updates with attachments -->
                         <div class="mt-6">
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                                 <div class="p-5 border-b border-gray-100">
@@ -560,14 +560,6 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     </div>
                                 </div>
 
-                                <!-- Notification Option -->
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="notify_agent" name="notify_agent" class="h-4 w-4 text-slate-900 rounded border-gray-300 focus:ring-slate-900">
-                                    <label for="notify_agent" class="ml-2 block text-xs text-gray-700">
-                                        Notify agent about this update
-                                    </label>
-                                </div>
-
                                 <!-- Submit Button for General Update -->
                                 <div class="pt-4 flex justify-end">
                                     <button type="submit" class="px-5 py-2 bg-slate-900 text-white text-xs font-medium rounded-xl hover:bg-slate-800 transition-colors">
@@ -593,6 +585,83 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             <?php endif; ?>
         </div>
     </main>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const updateForm = document.querySelector('.mt-6 form'); // Select the form for updates
+    const recentUpdatesContainer = document.querySelector('.divide-y.divide-gray-100'); // Container for recent updates
+    const initialNoUpdatesMessage = recentUpdatesContainer.querySelector('.p-5.text-center.text-sm.text-gray-500'); // The "No updates yet" message
+
+    if (updateForm) {
+        updateForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this); // Get form data including files
+
+            fetch('process_issue_update.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display success message
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-green-100 text-green-800';
+                    messageDiv.textContent = data.message;
+                    updateForm.closest('.mt-6').prepend(messageDiv); // Add message above the form
+
+                    // Remove message after a few seconds
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 5000);
+
+                    // Add new update to the Recent Updates section
+                    if (data.new_update_html) {
+                        if (initialNoUpdatesMessage) {
+                            initialNoUpdatesMessage.remove(); // Remove "No updates yet" if present
+                        }
+                        const newUpdateElement = document.createElement('div');
+                        newUpdateElement.innerHTML = data.new_update_html;
+                        recentUpdatesContainer.prepend(newUpdateElement.firstElementChild); // Add new update at the top
+                    }
+
+                    // Clear the form fields
+                    updateForm.reset();
+                    // Optionally, clear file inputs if needed (depends on browser behavior after reset)
+                    const fileInputs = updateForm.querySelectorAll('input[type="file"]');
+                    fileInputs.forEach(input => {
+                        input.value = ''; // Clear file selection
+                    });
+
+                } else {
+                    // Display error message
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
+                    messageDiv.textContent = data.message;
+                    updateForm.closest('.mt-6').prepend(messageDiv);
+
+                    setTimeout(() => {
+                        messageDiv.remove();
+                    }, 7000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
+                messageDiv.textContent = 'An unexpected error occurred. Please try again.';
+                updateForm.closest('.mt-6').prepend(messageDiv);
+
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 7000);
+            });
+        });
+    }
+});
+</script>
+
 </body>
 
 </html>
