@@ -180,7 +180,7 @@ CREATE TABLE issues (
     FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL,
 );
 
-CREATE TABLE issue_history_logs (
+CREATE TABLE issue_updates (
     id INT PRIMARY KEY AUTO_INCREMENT,
     issue_id INT,
     user_id INT,
@@ -194,7 +194,7 @@ CREATE TABLE issue_history_logs (
 CREATE TABLE issue_attachments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     issue_id INT,
-    log_id INT,
+    update_id INT,
     file_name VARCHAR(255),
     file_path VARCHAR(255),
     file_type VARCHAR(50),
@@ -202,7 +202,7 @@ CREATE TABLE issue_attachments (
     uploaded_by INT,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE CASCADE,
-    FOREIGN KEY (log_id) REFERENCES issue_history_logs(id) ON DELETE CASCADE,
+    FOREIGN KEY (update_id) REFERENCES issue_updates(id) ON DELETE CASCADE,
     FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
