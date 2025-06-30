@@ -12,14 +12,14 @@ require_once __DIR__ . '/../components/header.php';
 
 // Define the current page for sidebar highlighting.
 $current_page = 'issues';
-// Get the officer ID from the session (assuming it's set during login).
+// Get the officer ID from the session (assuming it's set in session).
 $officerId = $_SESSION['user_id'];
 // Get the issue ID from the URL, sanitizing it as an integer.
 $issue_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 // Initialize variables for messages and issue data.
-$message = '';
-$message_type = '';
+$message = isset($_GET['message']) ? htmlspecialchars($_GET['message']) : '';
+$message_type = isset($_GET['type']) ? htmlspecialchars($_GET['type']) : '';
 $issue = null;
 $history = [];
 $updates = []; // Array to store recent updates with attachments
@@ -64,24 +64,24 @@ if ($issue_id > 0) {
             $message = "Issue not found.";
             $message_type = "error";
         } else {
-            // Fetch all history entries for the full history timeline.
+            // Fetch all history entries from the `issue_updates` table.
             $stmt = $conn->prepare("
-                SELECT h.*, u.name AS user_name
-                FROM issue_history_logs h
-                LEFT JOIN users u ON h.user_id = u.id
-                WHERE h.issue_id = ?
-                ORDER BY h.created_at DESC
+                SELECT iu.*, u.name AS user_name
+                FROM issue_updates iu
+                LEFT JOIN users u ON iu.user_id = u.id
+                WHERE iu.issue_id = ?
+                ORDER BY iu.created_at DESC
             ");
             $stmt->execute([$issue_id]);
             $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Fetch the 5 most recent updates for the "Recent Updates" section, including user name.
+            // Fetch the 5 most recent updates from the `issue_updates` table.
             $stmt = $conn->prepare("
-                SELECT h.*, u.name AS user_name
-                FROM issue_history_logs h
-                LEFT JOIN users u ON h.user_id = u.id
-                WHERE h.issue_id = ?
-                ORDER BY h.created_at DESC
+                SELECT iu.*, u.name AS user_name
+                FROM issue_updates iu
+                LEFT JOIN users u ON iu.user_id = u.id
+                WHERE iu.issue_id = ?
+                ORDER BY iu.created_at DESC
                 LIMIT 5
             ");
             $stmt->execute([$issue_id]);
@@ -92,16 +92,12 @@ if ($issue_id > 0) {
                 $stmt = $conn->prepare("
                     SELECT id, file_name, file_path, file_type
                     FROM issue_attachments
-                    WHERE log_id = ?
+                    WHERE update_id = ? -- Link to issue_updates table via update_id
                 ");
                 $stmt->execute([$update['id']]);
                 $attachments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $update['attachments'] = $attachments;
-                // Assign 'action' to 'title' and 'comment' to 'message' for consistent display.
-                $update['title'] = htmlspecialchars($update['action']);
-                $update['message'] = htmlspecialchars($update['comment']);
-
                 // Check if the update action indicates a status change.
                 if (strpos(strtolower($update['action']), 'status updated to') === 0) {
                     preg_match('/status updated to: (\w+)/i', $update['action'], $matches);
@@ -139,18 +135,19 @@ if ($issue && $issue['status'] === 'pending') {
         'icon' => 'fas fa-edit',
         'label' => 'Edit Issue',
         'href' => 'edit_issue.php?id=' . $issue['id'],
-        'class' => 'bg-indigo-700 text-white hover:bg-indigo-600'
+        'class' => 'bg-blue-600 text-white hover:bg-blue-700'
     ];
 }
 
 // Determine the Tailwind CSS class for the issue status badge.
 $statusClass = match ($issue['status'] ?? '') {
     'pending' => 'bg-yellow-100 text-yellow-800',
-    'reviewed' => 'bg-purple-100 text-purple-800', // Styling for 'reviewed' status
+    'reviewed' => 'bg-purple-100 text-purple-800',
     'approved' => 'bg-blue-100 text-blue-800',
+    'in_progress' => 'bg-indigo-100 text-indigo-800', // New status styling
     'rejected' => 'bg-red-100 text-red-800',
     'resolved' => 'bg-green-100 text-green-800',
-    default => 'bg-gray-100 text-gray-800', // Default styling for unknown statuses
+    default => 'bg-gray-100 text-gray-800',
 };
 
 // Get the current user's name for display, defaulting to 'Officer'.
@@ -195,6 +192,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                         purple: { // Custom color for 'reviewed' status
                             100: '#ede9fe',
                             800: '#6d28d9',
+                        },
+                        indigo: { // New color for 'in_progress' status
+                            100: '#e0e7ff',
+                            800: '#4338ca',
                         }
                     },
                     fontFamily: {
@@ -221,9 +222,9 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
         ?>
 
         <div class="p-4 sm:p-6">
-            <?php if ($message) : // Display any system messages 
+            <?php if ($message) : // Display any system messages from URL parameters 
             ?>
-                <div class="mb-4 p-3 rounded-xl text-xs <?php echo $message_type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                <div id="alertMessage" class="mb-4 p-3 rounded-xl text-xs <?php echo ($message_type === 'success' || $message_type === 'warning') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
                     <?php echo $message; ?>
                 </div>
             <?php endif; ?>
@@ -253,45 +254,74 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                         <!-- Issue Actions - Procedural Status Update Buttons -->
                         <div class="flex flex-wrap gap-3 mt-4 sm:mt-0">
                             <?php if ($issue['status'] === 'pending'): ?>
-                                <form action="process_issue_update.php" method="POST" class="inline-block">
+                                <form id="formMarkReviewed" action="process_issue_update.php" method="POST" class="inline-block">
                                     <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                     <input type="hidden" name="new_status" value="reviewed">
-                                    <button type="submit" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 transition-colors flex items-center">
+                                    <button type="submit" id="btnMarkReviewed" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 transition-colors flex items-center">
                                         <i class="fas fa-eye mr-2"></i> Mark as Reviewed
                                     </button>
                                 </form>
-                                <form action="process_issue_update.php" method="POST" class="inline-block">
+                                <form id="formRejectPending" action="process_issue_update.php" method="POST" class="inline-block">
                                     <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                     <input type="hidden" name="new_status" value="rejected">
-                                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
+                                    <button type="submit" id="btnRejectPending" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
                                         <i class="fas fa-times-circle mr-2"></i> Reject Issue
                                     </button>
                                 </form>
                             <?php elseif ($issue['status'] === 'reviewed'): ?>
-                                <form action="process_issue_update.php" method="POST" class="inline-block">
+                                <form id="formApprove" action="process_issue_update.php" method="POST" class="inline-block">
                                     <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                     <input type="hidden" name="new_status" value="approved">
-                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors flex items-center">
+                                    <button type="submit" id="btnApprove" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors flex items-center">
                                         <i class="fas fa-check-circle mr-2"></i> Approve Issue
                                     </button>
                                 </form>
-                                <form action="process_issue_update.php" method="POST" class="inline-block">
+                                <form id="formRejectReviewed" action="process_issue_update.php" method="POST" class="inline-block">
                                     <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                     <input type="hidden" name="new_status" value="rejected">
-                                    <button type="submit" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
+                                    <button type="submit" id="btnRejectReviewed" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
                                         <i class="fas fa-times-circle mr-2"></i> Reject Issue
                                     </button>
                                 </form>
                             <?php elseif ($issue['status'] === 'approved'): ?>
-                                <form action="process_issue_update.php" method="POST" class="inline-block">
+                                <form id="formMarkInProgress" action="process_issue_update.php" method="POST" class="inline-block">
+                                    <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
+                                    <input type="hidden" name="new_status" value="in_progress">
+                                    <button type="submit" id="btnMarkInProgress" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition-colors flex items-center">
+                                        <i class="fas fa-spinner mr-2"></i> Mark In Progress
+                                    </button>
+                                </form>
+                                <form id="formResolveApproved" action="process_issue_update.php" method="POST" class="inline-block">
                                     <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                     <input type="hidden" name="new_status" value="resolved">
-                                    <button type="submit" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors flex items-center">
+                                    <button type="submit" id="btnResolveApproved" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors flex items-center">
                                         <i class="fas fa-clipboard-check mr-2"></i> Mark as Resolved
                                     </button>
                                 </form>
+                                <form id="formRejectApproved" action="process_issue_update.php" method="POST" class="inline-block">
+                                    <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
+                                    <input type="hidden" name="new_status" value="rejected">
+                                    <button type="submit" id="btnRejectApproved" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
+                                        <i class="fas fa-times-circle mr-2"></i> Reject Issue
+                                    </button>
+                                </form>
+                            <?php elseif ($issue['status'] === 'in_progress'): ?>
+                                <form id="formResolveInProgress" action="process_issue_update.php" method="POST" class="inline-block">
+                                    <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
+                                    <input type="hidden" name="new_status" value="resolved">
+                                    <button type="submit" id="btnResolveInProgress" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 transition-colors flex items-center">
+                                        <i class="fas fa-clipboard-check mr-2"></i> Mark as Resolved
+                                    </button>
+                                </form>
+                                <form id="formRejectInProgress" action="process_issue_update.php" method="POST" class="inline-block">
+                                    <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
+                                    <input type="hidden" name="new_status" value="rejected">
+                                    <button type="submit" id="btnRejectInProgress" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors flex items-center">
+                                        <i class="fas fa-times-circle mr-2"></i> Reject Issue
+                                    </button>
+                                </form>
                             <?php elseif ($issue['status'] === 'rejected' || $issue['status'] === 'resolved'): ?>
-                                <p class="text-sm text-gray-500">This issue is <strong><?php echo htmlspecialchars(ucfirst($issue['status'])); ?></strong> and cannot be updated further via status changes.</p>
+                                <p class="text-sm text-gray-500">This issue is <strong><?php echo htmlspecialchars(ucfirst($issue['status'])); ?></strong> and cannot be updated further via status actions.</p>
                                 <a href="./" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-300 transition-colors flex items-center">
                                     <i class="fas fa-list-alt mr-2"></i> View All Issues
                                 </a>
@@ -350,89 +380,32 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             </div>
                         </div>
 
-                        <!-- Updates Section - Displays updates with attachments -->
-                        <div class="mt-6">
-                            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div class="p-5 border-b border-gray-100">
-                                    <h2 class="text-base font-semibold text-gray-800">Recent Updates</h2>
-                                    <p class="text-xs text-gray-500 mt-1">Showing the 5 most recent updates for this issue.</p>
-                                </div>
-
-                                <div class="divide-y divide-gray-100">
-                                    <?php
-                                    if (empty($updates)) :
-                                    ?>
-                                        <div class="p-5 text-center text-sm text-gray-500">
-                                            No updates have been added yet.
-                                        </div>
-                                    <?php else : ?>
-                                        <?php foreach ($updates as $update) : ?>
-                                            <div class="p-5">
-                                                <div class="flex justify-between items-start mb-2">
-                                                    <h3 class="text-sm font-semibold text-gray-800"><?php echo htmlspecialchars($update['title']); ?></h3>
-                                                    <span class="text-xs text-gray-500"><?php echo date('M d, Y H:i', strtotime($update['created_at'])); ?></span>
+                        <!-- Issue History Card - displays ALL historical logs (now from issue_updates) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="p-5 border-b border-gray-100">
+                                <h2 class="text-base font-semibold text-gray-800">Full History</h2>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <?php if (!empty($history)) : ?>
+                                    <ol class="relative border-l border-gray-200 ml-2">
+                                        <?php foreach ($history as $log) : ?>
+                                            <li class="mb-6 ml-4">
+                                                <!-- Timeline dot -->
+                                                <div class="absolute w-3 h-3 bg-slate-900 rounded-full mt-1.5 -left-1.5 border border-white ring-4 ring-white"></div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs font-semibold text-gray-700"><?php echo htmlspecialchars($log['action'] ?? ''); ?></span>
+                                                    <span class="text-xs text-gray-400"><?php echo date('M d, Y H:i', strtotime($log['created_at'])); ?></span>
                                                 </div>
-
-                                                <?php if (!empty($update['status_change'])) : ?>
-                                                    <div class="mb-2 flex items-center gap-2">
-                                                        <span class="text-xs font-medium text-gray-700">Status changed to:</span>
-                                                        <!-- Dynamic styling for status change badge -->
-                                                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold 
-                                                        <?php echo match ($update['status_change']) {
-                                                            'pending' => 'bg-yellow-100 text-yellow-800',
-                                                            'reviewed' => 'bg-purple-100 text-purple-800',
-                                                            'approved' => 'bg-blue-100 text-blue-800',
-                                                            'rejected' => 'bg-red-100 text-red-800',
-                                                            'resolved' => 'bg-green-100 text-green-800',
-                                                            default => 'bg-gray-100 text-gray-800',
-                                                        }; ?>">
-                                                            <?php echo ucfirst($update['status_change']); ?>
-                                                        </span>
-                                                    </div>
-                                                <?php endif; ?>
-
-                                                <p class="text-sm text-gray-600 mb-3"><?php echo nl2br(htmlspecialchars($update['message'])); ?></p>
-
-                                                <?php if (!empty($update['attachments'])) : ?>
-                                                    <div class="mt-2">
-                                                        <div class="text-xs font-medium text-gray-700 mb-1">Attachments:</div>
-                                                        <div class="flex flex-wrap gap-2">
-                                                            <?php foreach ($update['attachments'] as $attachment) : ?>
-                                                                <?php
-                                                                // Determine if the attachment is an image for specific rendering.
-                                                                $file_ext = pathinfo($attachment['file_name'], PATHINFO_EXTENSION);
-                                                                $is_image = in_array(strtolower($file_ext), ['jpg', 'jpeg', 'png', 'gif']);
-                                                                ?>
-                                                                <?php if ($is_image) : ?>
-                                                                    <!-- Image preview with hover effect for zoom -->
-                                                                    <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" class="block w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group relative">
-                                                                        <img src="<?php echo htmlspecialchars($attachment['file_path']); ?>" alt="Attachment" class="w-full h-full object-cover group-hover:opacity-75 transition-opacity">
-                                                                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                            <i class="fas fa-magnifying-glass text-white text-lg"></i>
-                                                                        </div>
-                                                                    </a>
-                                                                <?php else : ?>
-                                                                    <!-- Document icon and link -->
-                                                                    <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" class="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 transition-colors">
-                                                                        <i class="fas fa-file-alt mr-1 text-slate-500"></i> <?php echo htmlspecialchars($attachment['file_name']); ?>
-                                                                    </a>
-                                                                <?php endif; ?>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    </div>
-                                                <?php endif; ?>
-
-                                                <div class="mt-2 text-xs text-gray-500">
-                                                    By <?php echo htmlspecialchars($update['user_name']); ?>
-                                                </div>
-                                            </div>
+                                                <div class="text-xs text-gray-500 mb-1">By <?php echo htmlspecialchars($log['user_name'] ?? '-'); ?></div>
+                                                <div class="text-sm text-gray-600"><?php echo nl2br(htmlspecialchars($log['message'] ?? '')); ?></div>
+                                            </li>
                                         <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
+                                    </ol>
+                                <?php else : ?>
+                                    <p class="text-sm text-gray-500">No history available for this issue.</p>
+                                <?php endif; ?>
                             </div>
                         </div>
-
-
                     </div>
 
                     <!-- Right Column: Meta & Constituent Info -->
@@ -509,7 +482,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                         </div>
 
                         <div class="p-5">
-                            <form action="process_issue_update.php" method="POST" enctype="multipart/form-data" class="space-y-4">
+                            <form id="generalUpdateForm" action="process_issue_update.php" method="POST" enctype="multipart/form-data" class="space-y-4">
                                 <input type="hidden" name="issue_id" value="<?php echo $issue_id; ?>">
                                 <!-- This hidden input signals to process_issue_update.php that it's a general update -->
                                 <input type="hidden" name="is_general_update" value="1">
@@ -540,7 +513,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                                     <div class="text-xs font-medium text-gray-700">Images</div>
                                                     <div class="text-xs text-gray-500">Upload images related to this issue (JPG, PNG, GIF)</div>
                                                 </div>
-                                                <input type="file" name="images[]" accept="image/jpeg,image/png,image/gif" multiple class="text-xs border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800">
+                                                <input type="file" id="images_upload" name="images[]" accept="image/jpeg,image/png,image/gif" multiple class="text-xs border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800">
                                             </div>
                                         </div>
 
@@ -554,15 +527,23 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                                     <div class="text-xs font-medium text-gray-700">Documents</div>
                                                     <div class="text-xs text-gray-500">Upload relevant documents (PDF, DOC, DOCX, XLS, XLSX)</div>
                                                 </div>
-                                                <input type="file" name="documents[]" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple class="text-xs border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800">
+                                                <input type="file" id="documents_upload" name="documents[]" accept=".pdf,.doc,.docx,.xls,.xlsx" multiple class="text-xs border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Notification Option -->
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="notify_agent" name="notify_agent" class="h-4 w-4 text-slate-900 rounded border-gray-300 focus:ring-slate-900">
+                                    <label for="notify_agent" class="ml-2 block text-xs text-gray-700">
+                                        Notify agent about this update
+                                    </label>
+                                </div>
+
                                 <!-- Submit Button for General Update -->
                                 <div class="pt-4 flex justify-end">
-                                    <button type="submit" class="px-5 py-2 bg-slate-900 text-white text-xs font-medium rounded-xl hover:bg-slate-800 transition-colors">
+                                    <button type="submit" id="submitGeneralUpdate" class="px-5 py-2 bg-slate-900 text-white text-xs font-medium rounded-xl hover:bg-slate-800 transition-colors">
                                         <i class="fas fa-paper-plane mr-1"></i> Submit Update
                                     </button>
                                 </div>
@@ -571,7 +552,92 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                     </div>
                 </div>
 
+                <!-- Recent Updates Section - Displays last 5 updates with attachments -->
+                <div class="mt-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-5 border-b border-gray-100">
+                            <h2 class="text-base font-semibold text-gray-800">Recent Updates</h2>
+                            <p class="text-xs text-gray-500 mt-1">Showing the 5 most recent updates for this issue.</p>
+                        </div>
 
+                        <div id="recentUpdatesList" class="divide-y divide-gray-100">
+                            <?php
+                            if (empty($updates)) :
+                            ?>
+                                <div id="noUpdatesMessage" class="p-5 text-center text-sm text-gray-500">
+                                    No updates have been added yet.
+                                </div>
+                            <?php else : ?>
+                                <?php foreach ($updates as $update) : ?>
+                                    <div class="p-5">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <h3 class="text-sm font-semibold text-gray-800"><?php echo htmlspecialchars($update['action']); ?></h3> <!-- Changed to 'action' -->
+                                            <span class="text-xs text-gray-500"><?php echo date('M d, Y H:i', strtotime($update['created_at'])); ?></span>
+                                        </div>
+
+                                        <?php if (strpos(strtolower($update['action']), 'status updated to') === 0) : // Check if it's a status update from 'action' field 
+                                        ?>
+                                            <?php preg_match('/status updated to: (\w+)/i', $update['action'], $matches); ?>
+                                            <?php if (isset($matches[1])) : ?>
+                                                <div class="mb-2 flex items-center gap-2">
+                                                    <span class="text-xs font-medium text-gray-700">Status changed to:</span>
+                                                    <!-- Dynamic styling for status change badge -->
+                                                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold 
+                                                    <?php echo match (strtolower($matches[1])) { // Use matched status for styling
+                                                        'pending' => 'bg-yellow-100 text-yellow-800',
+                                                        'reviewed' => 'bg-purple-100 text-purple-800',
+                                                        'approved' => 'bg-blue-100 text-blue-800',
+                                                        'in_progress' => 'bg-indigo-100 text-indigo-800',
+                                                        'rejected' => 'bg-red-100 text-red-800',
+                                                        'resolved' => 'bg-green-100 text-green-800',
+                                                        default => 'bg-gray-100 text-gray-800',
+                                                    }; ?>">
+                                                        <?php echo ucfirst($matches[1]); ?>
+                                                    </span>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <p class="text-sm text-gray-600 mb-3"><?php echo nl2br(htmlspecialchars($update['message'])); ?></p> <!-- Changed to 'message' -->
+
+                                        <?php if (!empty($update['attachments'])) : ?>
+                                            <div class="mt-2">
+                                                <div class="text-xs font-medium text-gray-700 mb-1">Attachments:</div>
+                                                <div class="flex flex-wrap gap-2">
+                                                    <?php foreach ($update['attachments'] as $attachment) : ?>
+                                                        <?php
+                                                        // Determine if the attachment is an image for specific rendering.
+                                                        $file_ext = pathinfo($attachment['file_name'], PATHINFO_EXTENSION);
+                                                        $is_image = in_array(strtolower($file_ext), ['jpg', 'jpeg', 'png', 'gif']);
+                                                        ?>
+                                                        <?php if ($is_image) : ?>
+                                                            <!-- Image preview with hover effect for zoom -->
+                                                            <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" class="block w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group relative">
+                                                                <img src="<?php echo htmlspecialchars($attachment['file_path']); ?>" alt="Attachment" class="w-full h-full object-cover group-hover:opacity-75 transition-opacity">
+                                                                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <i class="fas fa-magnifying-glass text-white text-lg"></i>
+                                                                </div>
+                                                            </a>
+                                                        <?php else : ?>
+                                                            <!-- Document icon and link -->
+                                                            <a href="<?php echo htmlspecialchars($attachment['file_path']); ?>" target="_blank" class="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 transition-colors">
+                                                                <i class="fas fa-file-alt mr-1 text-slate-500"></i> <?php echo htmlspecialchars($attachment['file_name']); ?>
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <div class="mt-2 text-xs text-gray-500">
+                                            By <?php echo htmlspecialchars($update['user_name']); ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
             <?php else: ?>
                 <!-- Fallback message if issue is not found -->
                 <div class="bg-white rounded-xl shadow-sm p-6 text-center text-gray-600">
@@ -587,81 +653,114 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
     </main>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const updateForm = document.querySelector('.mt-6 form'); // Select the form for updates
-    const recentUpdatesContainer = document.querySelector('.divide-y.divide-gray-100'); // Container for recent updates
-    const initialNoUpdatesMessage = recentUpdatesContainer.querySelector('.p-5.text-center.text-sm.text-gray-500'); // The "No updates yet" message
-
-    if (updateForm) {
-        updateForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-
-            const formData = new FormData(this); // Get form data including files
-
-            fetch('process_issue_update.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Display success message
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-green-100 text-green-800';
-                    messageDiv.textContent = data.message;
-                    updateForm.closest('.mt-6').prepend(messageDiv); // Add message above the form
-
-                    // Remove message after a few seconds
-                    setTimeout(() => {
-                        messageDiv.remove();
-                    }, 5000);
-
-                    // Add new update to the Recent Updates section
-                    if (data.new_update_html) {
-                        if (initialNoUpdatesMessage) {
-                            initialNoUpdatesMessage.remove(); // Remove "No updates yet" if present
-                        }
-                        const newUpdateElement = document.createElement('div');
-                        newUpdateElement.innerHTML = data.new_update_html;
-                        recentUpdatesContainer.prepend(newUpdateElement.firstElementChild); // Add new update at the top
-                    }
-
-                    // Clear the form fields
-                    updateForm.reset();
-                    // Optionally, clear file inputs if needed (depends on browser behavior after reset)
-                    const fileInputs = updateForm.querySelectorAll('input[type="file"]');
-                    fileInputs.forEach(input => {
-                        input.value = ''; // Clear file selection
-                    });
-
-                } else {
-                    // Display error message
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
-                    messageDiv.textContent = data.message;
-                    updateForm.closest('.mt-6').prepend(messageDiv);
-
-                    setTimeout(() => {
-                        messageDiv.remove();
-                    }, 7000);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
-                messageDiv.textContent = 'An unexpected error occurred. Please try again.';
-                updateForm.closest('.mt-6').prepend(messageDiv);
-
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-hide alert message after a few seconds if it exists
+            const alertMessage = document.getElementById('alertMessage');
+            if (alertMessage) {
                 setTimeout(() => {
-                    messageDiv.remove();
-                }, 7000);
-            });
-        });
-    }
-});
-</script>
+                    alertMessage.remove();
+                }, 5000); // Remove after 5 seconds
+            }
 
+            // Function to handle AJAX form submission for status and general updates
+            function handleFormSubmission(formId, submitButtonId) {
+                const form = document.getElementById(formId);
+                const submitButton = document.getElementById(submitButtonId);
+
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault(); // Prevent default form submission
+
+                        const formData = new FormData(this); // Get form data including files
+
+                        // Show loading indicator and disable button
+                        if (submitButton) {
+                            submitButton.disabled = true;
+                            // Store original button text/icon for restoration
+                            submitButton.dataset.originalHtml = submitButton.innerHTML;
+                            submitButton.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i> Processing...';
+                        }
+
+                        fetch('process_issue_update.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                // Restore button state
+                                if (submitButton) {
+                                    submitButton.disabled = false;
+                                    submitButton.innerHTML = submitButton.dataset.originalHtml;
+                                }
+
+                                // Display server message (success/error/warning)
+                                let displayMessageDiv = document.getElementById('fetchAlertMessage');
+                                if (!displayMessageDiv) {
+                                    displayMessageDiv = document.createElement('div');
+                                    displayMessageDiv.id = 'fetchAlertMessage';
+                                    displayMessageDiv.className = 'mb-4 p-3 rounded-xl text-xs';
+                                    // Prepend to the main content area for visibility
+                                    document.querySelector('main .p-4').prepend(displayMessageDiv);
+                                }
+
+                                if (data.success) {
+                                    displayMessageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-green-100 text-green-800';
+                                    displayMessageDiv.textContent = data.message;
+                                    // Reload the page on success to show the updated data
+                                    setTimeout(() => {
+                                        window.location.reload();
+                                    }, 1000); // Give a brief moment for the user to see the success message
+                                } else {
+                                    displayMessageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
+                                    displayMessageDiv.textContent = data.message || 'Failed to complete action. Please try again.';
+                                    setTimeout(() => {
+                                        displayMessageDiv.remove();
+                                    }, 7000);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Fetch Error:', error);
+                                // Restore button state
+                                if (submitButton) {
+                                    submitButton.disabled = false;
+                                    submitButton.innerHTML = submitButton.dataset.originalHtml;
+                                }
+
+                                let displayMessageDiv = document.getElementById('fetchAlertMessage');
+                                if (!displayMessageDiv) {
+                                    displayMessageDiv = document.createElement('div');
+                                    displayMessageDiv.id = 'fetchAlertMessage';
+                                    displayMessageDiv.className = 'mb-4 p-3 rounded-xl text-xs';
+                                    document.querySelector('main .p-4').prepend(displayMessageDiv);
+                                }
+                                displayMessageDiv.className = 'mb-4 p-3 rounded-xl text-xs bg-red-100 text-red-800';
+                                displayMessageDiv.textContent = 'An network error occurred. Please check your connection and try again.';
+                                setTimeout(() => {
+                                    displayMessageDiv.remove();
+                                }, 7000);
+                            });
+                    });
+                }
+            }
+
+            // --- Attach event listeners to specific forms ---
+
+            // General update form
+            handleFormSubmission('generalUpdateForm', 'submitGeneralUpdate');
+
+            // Status update forms (added IDs for specific targeting)
+            handleFormSubmission('formMarkReviewed', 'btnMarkReviewed');
+            handleFormSubmission('formRejectPending', 'btnRejectPending');
+            handleFormSubmission('formApprove', 'btnApprove');
+            handleFormSubmission('formRejectReviewed', 'btnRejectReviewed');
+            handleFormSubmission('formMarkInProgress', 'btnMarkInProgress');
+            handleFormSubmission('formResolveApproved', 'btnResolveApproved');
+            handleFormSubmission('formRejectApproved', 'btnRejectApproved');
+            handleFormSubmission('formResolveInProgress', 'btnResolveInProgress');
+            handleFormSubmission('formRejectInProgress', 'btnRejectInProgress');
+
+        });
+    </script>
 </body>
 
 </html>

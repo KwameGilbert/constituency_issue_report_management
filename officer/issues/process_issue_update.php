@@ -94,8 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'Issue status updated to ' . ucfirst($new_status) . ' successfully.';
         } elseif ($is_general_update) {
             // --- Handle General Update (Comment/Attachments) ---
-            $update_title = trim(filter_input(INPUT_POST, 'update_title', FILTER_SANITIZE_STRING));
-            $update_message = trim(filter_input(INPUT_POST, 'update_message', FILTER_SANITIZE_STRING));
+            $update_title = trim(filter_input(INPUT_POST, 'update_title', FILTER_UNSAFE_RAW));
+            $update_message = trim(filter_input(INPUT_POST, 'update_message', FILTER_UNSAFE_RAW));
             $notify_agent = isset($_POST['notify_agent']) ? 1 : 0; // Checkbox value
 
             if (empty($update_title) || empty($update_message)) {
