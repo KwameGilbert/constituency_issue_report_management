@@ -7,10 +7,8 @@ $database = new Database();
 $conn = $database->getConnection();
 require_once __DIR__ . '/../components/sidebar.php';
 require_once __DIR__ . '/../components/header.php';
-$agentId = $_SESSION['user_id'] ?? null;
-if (!$agentId) {
-    die("Unauthorized");
-}
+$officerId = $_SESSION['user_id'] ?? null;
+
 $current_page = 'issues';
 
 require_once __DIR__ . '/getComprehensiveIssuesForTable.php';
@@ -25,7 +23,7 @@ $headerActionButtons = [
 ];
 
 // Get current user data for display
-$userName = $_SESSION['user_name'] ?? 'Agent';
+$userName = $_SESSION['user_name'] ?? 'Officer';
 ?>
 
 <!DOCTYPE html>

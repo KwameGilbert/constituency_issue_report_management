@@ -72,6 +72,8 @@ CREATE TABLE contact_messages (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+
+
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255),
@@ -208,6 +210,7 @@ CREATE TABLE issue_attachments (
 
 
 
+
 CREATE TABLE projects (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
@@ -321,6 +324,17 @@ CREATE TABLE audit_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
     action TEXT,
+    ip_address VARCHAR(100),
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE activity_logs(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    action TEXT,
+    details TEXT,
     ip_address VARCHAR(100),
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
