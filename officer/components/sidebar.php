@@ -77,27 +77,27 @@ function renderOfficerSidebar($current_page, $totalPendingIssues = 0)
                     ?>
                 </ul>
 
-                <div class="mt-6 mb-2 px-3">
+                <!-- <div class="mt-6 mb-2 px-3">
                     <h5 class="text-xs font-medium text-gray-400 uppercase tracking-wider">Account</h5>
-                </div>
-                <ul class="space-y-1">
+                </div> -->
+                <!-- <ul class="space-y-1">
                     <?php
-                    $accountItems = [
-                        'profile_settings' => ['icon' => 'fas fa-user-cog', 'label' => 'Settings'],
-                    ];
+                    // $accountItems = [
+                    //     'profile_settings' => ['icon' => 'fas fa-user-cog', 'label' => 'Settings'],
+                    // ];
 
-                    foreach ($accountItems as $page => $item) {
-                        $isActive = getActiveMenuClass($current_page, $page);
+                    // foreach ($accountItems as $page => $item) {
+                    //     $isActive = getActiveMenuClass($current_page, $page);
 
-                        echo '<li>';
-                        echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-colors ' . $isActive . '">';
-                        echo '<i class="' . $item['icon'] . ' fa-lg mr-3"></i>';
-                        echo '<span>' . $item['label'] . '</span>';
-                        echo '</a>';
-                        echo '</li>';
-                    }
+                    //     echo '<li>';
+                    //     echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-colors ' . $isActive . '">';
+                    //     echo '<i class="' . $item['icon'] . ' fa-lg mr-3"></i>';
+                    //     echo '<span>' . $item['label'] . '</span>';
+                    //     echo '</a>';
+                    //     echo '</li>';
+                    // }
                     ?>
-                </ul>
+                </ul> -->
             </nav>
 
             <!-- Bottom Section with User Info -->
@@ -190,3 +190,4 @@ function renderOfficerSidebar($current_page, $totalPendingIssues = 0)
     </script>
 <?php
 }
+?>
