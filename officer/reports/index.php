@@ -12,7 +12,7 @@ $current_page = 'reports';
 $officerId = $_SESSION['user_id'] ?? null;
 
 // Initialize date filters
-$date_from = $_GET['date_from'] ?? date('Y-m-01'); // First day of current month
+$date_from = $_GET['date_from'] ?? date('2000-01-01'); // First day of current month
 $date_to = $_GET['date_to'] ?? date('Y-m-d'); // Today
 $selected_agent = $_GET['agent_id'] ?? '';
 $selected_status = $_GET['status'] ?? '';
@@ -29,6 +29,7 @@ try {
             SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_issues,
             SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_issues,
             SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_issues,
+            SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress_issues,
             AVG(CASE WHEN resolved_at IS NOT NULL 
                 THEN DATEDIFF(resolved_at, created_at) END) as avg_resolution_days
         FROM issues 
@@ -244,6 +245,11 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             color: #065f46;
         }
 
+        .status-badge-in_progress{
+            background-color: #ec7f0abd;
+            color: #341802ff;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
@@ -302,7 +308,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                 <option value="">All Statuses</option>
                                 <?php foreach ($statuses as $status) : ?>
                                     <option value="<?php echo $status; ?>" <?php echo $selected_status == $status ? 'selected' : ''; ?>>
-                                        <?php echo ucfirst($status); ?>
+                                        <?php echo str_replace('_',' ',ucfirst($status)); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -579,7 +585,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                         </td>
                                         <td class="px-6 py-4">
                                             <span class="status-badge status-badge-<?php echo strtolower($activity['status']); ?>">
-                                                <?php echo ucfirst($activity['status']); ?>
+                                                <?php echo str_replace('_',' ', ucfirst($activity['status'])); ?>
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500">
@@ -643,21 +649,23 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
         new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Pending', 'Reviewed', 'Approved', 'Rejected', 'Resolved'],
+                labels: ['Pending', 'Reviewed', 'Approved', 'Rejected', 'Resolved', 'In Progress'],
                 datasets: [{
                     data: [
                         <?php echo $issues_stats['pending_issues'] ?? 0; ?>,
                         <?php echo $issues_stats['reviewed_issues'] ?? 0; ?>,
                         <?php echo $issues_stats['approved_issues'] ?? 0; ?>,
                         <?php echo $issues_stats['rejected_issues'] ?? 0; ?>,
-                        <?php echo $issues_stats['resolved_issues'] ?? 0; ?>
+                        <?php echo $issues_stats['resolved_issues'] ?? 0; ?>,
+                        <?php echo $issues_stats['in_progress_issues'] ?? 0; ?>,
                     ],
                     backgroundColor: [
                         '#fbbf24', // yellow for pending
                         '#3b82f6', // blue for reviewed
                         '#10b981', // green for approved
                         '#ef4444', // red for rejected
-                        '#6b7280' // gray for resolved
+                        '#26fa01ff', // gray for resolved,
+                        '#6b7280' // pending
                     ],
                     borderWidth: 0
                 }]
