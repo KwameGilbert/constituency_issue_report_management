@@ -20,8 +20,8 @@ function renderAdminHeader($pageTitle, $pageDescription = '', $actionButtons = [
     ];
     $roleAbbr = $roleNames[$userRole] ?? 'ADMIN';
 ?>
-    <!-- Enhanced Admin Header Section -->
-    <header class="bg-gradient-to-r from-white to-gray-50 border-b border-gray-200 shadow-sm">
+    <!-- Clean Admin Header Section -->
+    <header class="bg-white border-b border-gray-200 shadow-sm">
         <div class="px-4 py-4 sm:px-6 flex items-center justify-between">
             <div class="flex items-center">
                 <!-- Mobile menu hamburger button - only visible on mobile -->
@@ -36,54 +36,51 @@ function renderAdminHeader($pageTitle, $pageDescription = '', $actionButtons = [
                     <!-- Page Title and Description -->
                     <div>
                         <div class="flex items-center space-x-3">
-                            <h1 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($pageTitle); ?></h1>
-                            <!-- Admin Role Badge -->
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-red-100 to-purple-100 text-red-800 border border-red-200">
+                            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800"><?php echo htmlspecialchars($pageTitle); ?></h1>
+                            <!-- Admin Role Badge - Hidden on mobile for cleaner look -->
+                            <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-white">
                                 <i class="fas fa-crown mr-1 text-xs"></i>
                                 <?php echo $roleAbbr; ?>
                             </span>
                         </div>
                         <?php if (!empty($pageDescription)) : ?>
-                            <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($pageDescription); ?></p>
+                            <p class="text-sm text-gray-600 mt-1 hidden sm:block"><?php echo htmlspecialchars($pageDescription); ?></p>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
 
             <!-- Action Buttons and Admin Info -->
-            <div class="flex items-center space-x-4">
-                <!-- System Status Indicator -->
-                <div class="hidden sm:flex items-center space-x-2 px-3 py-1.5 bg-green-50 rounded-lg border border-green-200">
-                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span class="text-xs font-medium text-green-800">System Online</span>
-                </div>
-
-                <!-- Action Buttons -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Action Buttons - Only show primary action on larger screens -->
                 <?php if (!empty($actionButtons)) : ?>
-                    <div class="flex items-center space-x-3">
-                        <?php foreach ($actionButtons as $button) :
-                            $icon = $button['icon'] ?? '';
-                            $label = $button['label'] ?? '';
-                            $href = $button['href'] ?? '#';
-                            $btnClass = $button['class'] ?? 'bg-gradient-to-r from-red-600 to-purple-600 text-white hover:from-red-700 hover:to-purple-700 shadow-lg';
+                    <div class="hidden xl:flex items-center space-x-3">
+                        <?php
+                        // Show only the first (primary) action button on desktop
+                        $primaryButton = $actionButtons[0] ?? null;
+                        if ($primaryButton) :
+                            $icon = $primaryButton['icon'] ?? '';
+                            $label = $primaryButton['label'] ?? '';
+                            $href = $primaryButton['href'] ?? '#';
+                            $btnClass = $primaryButton['class'] ?? 'bg-red-900 text-white hover:bg-red-800 shadow-sm';
                         ?>
-                            <a href="<?php echo $href; ?>" class="px-4 py-2 <?php echo $btnClass; ?> text-sm rounded-xl transition-all duration-200 flex items-center space-x-2 font-medium">
+                            <a href="<?php echo $href; ?>" class="px-3 py-2 <?php echo $btnClass; ?> text-sm rounded-lg transition-all duration-200 flex items-center space-x-2 font-medium">
                                 <?php if ($icon) : ?>
                                     <i class="<?php echo $icon; ?> text-xs"></i>
                                 <?php endif; ?>
                                 <span><?php echo $label; ?></span>
                             </a>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- Admin Quick Actions Dropdown -->
                 <div class="relative">
-                    <button id="adminMenuToggle" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-                        <div class="w-8 h-8 bg-gradient-to-br from-red-100 to-purple-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user-crown text-red-700 text-sm"></i>
+                    <button id="adminMenuToggle" class="flex items-center space-x-2 px-2 py-2 text-sm text-gray-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                        <div class="w-8 h-8 bg-red-900 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
                         </div>
-                        <i class="fas fa-chevron-down text-xs"></i>
+                        <i class="fas fa-chevron-down text-xs hidden sm:block"></i>
                     </button>
 
                     <!-- Dropdown Menu -->
@@ -96,6 +93,27 @@ function renderAdminHeader($pageTitle, $pageDescription = '', $actionButtons = [
                                 <?php echo $roleNames[$userRole] ?? 'Administrator'; ?>
                             </p>
                         </div>
+
+                        <!-- Action Buttons - Show all on mobile, remaining on desktop -->
+                        <?php if (!empty($actionButtons)) : ?>
+                            <div class="border-b border-gray-100">
+                                <?php foreach ($actionButtons as $index => $button) :
+                                    $icon = $button['icon'] ?? '';
+                                    $label = $button['label'] ?? '';
+                                    $href = $button['href'] ?? '#';
+                                    // Show all buttons on mobile, skip first button on desktop (since it's shown in header)
+                                    $shouldShow = $index === 0 ? 'xl:hidden' : '';
+                                ?>
+                                    <a href="<?php echo $href; ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors <?php echo $shouldShow; ?>">
+                                        <?php if ($icon) : ?>
+                                            <i class="<?php echo $icon; ?> w-4 h-4 mr-3"></i>
+                                        <?php endif; ?>
+                                        <?php echo $label; ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+
                         <a href="../profile/" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
                             <i class="fas fa-user-circle w-4 h-4 mr-3"></i>
                             Profile Settings
@@ -146,7 +164,7 @@ function renderAdminHeader($pageTitle, $pageDescription = '', $actionButtons = [
 
             function toggleAdminDropdown() {
                 const isVisible = !adminDropdown.classList.contains('invisible');
-                
+
                 if (isVisible) {
                     adminDropdown.classList.add('opacity-0', 'invisible', 'scale-95');
                     adminDropdown.classList.remove('opacity-100', 'visible', 'scale-100');
