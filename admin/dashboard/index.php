@@ -238,6 +238,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             }
         }
     </script>
+    
 </head>
 
 <body class="bg-slate-50 min-h-screen font-sans">
