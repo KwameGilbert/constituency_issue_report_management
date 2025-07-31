@@ -227,7 +227,7 @@
 
                 <!-- Clean Login Form -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                    <form id="loginForm" class="space-y-4">
+                    <form id="loginForm" method="POST" class="space-y-4">
                         <!-- Admin Email Field -->
                         <div>
                             <label for="email" class="block text-sm font-semibold text-gray-800 mb-1.5">

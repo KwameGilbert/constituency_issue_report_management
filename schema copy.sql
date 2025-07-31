@@ -100,38 +100,29 @@ CREATE TABLE constituents (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- MAIN COMMUNITIES
+CREATE TABLE electoral_areas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    constituency VARCHAR(255),
+    region VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE communities (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    electoral_area_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (electoral_area_id) REFERENCES electoral_areas(id) ON DELETE CASCADE
 );
 
--- SUBURBS under MAIN COMMUNITIES
 CREATE TABLE suburbs (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
-    community_id INT NOT NULL,
+    community_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
 );
-
--- SMALLER COMMUNITIES (standalone)
-CREATE TABLE smaller_communities (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- COTTAGES under SMALLER COMMUNITIES
-CREATE TABLE cottages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    smaller_community_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE CASCADE
-);
-
 
 CREATE TABLE issue_categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -158,15 +149,10 @@ CREATE TABLE issues (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
     description TEXT,
-    location_description VARCHAR(255),
-
-    -- NEW LOCATION SCHEME
-    main_community_id INT,                -- Optional
-    smaller_community_id INT,            -- Optional
-    suburb_id INT,                       -- Optional
-    cottage_id INT,                      -- Optional
-
-    -- Other fields unchanged
+    location VARCHAR(255),
+    electoral_area_id INT,
+    community_id INT,
+    suburb_id INT,
     category_id INT,
     sector_id INT,
     subsector_id INT,
@@ -185,19 +171,16 @@ CREATE TABLE issues (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP NULL,
-
-    FOREIGN KEY (main_community_id) REFERENCES communities(id) ON DELETE SET NULL,
-    FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE SET NULL,
+    FOREIGN KEY (electoral_area_id) REFERENCES electoral_areas(id) ON DELETE SET NULL,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE SET NULL,
     FOREIGN KEY (suburb_id) REFERENCES suburbs(id) ON DELETE SET NULL,
-    FOREIGN KEY (cottage_id) REFERENCES cottages(id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES issue_categories(id) ON DELETE SET NULL,
     FOREIGN KEY (sector_id) REFERENCES issue_sectors(id) ON DELETE SET NULL,
     FOREIGN KEY (subsector_id) REFERENCES issue_subsectors(id) ON DELETE SET NULL,
     FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (officer_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL
+    FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL,
 );
-
 
 CREATE TABLE issue_updates (
     id INT PRIMARY KEY AUTO_INCREMENT,

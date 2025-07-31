@@ -76,20 +76,20 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 -translate-x-full lg:translate-x-0 z-50 transition-transform duration-300 ease-in-out">
         <div class="h-full flex flex-col bg-white border-r border-gray-200 shadow-sm font-inter">
             <!-- Sidebar Header -->
-            <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-red-50 to-purple-50">
+            <div class="p-4 border-b border-gray-100 bg-red-900">
                 <div class="flex items-center space-x-3">
                     <div class="relative">
-                        <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <i class="fas fa-crown text-white text-sm"></i>
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-crown text-red-900 text-lg"></i>
                         </div>
                         <!-- Admin badge -->
-                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                            <i class="fas fa-star text-yellow-900 text-xs"></i>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-star text-white text-xs"></i>
                         </div>
                     </div>
                     <div>
-                        <h3 class="text-gray-800 font-semibold">Admin Portal</h3>
-                        <p class="text-gray-500 text-xs"><?php echo htmlspecialchars($displayRole); ?></p>
+                        <h3 class="text-white font-semibold">Admin Portal</h3>
+                        <p class="text-red-100 text-xs"><?php echo htmlspecialchars($displayRole); ?></p>
                     </div>
                 </div>
             </div>
@@ -118,7 +118,7 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
 
                     foreach ($mainMenuItems as $page => $item) {
                         $isActive = getActiveMenuClass($current_page, $page);
-                        
+
                         echo '<li class="transition-all duration-200 ease-in-out">';
                         echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-all ' . $isActive . '">';
                         echo '<i class="' . $item['icon'] . ' fa-lg mr-3 w-5"></i>';
@@ -145,17 +145,17 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
 
                     foreach ($managementItems as $page => $item) {
                         $isActive = getActiveMenuClass($current_page, $page);
-                        
+
                         echo '<li class="transition-all duration-200 ease-in-out">';
                         echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-all ' . $isActive . '">';
                         echo '<i class="' . $item['icon'] . ' fa-lg mr-3 w-5"></i>';
                         echo '<span>' . $item['label'];
-                        
+
                         // Show badge if available
                         if (isset($item['badge'])) {
                             echo renderNotificationBadge($page, $item['badge']);
                         }
-                        
+
                         echo '</span>';
                         echo '</a>';
                         echo '</li>';
@@ -178,7 +178,7 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
 
                     foreach ($contentItems as $page => $item) {
                         $isActive = getActiveMenuClass($current_page, $page);
-                        
+
                         echo '<li class="transition-all duration-200 ease-in-out">';
                         echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-all ' . $isActive . '">';
                         echo '<i class="' . $item['icon'] . ' fa-lg mr-3 w-5"></i>';
@@ -204,7 +204,7 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
 
                     foreach ($systemItems as $page => $item) {
                         $isActive = getActiveMenuClass($current_page, $page);
-                        
+
                         echo '<li class="transition-all duration-200 ease-in-out">';
                         echo '<a href="./../' . $page . '/" class="flex items-center px-4 py-2.5 text-sm rounded-xl transition-all ' . $isActive . '">';
                         echo '<i class="' . $item['icon'] . ' fa-lg mr-3 w-5"></i>';
@@ -217,26 +217,24 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
             </nav>
 
             <!-- Bottom Section with Admin Info -->
-            <div class="p-4 border-t border-gray-100 bg-gradient-to-r from-red-50/50 to-purple-50/50">
+            <div class="p-4 border-t border-gray-100 bg-red-900">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         <div class="relative">
-                            <div class="w-8 h-8 bg-gradient-to-br from-red-100 to-purple-100 rounded-full flex items-center justify-center text-red-700">
-                                <i class="fas fa-user-crown text-sm"></i>
+                            <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-red-900">
+                                <i class="fas fa-user text-lg"></i>
                             </div>
-                            <!-- Online status indicator -->
-                            <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-800">
+                            <p class="text-sm font-medium text-white">
                                 <?php echo isset($_SESSION['user_name']) ? htmlspecialchars($_SESSION['user_name'], ENT_QUOTES, 'UTF-8') : 'Administrator'; ?>
                             </p>
-                            <p class="text-xs text-gray-500">
+                            <p class="text-xs text-red-100">
                                 <?php echo isset($_SESSION['user_email']) ? htmlspecialchars($_SESSION['user_email'], ENT_QUOTES, 'UTF-8') : 'admin@example.com'; ?>
                             </p>
                         </div>
                     </div>
-                    <a href="./../login/logout.php" id="logout-link" class="p-2 rounded-lg text-gray-500 hover:text-red-700 hover:bg-red-50 transition-colors">
+                    <a href="./../login/logout.php" id="logout-link" class="p-2 rounded-lg text-white hover:text-red-900 hover:bg-white transition-colors">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>
                 </div>
