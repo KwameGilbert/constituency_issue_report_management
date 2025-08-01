@@ -112,8 +112,8 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
                     function getActiveMenuClass($current_page, $page)
                     {
                         return ($current_page === $page)
-                            ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white font-medium shadow-lg'
-                            : 'text-gray-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-purple-50 hover:text-red-700';
+                            ? 'bg-red-900 text-white font-medium shadow-lg'
+                            : 'text-gray-600 hover:bg-red-100 hover:text-red-900';
                     }
 
                     foreach ($mainMenuItems as $page => $item) {
@@ -155,7 +155,6 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
                         if (isset($item['badge'])) {
                             echo renderNotificationBadge($page, $item['badge']);
                         }
-
                         echo '</span>';
                         echo '</a>';
                         echo '</li>';
