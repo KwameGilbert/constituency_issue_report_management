@@ -169,6 +169,7 @@ try {
     $systemHealth = $systemHealthStmt->fetch(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     error_log("Analytics data error: " . $e->getMessage());
+    echo "Error fetching analytics data.". "\n" . $e->getMessage();
     // Set default values
     $overallStats = ['total_issues' => 0, 'total_staff' => 0, 'total_projects' => 0, 'total_constituents' => 0, 'total_jobs' => 0, 'total_ideas' => 0, 'active_budget' => 0];
     $issuesAnalytics = [];
