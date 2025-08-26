@@ -72,10 +72,15 @@ $categories = [];
 $sectors = [];
 
 try {
-    // Fetch electoral areas
-    $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
+    // Fetch main communities
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch smaller communities
+    $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smallerCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch issue categories
     $stmt = $conn->prepare("SELECT id, name FROM issue_categories ORDER BY name");
@@ -87,22 +92,22 @@ try {
     $stmt->execute();
     $sectors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch communities for this electoral area
-    if ($issue && $issue['electoral_area_id']) {
-        $stmt = $conn->prepare("SELECT id, name FROM communities WHERE electoral_area_id = ? ORDER BY name");
-        $stmt->execute([$issue['electoral_area_id']]);
-        $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $communities = [];
-    }
-
-    // Fetch suburbs for this community
-    if ($issue && $issue['community_id']) {
+    // Fetch suburbs for this main community
+    if ($issue && $issue['main_community_id']) {
         $stmt = $conn->prepare("SELECT id, name FROM suburbs WHERE community_id = ? ORDER BY name");
-        $stmt->execute([$issue['community_id']]);
+        $stmt->execute([$issue['main_community_id']]);
         $suburbs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $suburbs = [];
+    }
+
+    // Fetch cottages for this smaller community
+    if ($issue && $issue['smaller_community_id']) {
+        $stmt = $conn->prepare("SELECT id, name FROM cottages WHERE smaller_community_id = ? ORDER BY name");
+        $stmt->execute([$issue['smaller_community_id']]);
+        $cottages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $cottages = [];
     }
 
     // Fetch subsectors for this sector
@@ -310,21 +315,21 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             <div id="content-location" class="hidden space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="electoral_area_id" class="block text-xs font-medium text-gray-700 mb-1">Electoral Area <span class="text-red-500">*</span></label>
-                                        <select id="electoral_area_id" name="electoral_area_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                            <option value="">Select Electoral Area</option>
-                                            <?php foreach ($electoralAreas as $area) : ?>
-                                                <option value="<?php echo htmlspecialchars($area['id']); ?>" <?php echo ($issue['electoral_area_id'] ?? '') == $area['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($area['name']); ?></option>
+                                        <label for="main_community_id" class="block text-xs font-medium text-gray-700 mb-1">Main Community <span class="text-red-500">*</span></label>
+                                        <select id="main_community_id" name="main_community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Main Community</option>
+                                            <?php foreach ($communities as $community) : ?>
+                                                <option value="<?php echo htmlspecialchars($community['id']); ?>" <?php echo ($issue['main_community_id'] ?? '') == $community['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($community['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label for="community_id" class="block text-xs font-medium text-gray-700 mb-1">Community <span class="text-red-500">*</span></label>
-                                        <select id="community_id" name="community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                            <option value="">Select Community</option>
-                                            <?php foreach ($communities ?? [] as $community) : ?>
-                                                <option value="<?php echo htmlspecialchars($community['id']); ?>" <?php echo ($issue['community_id'] ?? '') == $community['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($community['name']); ?></option>
+                                        <label for="smaller_community_id" class="block text-xs font-medium text-gray-700 mb-1">Smaller Community</label>
+                                        <select id="smaller_community_id" name="smaller_community_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Smaller Community (Optional)</option>
+                                            <?php foreach ($smallerCommunities ?? [] as $smallerCommunity) : ?>
+                                                <option value="<?php echo htmlspecialchars($smallerCommunity['id']); ?>" <?php echo ($issue['smaller_community_id'] ?? '') == $smallerCommunity['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($smallerCommunity['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -337,6 +342,16 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                             <option value="">Select Suburb (Optional)</option>
                                             <?php foreach ($suburbs ?? [] as $suburb) : ?>
                                                 <option value="<?php echo htmlspecialchars($suburb['id']); ?>" <?php echo ($issue['suburb_id'] ?? '') == $suburb['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($suburb['name']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="cottage_id" class="block text-xs font-medium text-gray-700 mb-1">Cottage</label>
+                                        <select id="cottage_id" name="cottage_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Cottage (Optional)</option>
+                                            <?php foreach ($cottages ?? [] as $cottage) : ?>
+                                                <option value="<?php echo htmlspecialchars($cottage['id']); ?>" <?php echo ($issue['cottage_id'] ?? '') == $cottage['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($cottage['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -438,40 +453,21 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
             });
 
             // Initialize dynamic dropdowns
-            const electoralAreaSelect = document.getElementById('electoral_area_id');
-            const communitySelect = document.getElementById('community_id');
+            const mainCommunitySelect = document.getElementById('main_community_id');
+            const smallerCommunitySelect = document.getElementById('smaller_community_id');
             const suburbSelect = document.getElementById('suburb_id');
+            const cottageSelect = document.getElementById('cottage_id');
             const sectorSelect = document.getElementById('sector_id');
             const subsectorSelect = document.getElementById('subsector_id');
 
-            // Function to load communities based on selected electoral area
-            async function loadCommunities() {
-                const electoralAreaId = electoralAreaSelect.value;
-                communitySelect.innerHTML = '<option value="">Loading Communities...</option>';
-                suburbSelect.innerHTML = '<option value="">Select Suburb (Optional)</option>'; // Reset suburbs
-
-                if (electoralAreaId) {
-                    try {
-                        const response = await fetch(`../../api/get_communities.php?electoral_area_id=${electoralAreaId}`);
-                        const communities = await response.json();
-                        populateSelect(communitySelect, communities, 'Select Community');
-                    } catch (error) {
-                        console.error('Error fetching communities:', error);
-                        populateSelect(communitySelect, [], 'Error loading communities');
-                    }
-                } else {
-                    populateSelect(communitySelect, [], 'Select Community');
-                }
-            }
-
-            // Function to load suburbs based on selected community
+            // Function to load suburbs based on selected main community
             async function loadSuburbs() {
-                const communityId = communitySelect.value;
+                const mainCommunityId = mainCommunitySelect.value;
                 suburbSelect.innerHTML = '<option value="">Loading Suburbs...</option>';
 
-                if (communityId) {
+                if (mainCommunityId) {
                     try {
-                        const response = await fetch(`../../api/get_suburbs.php?community_id=${communityId}`);
+                        const response = await fetch(`../../api/get_suburbs.php?community_id=${mainCommunityId}`);
                         const suburbs = await response.json();
                         populateSelect(suburbSelect, suburbs, 'Select Suburb (Optional)');
                     } catch (error) {
@@ -480,6 +476,25 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                     }
                 } else {
                     populateSelect(suburbSelect, [], 'Select Suburb (Optional)');
+                }
+            }
+
+            // Function to load cottages based on selected smaller community
+            async function loadCottages() {
+                const smallerCommunityId = smallerCommunitySelect.value;
+                cottageSelect.innerHTML = '<option value="">Loading Cottages...</option>';
+
+                if (smallerCommunityId) {
+                    try {
+                        const response = await fetch(`../../api/get_cottages.php?smaller_community_id=${smallerCommunityId}`);
+                        const cottages = await response.json();
+                        populateSelect(cottageSelect, cottages, 'Select Cottage (Optional)');
+                    } catch (error) {
+                        console.error('Error fetching cottages:', error);
+                        populateSelect(cottageSelect, [], 'Error loading cottages');
+                    }
+                } else {
+                    populateSelect(cottageSelect, [], 'Select Cottage (Optional)');
                 }
             }
 
@@ -512,8 +527,8 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                 });
             }
 
-            electoralAreaSelect.addEventListener('change', loadCommunities);
-            communitySelect.addEventListener('change', loadSuburbs);
+            mainCommunitySelect.addEventListener('change', loadSuburbs);
+            smallerCommunitySelect.addEventListener('change', loadCottages);
             sectorSelect.addEventListener('change', loadSubsectors);
 
             // Show initial tab

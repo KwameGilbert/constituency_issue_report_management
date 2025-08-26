@@ -22,9 +22,9 @@ if ($issue_id > 0) {
                 ic.name AS category_name,
                 isec.name AS sector_name,
                 issub.name AS subsector_name,
-                ea.name AS electoral_area_name,
-                ea.constituency AS electoral_area_constituency,
-                ea.region AS electoral_area_region,
+                mc.name AS main_community_name,
+                sc.name AS smaller_community_name,
+                cot.name AS cottage_name,
                 c.name AS community_name,
                 s.name AS suburb_name,
                 const.name AS constituent_name,
@@ -36,9 +36,10 @@ if ($issue_id > 0) {
             LEFT JOIN issue_categories ic ON i.category_id = ic.id
             LEFT JOIN issue_sectors isec ON i.sector_id = isec.id
             LEFT JOIN issue_subsectors issub ON i.subsector_id = issub.id
-            LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-            LEFT JOIN communities c ON i.community_id = c.id
+            LEFT JOIN communities mc ON i.main_community_id = mc.id
+            LEFT JOIN smaller_communities sc ON i.smaller_community_id = sc.id
             LEFT JOIN suburbs s ON i.suburb_id = s.id
+            LEFT JOIN cottages cot ON i.cottage_id = cot.id
             LEFT JOIN constituents const ON i.constituent_id = const.id
             LEFT JOIN users agent_user ON i.agent_id = agent_user.id
             LEFT JOIN users officer_user ON i.officer_id = officer_user.id
@@ -261,16 +262,20 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['location'] ?? '-'); ?></p>
                             </div>
                             <div>
-                                <h3 class="text-xs font-semibold text-gray-700 mb-1">Electoral Area</h3>
-                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['electoral_area_name'] ?? '-'); ?></p>
+                                <h3 class="text-xs font-semibold text-gray-700 mb-1">Main Community</h3>
+                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['main_community_name'] ?? '-'); ?></p>
                             </div>
                             <div>
-                                <h3 class="text-xs font-semibold text-gray-700 mb-1">Community</h3>
-                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['community_name'] ?? '-'); ?></p>
+                                <h3 class="text-xs font-semibold text-gray-700 mb-1">Smaller Community</h3>
+                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['smaller_community_name'] ?? '-'); ?></p>
                             </div>
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Suburb</h3>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['suburb_name'] ?? '-'); ?></p>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-semibold text-gray-700 mb-1">Cottage</h3>
+                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['cottage_name'] ?? '-'); ?></p>
                             </div>
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Created</h3>
