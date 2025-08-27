@@ -173,7 +173,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             'Type' => $types,
                             'Sector' => $sectors,
                             'Subsector' => $subsectors,
-                            'Electoral Area' => $electoralAreas,
+                            'Main Community' => $electoralAreas, // kept as source of main community names
                             'Community' => $communities,
                             'Severity' => $severities,
                             'Agent' => $agents,
@@ -184,7 +184,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             'Type' => 'typeFilter',
                             'Sector' => 'sectorFilter',
                             'Subsector' => 'subsectorFilter',
-                            'Electoral Area' => 'electoralAreaFilter',
+                            'Main Community' => 'mainCommunityFilter',
                             'Community' => 'communityFilter',
                             'Severity' => 'severityFilter',
                             'Agent' => 'agentFilter'
@@ -261,17 +261,19 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     }
                                 ?>
                                     <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
-                                        data-title="<?= strtolower($issue['title']) ?>"
-                                        data-location="<?= strtolower($issue['location']) ?>"
-                                        data-category="<?= strtolower($issue['category']) ?>"
-                                        data-status="<?= strtolower($issue['status']) ?>"
-                                        data-type="<?= strtolower($issue['type']) ?>"
-                                        data-sector="<?= strtolower($issue['sector']) ?>"
-                                        data-subsector="<?= strtolower($issue['subsector']) ?>"
-                                        data-electoral-area="<?= strtolower($issue['electoral_area']) ?>"
-                                        data-community="<?= strtolower($issue['community']) ?>"
-                                        data-severity="<?= strtolower($issue['severity']) ?>"
-                                        data-agent="<?= strtolower($issue['agent']) ?>">
+                                        data-title="<?= strtolower($issue['title'] ?? '') ?>"
+                                        data-location="<?= strtolower($issue['location_description'] ?? $issue['location'] ?? '') ?>"
+                                        data-category="<?= strtolower($issue['category'] ?? '') ?>"
+                                        data-status="<?= strtolower($issue['status'] ?? '') ?>"
+                                        data-type="<?= strtolower($issue['type'] ?? '') ?>"
+                                        data-sector="<?= strtolower($issue['sector'] ?? '') ?>"
+                                        data-subsector="<?= strtolower($issue['subsector'] ?? '') ?>"
+                                        data-electoral-area="<?= strtolower($issue['electoral_area'] ?? '') ?>"
+                                        data-main-community="<?= strtolower($issue['main_community'] ?? $issue['electoral_area'] ?? '') ?>"
+                                        data-community="<?= strtolower($issue['community'] ?? '') ?>"
+                                        data-smaller-community="<?= strtolower($issue['smaller_community'] ?? '') ?>"
+                                        data-severity="<?= strtolower($issue['severity'] ?? '') ?>"
+                                        data-agent="<?= strtolower($issue['agent'] ?? '') ?>">
                                         <td class="px-6 py-4 text-sm text-gray-500"><?= $issue['id'] ?></td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($issue['title']) ?></div>
@@ -310,7 +312,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                 type: document.getElementById('typeFilter'),
                 sector: document.getElementById('sectorFilter'),
                 subsector: document.getElementById('subsectorFilter'),
-                electoralArea: document.getElementById('electoralAreaFilter'),
+                mainCommunity: document.getElementById('mainCommunityFilter'),
                 community: document.getElementById('communityFilter'),
                 severity: document.getElementById('severityFilter'),
                 agent: document.getElementById('agentFilter')
@@ -348,14 +350,14 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             }
 
             function filterRows() {
-                const values = Object.fromEntries(Object.entries(filters).map(([key, el]) => [key, normalize(el.value)]));
+                const values = Object.fromEntries(Object.entries(filters).map(([key, el]) => [key, normalize(el ? el.value : '')]));
                 let visibleRowCount = 0;
 
                 tableRows.forEach(row => {
                     const matches =
                         (!values.search ||
                             row.dataset.title.includes(values.search) ||
-                            row.dataset.location.includes(values.search) ||
+                            (row.dataset.location || '').includes(values.search) ||
                             (row.querySelector('.text-xs.text-gray-500') && normalize(row.querySelector('.text-xs.text-gray-500').textContent).includes(values.search))
                         ) &&
                         (!values.category || row.dataset.category === values.category) &&
@@ -363,8 +365,8 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                         (!values.type || row.dataset.type === values.type) &&
                         (!values.sector || row.dataset.sector === values.sector) &&
                         (!values.subsector || row.dataset.subsector === values.subsector) &&
-                        (!values.electoralArea || row.dataset.electoralArea === values.electoralArea) &&
-                        (!values.community || row.dataset.community === values.community) &&
+                        (!values.mainCommunity || (row.dataset.mainCommunity || '') === values.mainCommunity) &&
+                        (!values.community || ((row.dataset.smallerCommunity || row.dataset.community || '') === values.community)) &&
                         (!values.severity || row.dataset.severity === values.severity) &&
                         (!values.agent || row.dataset.agent === values.agent);
 

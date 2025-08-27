@@ -1,6 +1,6 @@
 <?php
 // api/update_issue.php
-header('Content-Type: application/json'); 
+header('Content-Type: application/json');
 require_once __DIR__ . '/../config/db_connection.php';
 
 // Start session if it hasn't been started already
@@ -25,8 +25,8 @@ if (!$issue_id) {
 
 try {
     $database = new Database();
-    $conn = $database->getConnection(); 
-    $conn->beginTransaction(); 
+    $conn = $database->getConnection();
+    $conn->beginTransaction();
 
     // Step 1: Update constituent details
     $constituent_id = $_POST['constituent_id'] ?? null;
@@ -36,43 +36,45 @@ try {
 
     $stmt = $conn->prepare("UPDATE constituents SET name = ?, phone = ?, location = ?, email = ?, gender = ? WHERE id = ?");
     $stmt->execute([
-        $_POST['constituent_name'],
-        $_POST['constituent_phone'],
-        $_POST['constituent_address'],
-        $_POST['constituent_email'],
-        $_POST['constituent_gender'],
+        $_POST['constituent_name'] ?? null,
+        $_POST['constituent_phone'] ?? null,
+        $_POST['constituent_address'] ?? null,
+        $_POST['constituent_email'] ?? null,
+        $_POST['constituent_gender'] ?? null,
         $constituent_id
     ]);
 
-    // Step 2: Update issue details
-    $issueStmt = $conn->prepare("
-        UPDATE issues SET
-            title = ?, description = ?, location = ?,
-            electoral_area_id = ?, community_id = ?, suburb_id = ?,
+    // Step 2: Update issue details using the new location columns
+    $issueStmt = $conn->prepare(
+        "UPDATE issues SET
+            title = ?, description = ?, location_description = ?,
+            main_community_id = ?, smaller_community_id = ?, suburb_id = ?, cottage_id = ?,
             category_id = ?, sector_id = ?, subsector_id = ?,
             type = ?, severity = ?, people_affected = ?,
             additional_notes = ?
-        WHERE id = ? AND officer_id = ?
-    ");
+        WHERE id = ? AND officer_id = ?"
+    );
+
     $issueStmt->execute([
-        $_POST['title'],
-        $_POST['description'],
-        $_POST['location'],
-        $_POST['electoral_area_id'],
-        $_POST['community_id'],
-        $_POST['suburb_id'],
-        $_POST['category_id'],
-        $_POST['sector_id'],
-        $_POST['subsector_id'],
-        $_POST['type'],
-        $_POST['severity'],
-        $_POST['people_affected'],
-        $_POST['additional_notes'],
-        $issue_id, 
+        $_POST['title'] ?? null,
+        $_POST['description'] ?? null,
+        $_POST['location_description'] ?? null,
+        $_POST['main_community_id'] ?? null,
+        $_POST['smaller_community_id'] ?? null,
+        $_POST['suburb_id'] ?? null,
+        $_POST['cottage_id'] ?? null,
+        $_POST['category_id'] ?? null,
+        $_POST['sector_id'] ?? null,
+        $_POST['subsector_id'] ?? null,
+        $_POST['type'] ?? null,
+        $_POST['severity'] ?? null,
+        $_POST['people_affected'] ?? null,
+        $_POST['additional_notes'] ?? null,
+        $issue_id,
         $officerId
     ]);
 
-    $conn->commit(); 
+    $conn->commit();
     echo json_encode(['success' => true, 'message' => 'Issue updated successfully.']);
 } catch (Exception $e) {
     $conn->rollBack(); // Rollback the transaction if any error occurred

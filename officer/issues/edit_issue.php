@@ -502,7 +502,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                 });
             }
 
-            mainCommunitySelect.addEventListener('change', function() { loadSmallerCommunities(); loadSuburbs(); });
+            mainCommunitySelect.addEventListener('change', function() {
+                loadSmallerCommunities();
+                loadSuburbs();
+            });
             smallerCommunitySelect.addEventListener('change', loadCottages);
             sectorSelect.addEventListener('change', loadSubsectors);
 
@@ -611,4 +614,5 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
 </body>
 
 </html>
-</html>                    const issueId = <?php echo json_encode($issue_id); ?>;
+
+</html> const issueId = <?php echo json_encode($issue_id); ?>;
