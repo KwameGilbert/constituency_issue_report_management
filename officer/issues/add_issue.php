@@ -27,15 +27,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch data for dropdowns from database
-$electoralAreas = [];
+$communities = [];
+$smallerCommunities = [];
 $categories = [];
 $sectors = [];
 
 try {
-    // Fetch electoral areas
-    $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
+    // Fetch main communities
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch smaller communities
+    $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smallerCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch issue categories
     $stmt = $conn->prepare("SELECT id, name FROM issue_categories ORDER BY name");
@@ -245,19 +251,22 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                         <div id="content-location" class="hidden space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="electoral_area_id" class="block text-xs font-medium text-gray-700 mb-1">Electoral Area <span class="text-red-500">*</span></label>
-                                    <select id="electoral_area_id" name="electoral_area_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                        <option value="">Select Electoral Area</option>
-                                        <?php foreach ($electoralAreas as $area) : ?>
-                                            <option value="<?= htmlspecialchars($area['id']) ?>"><?= htmlspecialchars($area['name']) ?></option>
+                                    <label for="main_community_id" class="block text-xs font-medium text-gray-700 mb-1">Main Community <span class="text-red-500">*</span></label>
+                                    <select id="main_community_id" name="main_community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                        <option value="">Select Main Community</option>
+                                        <?php foreach ($communities as $community) : ?>
+                                            <option value="<?= htmlspecialchars($community['id']) ?>"><?= htmlspecialchars($community['name']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label for="community_id" class="block text-xs font-medium text-gray-700 mb-1">Community <span class="text-red-500">*</span></label>
-                                    <select id="community_id" name="community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                        <option value="">Select Community</option>
+                                    <label for="smaller_community_id" class="block text-xs font-medium text-gray-700 mb-1">Smaller Community</label>
+                                    <select id="smaller_community_id" name="smaller_community_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                        <option value="">Select Smaller Community (Optional)</option>
+                                        <?php foreach ($smallerCommunities as $smallerCommunity) : ?>
+                                            <option value="<?= htmlspecialchars($smallerCommunity['id']) ?>"><?= htmlspecialchars($smallerCommunity['name']) ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
@@ -271,8 +280,8 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                 </div>
 
                                 <div>
-                                    <label for="location" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
-                                    <input type="text" id="location" name="location" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                    <label for="location_description" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
+                                    <input type="text" id="location_description" name="location_description" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
                                 </div>
                             </div>
                         </div>

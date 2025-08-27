@@ -22,24 +22,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get and sanitize input
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
     $password = $_POST['password'];
-    
+
     // Check for empty fields
     if (empty($email) || empty($password)) {
         $response['message'] = 'Please fill in all required fields';
         echo json_encode($response);
         exit;
     }
-    
+
     try {
         // Find user by email
         $stmt = $conn->prepare("SELECT id, name, email, password, role, electoral_area, status FROM users WHERE email = ?  LIMIT 1");
         $stmt->bindValue(1, $email);
         $stmt->execute();
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         // Check if user exists
         if ($user) {
-            
+
             // Verify password
             if (password_verify($password, $user['password'])) {
                 // Check if account is active
@@ -48,23 +48,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo json_encode($response);
                     exit;
                 }
-                
+
                 // Check if user is an agent
                 if ($user['role'] !== 'officer') {
                     $response['message'] = 'Access denied. This portal is only for agents';
                     echo json_encode($response);
                     exit;
                 }
-                
+
                 // Authentication successful - set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
+                // Keep backward-compatible electoral_area and also expose as main_community_id
                 $_SESSION['electoral_area'] = $user['electoral_area'];
+                $_SESSION['main_community_id'] = $user['electoral_area'];
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time();
-                
+
                 // Update last login time
                 $updateStmt = $conn->prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?");
                 $updateStmt->bindValue(1, $user['id'], PDO::PARAM_INT);

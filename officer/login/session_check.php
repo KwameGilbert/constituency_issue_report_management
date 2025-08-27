@@ -4,9 +4,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in and is an agent
-if (!isset($_SESSION['user_id'])) {
-    // User is not logged in or not an agent, redirect to login page
+// Check if user is logged in and is an officer
+if (!isset($_SESSION['user_id']) && ($_SESSION['user_role'] !== 'officer')) {
+    // User is not logged in or not an officer, redirect to login page
     header("Location: ../login/index.php?error=auth_required");
     exit();
 }

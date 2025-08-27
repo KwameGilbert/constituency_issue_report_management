@@ -29,30 +29,18 @@ if ($issue_id <= 0) {
 
     // Fetch current issue data
     try {
-        $stmt = $conn->prepare("
-            SELECT
-                i.*,
-                ic.name AS category_name,
-                isec.name AS sector_name,
-                issub.name AS subsector_name,
-                ea.name AS electoral_area_name,
-                c.name AS community_name,
-                s.name AS suburb_name,
-                const.id AS constituent_id,
-                const.name AS constituent_name,
-                const.phone AS constituent_phone,
-                const.location AS constituent_location
-            FROM issues i
-            LEFT JOIN issue_categories ic ON i.category_id = ic.id
-            LEFT JOIN issue_sectors isec ON i.sector_id = isec.id
-            LEFT JOIN issue_subsectors issub ON i.subsector_id = issub.id
-            LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-            LEFT JOIN communities c ON i.community_id = c.id
-            LEFT JOIN suburbs s ON i.suburb_id = s.id
-            LEFT JOIN constituents const ON i.constituent_id = const.id
-            WHERE i.id = ?
-        ");
+        $sql = "SELECT i.*, i.location_description, i.main_community_id, i.smaller_community_id, i.suburb_id, i.cottage_id,
+                       const.name AS constituent_name, const.phone AS constituent_phone, const.email AS constituent_email,
+                       mc.name AS main_community_name, sc.name AS smaller_community_name, s.name AS suburb_name, cot.name AS cottage_name
+                FROM issues i
+                LEFT JOIN constituents const ON i.constituent_id = const.id
+                LEFT JOIN communities mc ON i.main_community_id = mc.id
+                LEFT JOIN smaller_communities sc ON i.smaller_community_id = sc.id
+                LEFT JOIN suburbs s ON i.suburb_id = s.id
+                LEFT JOIN cottages cot ON i.cottage_id = cot.id
+                WHERE i.id = ? LIMIT 1";
 
+        $stmt = $conn->prepare($sql);
         $stmt->execute([$issue_id]);
         $issue = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -67,15 +55,21 @@ if ($issue_id <= 0) {
 }
 
 // Fetch data for dropdown options
-$electoralAreas = [];
+$communities = [];
+$smallerCommunities = [];
 $categories = [];
 $sectors = [];
 
 try {
-    // Fetch electoral areas
-    $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
+    // Fetch main communities
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch smaller communities
+    $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smallerCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Fetch issue categories
     $stmt = $conn->prepare("SELECT id, name FROM issue_categories ORDER BY name");
@@ -87,22 +81,22 @@ try {
     $stmt->execute();
     $sectors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch communities for this electoral area
-    if ($issue && $issue['electoral_area_id']) {
-        $stmt = $conn->prepare("SELECT id, name FROM communities WHERE electoral_area_id = ? ORDER BY name");
-        $stmt->execute([$issue['electoral_area_id']]);
-        $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $communities = [];
-    }
-
-    // Fetch suburbs for this community
-    if ($issue && $issue['community_id']) {
+    // Fetch suburbs for this main community
+    if ($issue && $issue['main_community_id']) {
         $stmt = $conn->prepare("SELECT id, name FROM suburbs WHERE community_id = ? ORDER BY name");
-        $stmt->execute([$issue['community_id']]);
+        $stmt->execute([$issue['main_community_id']]);
         $suburbs = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $suburbs = [];
+    }
+
+    // Fetch cottages for this smaller community
+    if ($issue && $issue['smaller_community_id']) {
+        $stmt = $conn->prepare("SELECT id, name FROM cottages WHERE smaller_community_id = ? ORDER BY name");
+        $stmt->execute([$issue['smaller_community_id']]);
+        $cottages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $cottages = [];
     }
 
     // Fetch subsectors for this sector
@@ -131,41 +125,6 @@ $headerActionButtons = [
 // Get current user data for display
 $userName = $_SESSION['user_name'] ?? 'Officer';
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Edit Issue #<?php echo $issue_id; ?> - Officer Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#6366f1',
-                        secondary: '#8b5cf6',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        error: '#ef4444',
-                        slate: {
-                            50: '#f8fafc',
-                            900: '#0f172a',
-                        }
-                    },
-                    fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif']
-                    }
-                }
-            }
-        };
-    </script>
-</head>
 
 <body class="bg-slate-50 min-h-screen font-sans">
     <?php renderOfficerSidebar($current_page); ?>
@@ -310,21 +269,21 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             <div id="content-location" class="hidden space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="electoral_area_id" class="block text-xs font-medium text-gray-700 mb-1">Electoral Area <span class="text-red-500">*</span></label>
-                                        <select id="electoral_area_id" name="electoral_area_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                            <option value="">Select Electoral Area</option>
-                                            <?php foreach ($electoralAreas as $area) : ?>
-                                                <option value="<?php echo htmlspecialchars($area['id']); ?>" <?php echo ($issue['electoral_area_id'] ?? '') == $area['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($area['name']); ?></option>
+                                        <label for="main_community_id" class="block text-xs font-medium text-gray-700 mb-1">Main Community <span class="text-red-500">*</span></label>
+                                        <select id="main_community_id" name="main_community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Main Community</option>
+                                            <?php foreach ($communities as $community) : ?>
+                                                <option value="<?php echo htmlspecialchars($community['id']); ?>" <?php echo ($issue['main_community_id'] ?? '') == $community['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($community['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
 
                                     <div>
-                                        <label for="community_id" class="block text-xs font-medium text-gray-700 mb-1">Community <span class="text-red-500">*</span></label>
-                                        <select id="community_id" name="community_id" required class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
-                                            <option value="">Select Community</option>
-                                            <?php foreach ($communities ?? [] as $community) : ?>
-                                                <option value="<?php echo htmlspecialchars($community['id']); ?>" <?php echo ($issue['community_id'] ?? '') == $community['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($community['name']); ?></option>
+                                        <label for="smaller_community_id" class="block text-xs font-medium text-gray-700 mb-1">Smaller Community</label>
+                                        <select id="smaller_community_id" name="smaller_community_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Smaller Community (Optional)</option>
+                                            <?php foreach ($smallerCommunities as $smallerCommunity) : ?>
+                                                <option value="<?php echo htmlspecialchars($smallerCommunity['id']); ?>" <?php echo ($issue['smaller_community_id'] ?? '') == $smallerCommunity['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($smallerCommunity['name']); ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -342,9 +301,19 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     </div>
 
                                     <div>
-                                        <label for="location" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
-                                        <input type="text" id="location" name="location" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['location'] ?? ''); ?>">
+                                        <label for="cottage_id" class="block text-xs font-medium text-gray-700 mb-1">Cottage</label>
+                                        <select id="cottage_id" name="cottage_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                            <option value="">Select Cottage (Optional)</option>
+                                            <?php foreach ($cottages ?? [] as $cottage) : ?>
+                                                <option value="<?php echo htmlspecialchars($cottage['id']); ?>" <?php echo ($issue['cottage_id'] ?? '') == $cottage['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($cottage['name']); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label for="location_description" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
+                                    <input type="text" id="location_description" name="location_description" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['location_description'] ?? ''); ?>">
                                 </div>
                             </div>
                         </div>
@@ -438,35 +407,37 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             });
 
             // Initialize dynamic dropdowns
-            const electoralAreaSelect = document.getElementById('electoral_area_id');
-            const communitySelect = document.getElementById('community_id');
+            const mainCommunitySelect = document.getElementById('main_community_id');
+            const smallerCommunitySelect = document.getElementById('smaller_community_id');
             const suburbSelect = document.getElementById('suburb_id');
+            const cottageSelect = document.getElementById('cottage_id');
             const sectorSelect = document.getElementById('sector_id');
             const subsectorSelect = document.getElementById('subsector_id');
 
-            // Function to load communities based on selected electoral area
-            async function loadCommunities() {
-                const electoralAreaId = electoralAreaSelect.value;
-                communitySelect.innerHTML = '<option value="">Loading Communities...</option>';
+            // Load smaller communities when a main community is selected
+            async function loadSmallerCommunities() {
+                const communityId = mainCommunitySelect.value;
+                smallerCommunitySelect.innerHTML = '<option value="">Loading Smaller Communities...</option>';
                 suburbSelect.innerHTML = '<option value="">Select Suburb (Optional)</option>'; // Reset suburbs
+                cottageSelect.innerHTML = '<option value="">Select Cottage (Optional)</option>'; // Reset cottages
 
-                if (electoralAreaId) {
+                if (communityId) {
                     try {
-                        const response = await fetch(`../../api/get_communities.php?electoral_area_id=${electoralAreaId}`);
-                        const communities = await response.json();
-                        populateSelect(communitySelect, communities, 'Select Community');
+                        const response = await fetch(`../../api/get_smaller_communities.php?community_id=${communityId}`);
+                        const smaller = await response.json();
+                        populateSelect(smallerCommunitySelect, smaller, 'Select Smaller Community');
                     } catch (error) {
-                        console.error('Error fetching communities:', error);
-                        populateSelect(communitySelect, [], 'Error loading communities');
+                        console.error('Error fetching smaller communities:', error);
+                        populateSelect(smallerCommunitySelect, [], 'Error loading communities');
                     }
                 } else {
-                    populateSelect(communitySelect, [], 'Select Community');
+                    populateSelect(smallerCommunitySelect, [], 'Select Smaller Community');
                 }
             }
 
-            // Function to load suburbs based on selected community
+            // Function to load suburbs based on selected main community
             async function loadSuburbs() {
-                const communityId = communitySelect.value;
+                const communityId = mainCommunitySelect.value;
                 suburbSelect.innerHTML = '<option value="">Loading Suburbs...</option>';
 
                 if (communityId) {
@@ -480,6 +451,25 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                     }
                 } else {
                     populateSelect(suburbSelect, [], 'Select Suburb (Optional)');
+                }
+            }
+
+            // Function to load cottages based on selected smaller community
+            async function loadCottages() {
+                const smallerId = smallerCommunitySelect.value;
+                cottageSelect.innerHTML = '<option value="">Loading Cottages...</option>';
+
+                if (smallerId) {
+                    try {
+                        const response = await fetch(`../../api/get_cottages.php?smaller_community_id=${smallerId}`);
+                        const cottages = await response.json();
+                        populateSelect(cottageSelect, cottages, 'Select Cottage (Optional)');
+                    } catch (error) {
+                        console.error('Error fetching cottages:', error);
+                        populateSelect(cottageSelect, [], 'Error loading cottages');
+                    }
+                } else {
+                    populateSelect(cottageSelect, [], 'Select Cottage (Optional)');
                 }
             }
 
@@ -512,12 +502,37 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                 });
             }
 
-            electoralAreaSelect.addEventListener('change', loadCommunities);
-            communitySelect.addEventListener('change', loadSuburbs);
+            mainCommunitySelect.addEventListener('change', function() { loadSmallerCommunities(); loadSuburbs(); });
+            smallerCommunitySelect.addEventListener('change', loadCottages);
             sectorSelect.addEventListener('change', loadSubsectors);
+
 
             // Show initial tab
             showTab(0);
+
+            // Initialize dependent selects when editing an existing issue
+            (function initDependentSelects() {
+                const existingMain = <?php echo json_encode($issue['main_community_id'] ?? null); ?>;
+                const existingSmaller = <?php echo json_encode($issue['smaller_community_id'] ?? null); ?>;
+                const existingSuburb = <?php echo json_encode($issue['suburb_id'] ?? null); ?>;
+                const existingCottage = <?php echo json_encode($issue['cottage_id'] ?? null); ?>;
+
+                if (existingMain) {
+                    mainCommunitySelect.value = existingMain;
+                    // load smaller communities and suburbs, then set selected values
+                    loadSmallerCommunities().then(() => {
+                        if (existingSmaller) {
+                            smallerCommunitySelect.value = existingSmaller;
+                            loadCottages().then(() => {
+                                if (existingCottage) cottageSelect.value = existingCottage;
+                            });
+                        }
+                    });
+                    loadSuburbs().then(() => {
+                        if (existingSuburb) suburbSelect.value = existingSuburb;
+                    });
+                }
+            })();
 
 
 
@@ -591,11 +606,9 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                 }
             });
 
-
-
-
         });
     </script>
 </body>
 
+</html>
 </html>                    const issueId = <?php echo json_encode($issue_id); ?>;
