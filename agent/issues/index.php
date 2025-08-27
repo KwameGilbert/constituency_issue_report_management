@@ -10,7 +10,7 @@ $conn = $database->getConnection();
 $agentId = $_SESSION['user_id'] ?? null;
 if (!$agentId) {
     die("Unauthorized");
-}                                                                                                                                      
+}
 $current_page = 'issues';
 
 $issuesStmt = $conn->prepare("
@@ -19,7 +19,7 @@ $issuesStmt = $conn->prepare("
         i.title,
         ic.name AS category,
         i.status,
-        i.location,
+        i.location_description,
         DATE(i.created_at) AS submitted_at
     FROM issues i
     LEFT JOIN issue_categories ic ON i.category_id = ic.id
@@ -98,7 +98,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                     <!-- Search Filter -->
                     <div>
                         <label for="searchInput" class="block text-xs font-medium text-gray-700 mb-2">Search</label>
-                        <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900" placeholder="Search by title or location...">
+                        <input type="text" id="searchInput" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-slate-900 focus:border-slate-900" placeholder="Search by title or location_description...">
                     </div>
 
                     <!-- Category Filter -->
@@ -164,7 +164,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                         <div class="text-xs text-gray-500 truncate max-w-xs"><?php echo htmlspecialchars($issue['description'] ?? 'No description'); ?></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['category']); ?></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['location']); ?></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo htmlspecialchars($issue['location_description']); ?></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <?php
                                         $statusClass = '';
@@ -240,7 +240,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
+
             // Filter functionality
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
@@ -258,11 +258,11 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                 rows.forEach(row => {
                     const title = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                    const location = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    const location_description = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
                     const rowCategory = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
                     const rowStatus = row.querySelector('td:nth-child(5)').textContent.toLowerCase();
 
-                    const matchesSearch = title.includes(searchTerm) || location.includes(searchTerm);
+                    const matchesSearch = title.includes(searchTerm) || location_description.includes(searchTerm);
                     const matchesCategory = !category || rowCategory === category;
                     const matchesStatus = !status || rowStatus.includes(status);
 

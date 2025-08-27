@@ -4,7 +4,7 @@ This project is a web-based application designed to help field officers and admi
 
 ## Features
 
-- **Issue Reporting**: Field officers can report new issues with details such as title, description, location, severity, and more.
+- **Issue Reporting**: Field officers can report new issues with details such as title, description, location_description, severity, and more.
 - **Issue Management**: View, edit, and delete reported issues.
 - **Reports & Analytics**: Generate detailed reports and visualize data through charts (e.g., status breakdown, severity distribution, etc.).
 - **User Authentication**: Secure login for field officers and administrators.
@@ -60,7 +60,7 @@ This project is a web-based application designed to help field officers and admi
 ### Reporting Issues
 
 1. Navigate to the "Report New Issue" page.
-2. Fill in the required fields (e.g., title, description, location).
+2. Fill in the required fields (e.g., title, description, location_description).
 3. Submit the form to add the issue to the system.
 
 ### Managing Issues

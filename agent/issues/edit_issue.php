@@ -35,8 +35,9 @@ if ($issue_id <= 0) {
                 ic.name AS category_name,
                 isec.name AS sector_name,
                 issub.name AS subsector_name,
-                ea.name AS electoral_area_name,
-                c.name AS community_name,
+                mc.name AS main_community_name,
+                sc.name AS smaller_community_name,
+                cot.name AS cottage_name,
                 s.name AS suburb_name,
                 const.id AS constituent_id,
                 const.name AS constituent_name,
@@ -46,8 +47,9 @@ if ($issue_id <= 0) {
             LEFT JOIN issue_categories ic ON i.category_id = ic.id
             LEFT JOIN issue_sectors isec ON i.sector_id = isec.id
             LEFT JOIN issue_subsectors issub ON i.subsector_id = issub.id
-            LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
-            LEFT JOIN communities c ON i.community_id = c.id
+            LEFT JOIN communities mc ON i.main_community_id = mc.id
+            LEFT JOIN smaller_communities sc ON i.smaller_community_id = sc.id
+            LEFT JOIN cottages cot ON i.cottage_id = cot.id
             LEFT JOIN suburbs s ON i.suburb_id = s.id
             LEFT JOIN constituents const ON i.constituent_id = const.id
             WHERE i.id = ?
@@ -67,7 +69,8 @@ if ($issue_id <= 0) {
 }
 
 // Fetch data for dropdown options
-$electoralAreas = [];
+$communities = [];
+$smallerCommunities = [];
 $categories = [];
 $sectors = [];
 
@@ -76,7 +79,7 @@ try {
     $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
     $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Fetch smaller communities
     $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
     $stmt->execute();
@@ -192,7 +195,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             <div class="flex -mb-px space-x-6">
                                 <button type="button" id="tab-issue" class="text-xs font-medium py-2 border-b-2 border-slate-900 text-slate-900">Issue Details</button>
                                 <button type="button" id="tab-constituent" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Constituent Details</button>
-                                <button type="button" id="tab-location" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Location</button>
+                                <button type="button" id="tab-location_description" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Location</button>
                             </div>
                         </div>
 
@@ -312,7 +315,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                 </div>
                             </div>
 
-                            <div id="content-location" class="hidden space-y-4">
+                            <div id="content-location_description" class="hidden space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label for="main_community_id" class="block text-xs font-medium text-gray-700 mb-1">Main Community <span class="text-red-500">*</span></label>
@@ -345,7 +348,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    
+
                                     <div>
                                         <label for="cottage_id" class="block text-xs font-medium text-gray-700 mb-1">Cottage</label>
                                         <select id="cottage_id" name="cottage_id" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
@@ -357,8 +360,8 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                     </div>
 
                                     <div>
-                                        <label for="location" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
-                                        <input type="text" id="location" name="location" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['location'] ?? ''); ?>">
+                                        <label for="location_description" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
+                                        <input type="text" id="location_description" name="location_description" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs" value="<?php echo htmlspecialchars($issue['location_description'] ?? ''); ?>">
                                     </div>
                                 </div>
                             </div>
@@ -398,7 +401,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Tab navigation functionality  
-            const tabs = ['issue', 'constituent', 'location'];
+            const tabs = ['issue', 'constituent', 'location_description'];
             let currentTabIndex = 0;
 
             const tabButtons = tabs.map(tab => document.getElementById(`tab-${tab}`));
@@ -584,7 +587,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                         // Redirect to the dashboard after a short delay
                         setTimeout(() => {
-                            window.location.href = './../dashboard/';
+                            window.location_description.href = './../dashboard/';
                         }, 3200); // Wait for the toast to be visible for a moment
                     } else {
                         // Show an error toast if the update failed

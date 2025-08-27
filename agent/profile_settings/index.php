@@ -123,19 +123,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch user data
 try {
     $stmt = $conn->prepare("
-        SELECT u.*, ea.name as electoral_area_name 
+        SELECT u.*, mc.name as main_community_name 
         FROM users u
-        LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+        LEFT JOIN communities mc ON u.electoral_area = mc.id
         WHERE u.id = :user_id
     ");
     $stmt->bindParam(':user_id', $userId);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Fetch electoral areas for dropdown
-    $stmt = $conn->prepare("SELECT id, name FROM electoral_areas ORDER BY name");
+    // Fetch main communities for dropdown
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoralAreas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $message = "Error fetching user data: " . $e->getMessage();
     $message_type = "error";
@@ -148,8 +148,8 @@ try {
         'role' => 'agent',
         'phone' => '+233 20 123 4567',
         'profile_image' => null,
-        'electoral_area' => 2,
-        'electoral_area_name' => 'North District',
+        'main_community_id' => 2,
+        'main_community_name' => 'North Community',
         'department' => 'Community Relations',
         'status' => 'active',
         'created_at' => '2023-01-15 08:30:00',
@@ -307,8 +307,8 @@ $userRoleLabel = $roleLabels[$user['role']] ?? 'User';
                                     <input type="text" id="role" value="<?php echo htmlspecialchars($userRoleLabel); ?>" class="w-full px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-lg" disabled>
                                 </div>
                                 <div>
-                                    <label for="electoral_area" class="block text-xs font-medium text-gray-700 mb-1">Electoral Area</label>
-                                    <input type="text" id="electoral_area" value="<?php echo htmlspecialchars($user['electoral_area_name'] ?? 'Not Assigned'); ?>" class="w-full px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-lg" disabled>
+                                    <label for="main_community" class="block text-xs font-medium text-gray-700 mb-1">Main Community</label>
+                                    <input type="text" id="main_community" value="<?php echo htmlspecialchars($user['main_community_name'] ?? 'Not Assigned'); ?>" class="w-full px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-lg" disabled>
                                 </div>
                             </div>
 

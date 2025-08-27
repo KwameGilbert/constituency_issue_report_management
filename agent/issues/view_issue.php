@@ -25,7 +25,6 @@ if ($issue_id > 0) {
                 mc.name AS main_community_name,
                 sc.name AS smaller_community_name,
                 cot.name AS cottage_name,
-                c.name AS community_name,
                 s.name AS suburb_name,
                 const.name AS constituent_name,
                 const.phone AS constituent_phone,
@@ -82,7 +81,7 @@ $headerActionButtons = [
     ]
 ];
 
-if ($issue['status'] === 'pending') {
+if (!empty($issue) && ($issue['status'] === 'pending')) {
     $headerActionButtons[] = [
         'icon' => 'fas fa-edit',
         'label' => 'Edit Issue',
@@ -109,7 +108,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Issue #<?php echo $issue['id']; ?> - Agent Dashboard</title>
+    <title>View Issue #<?php echo htmlspecialchars($issue['id'] ?? ''); ?> - Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -142,7 +141,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     <?php renderAgentSidebar($current_page); ?>
 
     <main class="lg:ml-64 min-h-screen transition-all duration-300">
-        <?php renderAgentHeader('Issue #' . $issue['id'], $issue['title'], $headerActionButtons); ?>
+        <?php renderAgentHeader('Issue #' . ($issue['id'] ?? ''), $issue['title'] ?? 'Issue details', $headerActionButtons); ?>
 
         <div class="p-4 sm:p-6">
             <?php if ($message) : ?>
@@ -160,7 +159,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                 <?php echo ucfirst($issue['status']); ?>
                             </span>
                             <span class="text-xs text-gray-500">
-                                <i class="fas fa-calendar-alt mr-1"></i> Reported on <?php echo date('M d, Y', strtotime($issue['created_at'])); ?>
+                                <i class="fas fa-calendar-alt mr-1"></i> Reported on <?php echo !empty($issue['created_at']) ? date('M d, Y', strtotime($issue['created_at'])) : '-'; ?>
                             </span>
                         </div>
                         <?php if (!empty($issue['status_description'])) : ?>
@@ -259,7 +258,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         <div class="p-5 space-y-3">
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Location</h3>
-                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['location'] ?? '-'); ?></p>
+                                <p class="text-sm text-gray-600"><?php echo htmlspecialchars($issue['location_description'] ?? '-'); ?></p>
                             </div>
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Main Community</h3>
@@ -279,16 +278,16 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                             </div>
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Created</h3>
-                                <p class="text-sm text-gray-600"><?php echo date('M d, Y H:i', strtotime($issue['created_at'])); ?></p>
+                                <p class="text-sm text-gray-600"><?php echo !empty($issue['created_at']) ? date('M d, Y H:i', strtotime($issue['created_at'])) : '-'; ?></p>
                             </div>
                             <div>
                                 <h3 class="text-xs font-semibold text-gray-700 mb-1">Last Updated</h3>
-                                <p class="text-sm text-gray-600"><?php echo date('M d, Y H:i', strtotime($issue['updated_at'])); ?></p>
+                                <p class="text-sm text-gray-600"><?php echo !empty($issue['updated_at']) ? date('M d, Y H:i', strtotime($issue['updated_at'])) : '-'; ?></p>
                             </div>
                             <?php if (!empty($issue['resolved_at'])): ?>
                                 <div>
                                     <h3 class="text-xs font-semibold text-gray-700 mb-1">Resolved At</h3>
-                                    <p class="text-sm text-gray-600"><?php echo date('M d, Y H:i', strtotime($issue['resolved_at'])); ?></p>
+                                    <p class="text-sm text-gray-600"><?php echo !empty($issue['resolved_at']) ? date('M d, Y H:i', strtotime($issue['resolved_at'])) : '-'; ?></p>
                                 </div>
                             <?php endif; ?>
                         </div>

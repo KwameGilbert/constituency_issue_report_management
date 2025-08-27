@@ -118,7 +118,7 @@ function getRecentIssues(PDO $conn, int $limit = 5): array
             i.id,
             i.title,
             i.description,
-            i.location,
+            i.location_description,
             mc.name AS main_community_name,
             sc.name AS smaller_community_name,
             cot.name AS cottage_name,
@@ -130,11 +130,15 @@ function getRecentIssues(PDO $conn, int $limit = 5): array
         FROM
             issues i
         LEFT JOIN
-            electoral_areas ea ON i.electoral_area_id = ea.id
+            communities mc ON i.main_community_id = mc.id
         LEFT JOIN
-            communities com ON i.community_id = com.id
+            smaller_communities sc ON i.smaller_community_id = sc.id
         LEFT JOIN
             suburbs sub ON i.suburb_id = sub.id
+        LEFT JOIN
+            cottages cot ON i.cottage_id = cot.id
+        LEFT JOIN
+            communities com ON sub.community_id = com.id
         LEFT JOIN
             issue_categories ic ON i.category_id = ic.id
         ORDER BY
@@ -364,12 +368,14 @@ $headerActionButtons = [
                                             <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($issue['title']); ?></div>
                                             <div class="text-xs text-gray-500">
                                                 <?php
-                                                // Construct location string
+                                                // Construct location_description string
                                                 $locationParts = [];
-                                                if (!empty($issue['location'])) $locationParts[] = htmlspecialchars($issue['location']);
+                                                if (!empty($issue['location_description'])) $locationParts[] = htmlspecialchars($issue['location_description']);
+                                                if (!empty($issue['cottage_name'])) $locationParts[] = htmlspecialchars($issue['cottage_name']);
                                                 if (!empty($issue['suburb_name'])) $locationParts[] = htmlspecialchars($issue['suburb_name']);
-                                                if (!empty($issue['community_name'])) $locationParts[] = htmlspecialchars($issue['community_name']);
-                                                if (!empty($issue['electoral_area_name'])) $locationParts[] = htmlspecialchars($issue['electoral_area_name']);
+                                                if (!empty($issue['smaller_community_name'])) $locationParts[] = htmlspecialchars($issue['smaller_community_name']);
+                                                if (!empty($issue['main_community_name'])) $locationParts[] = htmlspecialchars($issue['main_community_name']);
+                                                // Location parts are now handled by main_community_name, smaller_community_name, etc.
                                                 echo implode(', ', $locationParts);
                                                 ?>
                                             </div>

@@ -27,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch data for dropdowns from database
-$electoralAreas = [];
+$communities = [];
+$smallerCommunities = [];
 $categories = [];
 $sectors = [];
 
@@ -36,7 +37,7 @@ try {
     $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
     $communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Fetch smaller communities
     $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
     $stmt->execute();
@@ -125,7 +126,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         <div class="flex -mb-px space-x-6">
                             <button type="button" id="tab-issue" class="text-xs font-medium py-2 border-b-2 border-slate-900 text-slate-900">Issue Details</button>
                             <button type="button" id="tab-constituent" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Constituent Details</button>
-                            <button type="button" id="tab-location" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Location</button>
+                            <button type="button" id="tab-location_description" class="text-xs font-medium py-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Location</button>
                         </div>
                     </div>
 
@@ -247,7 +248,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                         </div>
 
                         <!-- Location Tab (hidden by default) -->
-                        <div id="content-location" class="hidden space-y-4">
+                        <div id="content-location_description" class="hidden space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label for="main_community_id" class="block text-xs font-medium text-gray-700 mb-1">Main Community <span class="text-red-500">*</span></label>
@@ -285,8 +286,8 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
                                 </div>
 
                                 <div>
-                                    <label for="location" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
-                                    <input type="text" id="location" name="location" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
+                                    <label for="location_description" class="block text-xs font-medium text-gray-700 mb-1">Specific Location Details</label>
+                                    <input type="text" id="location_description" name="location_description" placeholder="e.g., 'In front of Building 5'" class="w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary focus:border-primary text-xs">
                                 </div>
                             </div>
                         </div>
@@ -317,7 +318,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Tab navigation functionality  
-            const tabs = ['issue', 'constituent', 'location'];
+            const tabs = ['issue', 'constituent', 'location_description'];
             let currentTabIndex = 0;
 
             const tabButtons = tabs.map(tab => document.getElementById(`tab-${tab}`));
@@ -492,7 +493,7 @@ $userName = $_SESSION['user_name'] ?? 'Agent';
 
                         setTimeout(() => {
                             issueForm.reset();
-                            window.location.href = './../dashboard/';
+                            window.location_description.href = './../dashboard/';
                         }, 3200);
 
                     } else {
