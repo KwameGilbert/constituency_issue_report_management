@@ -29,14 +29,11 @@ if ($issue_id > 0) {
     try {
         // Query to fetch comprehensive issue details along with related data from joined tables.
         $stmt = $conn->prepare("
-            SELECT
+                SELECT
                 i.*,
                 ic.name AS category_name,
                 isec.name AS sector_name,
                 issub.name AS subsector_name,
-                ea.name AS electoral_area_name,
-                ea.constituency AS electoral_area_constituency,
-                ea.region AS electoral_area_region,
                 mc.name AS main_community_name,
                 sc.name AS smaller_community_name,
                 cot.name AS cottage_name,
@@ -50,11 +47,10 @@ if ($issue_id > 0) {
             LEFT JOIN issue_categories ic ON i.category_id = ic.id
             LEFT JOIN issue_sectors isec ON i.sector_id = isec.id
             LEFT JOIN issue_subsectors issub ON i.subsector_id = issub.id
-            LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
             LEFT JOIN communities mc ON i.main_community_id = mc.id
             LEFT JOIN smaller_communities sc ON i.smaller_community_id = sc.id
             LEFT JOIN cottages cot ON i.cottage_id = cot.id
-            LEFT JOIN communities c ON i.community_id = c.id
+            -- removed LEFT JOIN on i.community_id because `community_id` does not exist on issues table
             LEFT JOIN suburbs s ON i.suburb_id = s.id
             LEFT JOIN constituents const ON i.constituent_id = const.id
             LEFT JOIN users agent_user ON i.agent_id = agent_user.id
@@ -63,6 +59,12 @@ if ($issue_id > 0) {
         ");
         $stmt->execute([$issue_id]);
         $issue = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Populate a friendly community_name for the UI using available location fields.
+        if ($issue) {
+            // Prefer main community, then smaller community, otherwise empty
+            $issue['community_name'] = $issue['main_community_name'] ?? $issue['smaller_community_name'] ?? '-';
+        }
 
         // Check if the issue was found.
         if (!$issue) {
@@ -220,6 +222,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
         <?php
         // Render the header with issue ID/title and action buttons.
         if ($issue) {
+
             renderOfficerHeader('Issue #' . $issue['id'], $issue['title'], $headerActionButtons);
         } else {
             renderOfficerHeader('Issue Not Found', '', $headerActionButtons);
