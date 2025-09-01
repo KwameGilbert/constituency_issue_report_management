@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $conn->prepare("
             SELECT id, name, email, password, role, phone, main_community_id,
                    smaller_community_id, suburb_id, cottage_id, 
-                   department, status, last_login 
+                   department, status, last_login, password_reset_required
             FROM users 
             WHERE email = ? 
             LIMIT 1
@@ -78,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['last_activity'] = time();
                 $_SESSION['is_admin'] = true;
+                $_SESSION['password_reset_required'] = $user['password_reset_required'] ?? 0;
 
                 // Get client information for activity logging
                 $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'Unknown';

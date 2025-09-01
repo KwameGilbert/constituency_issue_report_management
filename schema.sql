@@ -95,6 +95,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
+    password_reset_required TINYINT(1) DEFAULT 0,
     FOREIGN KEY (main_community_id) REFERENCES communities(id) ON DELETE SET NULL,
     FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE SET NULL,
     FOREIGN KEY (suburb_id) REFERENCES suburbs(id) ON DELETE SET NULL,

@@ -42,8 +42,13 @@ if (!empty($status_filter)) {
 }
 
 if (!empty($search_query)) {
-    $where_clauses[] = "(name LIKE ? OR email LIKE ? OR department LIKE ?)";
+    // Update the WHERE clause to qualify the 'name' column with the appropriate table alias
+    $where_clauses[] = "(u.name LIKE ? OR u.email LIKE ? OR u.department LIKE ? OR mc.name LIKE ? OR sc.name LIKE ? OR sb.name LIKE ? OR ct.name LIKE ? )";
     $search_term = "%{$search_query}%";
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $params[] = $search_term;
+    $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
@@ -53,7 +58,13 @@ $where_clause = implode(" AND ", $where_clauses);
 
 // Count total users for pagination
 try {
-    $count_sql = "SELECT COUNT(*) FROM users WHERE {$where_clause}";
+    $count_sql = "
+        SELECT COUNT(*) FROM users u
+        LEFT JOIN communities mc ON u.main_community_id = mc.id
+        LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+        LEFT JOIN suburbs sb ON u.suburb_id = sb.id
+        LEFT JOIN cottages ct ON u.cottage_id = ct.id
+        WHERE {$where_clause}";
     $stmt = $conn->prepare($count_sql);
     
     // Bind parameters for count query

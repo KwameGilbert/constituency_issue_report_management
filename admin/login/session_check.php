@@ -20,6 +20,16 @@ if (!in_array($_SESSION['user_role'], $adminRoles)) {
     exit();
 }
 
+// Check if password reset is required
+$current_script = $_SERVER['SCRIPT_NAME'];
+if (isset($_SESSION['password_reset_required']) && 
+    $_SESSION['password_reset_required'] == 1 && 
+    !strpos($current_script, 'change_password.php')) {
+    // Redirect to change password page
+    header("Location: ../users/change_password.php");
+    exit();
+}
+
 // Additional security check for admin status
 if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     // Admin flag not set properly, redirect to login
