@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Find admin user by email in users table
         $stmt = $conn->prepare("
-            SELECT id, name, email, password, role, phone, electoral_area, 
+            SELECT id, name, email, password, role, phone, main_community_id,
+                   smaller_community_id, suburb_id, cottage_id, 
                    department, status, last_login 
             FROM users 
             WHERE email = ? 
@@ -68,7 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
                 $_SESSION['user_phone'] = $user['phone'];
-                $_SESSION['electoral_area'] = $user['electoral_area'];
+                $_SESSION['main_community_id'] = $user['main_community_id'];
+                $_SESSION['smaller_community_id'] = $user['smaller_community_id'];
+                $_SESSION['suburb_id'] = $user['suburb_id'];
+                $_SESSION['cottage_id'] = $user['cottage_id'];
                 $_SESSION['department'] = $user['department'];
                 $_SESSION['logged_in'] = true;
                 $_SESSION['admin_logged_in'] = true;
@@ -174,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         // System error
         error_log("Admin login system error: " . $e->getMessage());
-        $response['message'] = 'System authentication error. Please contact technical support immediately.';
+        $response['message'] = 'System authentication error. Please contact technical support immediately.' . $e->getMessage();
 
         // Log system error
         try {
