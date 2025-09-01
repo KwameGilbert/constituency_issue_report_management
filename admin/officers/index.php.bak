@@ -183,6 +183,7 @@ function getStatusBadge($status, $status_colors) {
     
     return "<span class=\"px-2 py-1 text-xs font-medium rounded-full {$color_class}\">" . ucfirst($status) . "</span>";
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -216,7 +217,6 @@ function getStatusBadge($status, $status_colors) {
         }
     </script>
 </head>
-
 <body class="bg-slate-50 min-h-screen font-sans">
     <?php renderAdminSidebar($current_page); ?>
 
@@ -252,6 +252,16 @@ function getStatusBadge($status, $status_colors) {
                         </div>
                     </div>
 
+                    <!-- Message Display -->
+                    <?php if (!empty($message)): ?>
+                        <div class="mb-6 p-4 rounded-lg <?php echo $message_type === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'; ?>">
+                            <div class="flex items-center">
+                                <i class="fas <?php echo $message_type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mr-2"></i>
+                                <?php echo htmlspecialchars($message); ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Search Form -->
                     <div class="mt-4">
                         <form method="GET" class="flex flex-wrap gap-3">
@@ -283,6 +293,7 @@ function getStatusBadge($status, $status_colors) {
 
             <!-- Officers Table -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
                 <?php if (empty($officers)): ?>
                     <div class="p-6 text-center">
                         <div class="py-8">
@@ -319,106 +330,114 @@ function getStatusBadge($status, $status_colors) {
                                     <th class="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <?php foreach ($officers as $officer): ?>
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                                                    <?php echo substr($officer['name'], 0, 2); ?>
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($officer['name']); ?></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><?php echo htmlspecialchars($officer['email']); ?></div>
-                                            <div class="text-sm text-gray-500"><?php echo htmlspecialchars($officer['phone']); ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">
-                                                <?php
-                                                $locations = [];
-                                                if (!empty($officer['main_community_name'])) $locations[] = $officer['main_community_name'];
-                                                if (!empty($officer['smaller_community_name'])) $locations[] = $officer['smaller_community_name'];
-                                                if (!empty($officer['suburb_name'])) $locations[] = $officer['suburb_name'];
-                                                if (!empty($officer['cottage_name'])) $locations[] = $officer['cottage_name'];
-                                                echo !empty($locations) ? htmlspecialchars(implode(' / ', $locations)) : '<span class="text-gray-400">No location assigned</span>';
-                                                ?>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <?php echo getStatusBadge($officer['status'], $status_colors); ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <?php echo date('M d, Y', strtotime($officer['created_at'])); ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div class="flex space-x-2">
-                                                <a href="./view_officer.php?id=<?php echo $officer['id']; ?>" class="text-indigo-600 hover:text-indigo-900 p-1">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="./edit_officer.php?id=<?php echo $officer['id']; ?>" class="text-blue-600 hover:text-blue-900 p-1">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button onclick="toggleStatus(<?php echo $officer['id']; ?>, '<?php echo $officer['status']; ?>')" class="<?php echo $officer['status'] === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'; ?> p-1">
-                                                    <i class="fas <?php echo $officer['status'] === 'active' ? 'fa-ban' : 'fa-check-circle'; ?>"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <?php if ($total_pages > 1): ?>
-                        <div class="px-6 py-4 bg-white border-t border-gray-100">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-700">
-                                        Showing <span class="font-medium"><?php echo ($page - 1) * $per_page + 1; ?></span> to <span class="font-medium"><?php echo min($page * $per_page, $total_officers); ?></span> of <span class="font-medium"><?php echo $total_officers; ?></span> results
-                                    </p>
-                                </div>
-                                <div>
-                                    <nav class="flex items-center space-x-1">
-                                        <?php if ($page > 1): ?>
-                                            <a href="<?php echo getPaginationUrl(1); ?>" class="px-3 py-1 text-gray-500 hover:text-indigo-600 hover:bg-gray-50 rounded">
-                                                <i class="fas fa-angle-double-left"></i>
-                                            </a>
-                                            <a href="<?php echo getPaginationUrl($page - 1); ?>" class="px-3 py-1 text-gray-500 hover:text-indigo-600 hover:bg-gray-50 rounded">
-                                                <i class="fas fa-angle-left"></i>
-                                            </a>
-                                        <?php endif; ?>
-
-                                        <?php
-                                        $start_page = max(1, $page - 2);
-                                        $end_page = min($total_pages, $page + 2);
-
-                                        for ($i = $start_page; $i <= $end_page; $i++):
-                                        ?>
-                                            <a href="<?php echo getPaginationUrl($i); ?>" class="px-3 py-1 <?php echo $i === $page ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-500 hover:text-indigo-600 hover:bg-gray-50'; ?> rounded">
-                                                <?php echo $i; ?>
-                                            </a>
-                                        <?php endfor; ?>
-
-                                        <?php if ($page < $total_pages): ?>
-                                            <a href="<?php echo getPaginationUrl($page + 1); ?>" class="px-3 py-1 text-gray-500 hover:text-indigo-600 hover:bg-gray-50 rounded">
-                                                <i class="fas fa-angle-right"></i>
-                                            </a>
-                                            <a href="<?php echo getPaginationUrl($total_pages); ?>" class="px-3 py-1 text-gray-500 hover:text-indigo-600 hover:bg-gray-50 rounded">
-                                                <i class="fas fa-angle-double-right"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                    </nav>
-                                </div>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <?php foreach ($officers as $officer): ?>
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0 h-10 w-10">
+                                                            <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                                                <span class="text-white font-medium text-sm">
+                                                                    <?php echo strtoupper(substr($officer['name'], 0, 1)); ?>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-4">
+                                                            <div class="text-sm font-medium text-gray-900">
+                                                                <?php echo htmlspecialchars($officer['name']); ?>
+                                                            </div>
+                                                            <div class="text-sm text-gray-500">
+                                                                ID: <?php echo $officer['id']; ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900"><?php echo htmlspecialchars($officer['email']); ?></div>
+                                                    <div class="text-sm text-gray-500"><?php echo htmlspecialchars($officer['phone']); ?></div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <div class="text-sm text-gray-900">
+                                                        <?php 
+                                                        $location_parts = array_filter([
+                                                            $officer['main_community_name'],
+                                                            $officer['smaller_community_name'],
+                                                            $officer['suburb_name'],
+                                                            $officer['cottage_name']
+                                                        ]);
+                                                        echo htmlspecialchars(implode(', ', $location_parts));
+                                                        ?>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                                        <?php echo $officer['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                                        <?php echo ucfirst($officer['status']); ?>
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    <?php echo $officer['last_login'] ? date('M d, Y H:i', strtotime($officer['last_login'])) : 'Never'; ?>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                    <div class="flex items-center space-x-2">
+                                                        <a href="view_officer.php?id=<?php echo $officer['id']; ?>" 
+                                                           class="text-blue-600 hover:text-blue-900 p-1" title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="edit_officer.php?id=<?php echo $officer['id']; ?>" 
+                                                           class="text-indigo-600 hover:text-indigo-900 p-1" title="Edit Officer">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button onclick="toggleStatus(<?php echo $officer['id']; ?>, '<?php echo $officer['status']; ?>')" 
+                                                                class="text-yellow-600 hover:text-yellow-900 p-1" title="Toggle Status">
+                                                            <i class="fas fa-<?php echo $officer['status'] === 'active' ? 'ban' : 'check'; ?>"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
+
+                            <!-- Pagination -->
+                            <?php if ($total_pages > 1): ?>
+                                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm text-gray-700">
+                                            Showing <?php echo ($offset + 1); ?> to <?php echo min($offset + $per_page, $total_officers); ?> of <?php echo $total_officers; ?> officers
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <?php if ($page > 1): ?>
+                                                <a href="?page=<?php echo ($page - 1); ?>&search=<?php echo urlencode($search_query); ?>&status=<?php echo urlencode($status_filter); ?>" 
+                                                   class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                                    Previous
+                                                </a>
+                                            <?php endif; ?>
+
+                                            <?php
+                                            $start_page = max(1, $page - 2);
+                                            $end_page = min($total_pages, $page + 2);
+                                            for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search_query); ?>&status=<?php echo urlencode($status_filter); ?>" 
+                                                   class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium <?php echo $i === $page ? 'bg-blue-600 text-white border-blue-600' : 'text-gray-700 bg-white hover:bg-gray-50'; ?>">
+                                                    <?php echo $i; ?>
+                                                </a>
+                                            <?php endfor; ?>
+
+                                            <?php if ($page < $total_pages): ?>
+                                                <a href="?page=<?php echo ($page + 1); ?>&search=<?php echo urlencode($search_query); ?>&status=<?php echo urlencode($status_filter); ?>" 
+                                                   class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                                    Next
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
         </div>
     </main>
 
@@ -488,12 +507,6 @@ function getStatusBadge($status, $status_colors) {
             if (e.target === this) {
                 closeModal();
             }
-        });
-        
-        // Handle sidebar toggle for mobile
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
         });
     </script>
 </body>
