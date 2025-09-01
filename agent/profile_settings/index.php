@@ -123,9 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch user data
 try {
     $stmt = $conn->prepare("
-        SELECT u.*, mc.name as main_community_name 
+        SELECT u.*
         FROM users u
-        LEFT JOIN communities mc ON u.electoral_area = mc.id
         WHERE u.id = :user_id
     ");
     $stmt->bindParam(':user_id', $userId);
@@ -139,22 +138,7 @@ try {
 } catch (Exception $e) {
     $message = "Error fetching user data: " . $e->getMessage();
     $message_type = "error";
-
-    // Fallback user data for demo
-    $user = [
-        'id' => 1,
-        'name' => 'Sarah Agent',
-        'email' => 'sarah.agent@example.com',
-        'role' => 'agent',
-        'phone' => '+233 20 123 4567',
-        'profile_image' => null,
-        'main_community_id' => 2,
-        'main_community_name' => 'North Community',
-        'department' => 'Community Relations',
-        'status' => 'active',
-        'created_at' => '2023-01-15 08:30:00',
-        'last_login' => '2023-06-23 14:25:00'
-    ];
+    $user = null;
 }
 
 // Define action buttons for the header
@@ -305,10 +289,6 @@ $userRoleLabel = $roleLabels[$user['role']] ?? 'User';
                                 <div>
                                     <label for="role" class="block text-xs font-medium text-gray-700 mb-1">Role</label>
                                     <input type="text" id="role" value="<?php echo htmlspecialchars($userRoleLabel); ?>" class="w-full px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-lg" disabled>
-                                </div>
-                                <div>
-                                    <label for="main_community" class="block text-xs font-medium text-gray-700 mb-1">Main Community</label>
-                                    <input type="text" id="main_community" value="<?php echo htmlspecialchars($user['main_community_name'] ?? 'Not Assigned'); ?>" class="w-full px-3 py-2 text-sm border border-gray-200 bg-gray-50 rounded-lg" disabled>
                                 </div>
                             </div>
 

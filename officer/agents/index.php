@@ -33,15 +33,21 @@ try {
             u.status,
             u.created_at,
             u.last_login,
-            ea.name as electoral_area_name,
+            mc.name as main_community_name,
+            sc.name as smaller_community_name,
+            s.name as suburb_name,
+            c.name as cottage_name,
             COUNT(i.id) as total_issues,
             SUM(CASE WHEN i.status = 'pending' THEN 1 ELSE 0 END) as pending_issues,
             SUM(CASE WHEN i.status = 'resolved' THEN 1 ELSE 0 END) as resolved_issues
         FROM users u
-        LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+        LEFT JOIN communities mc ON u.main_community_id = mc.id
+        LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+        LEFT JOIN suburbs s ON u.suburb_id = s.id
+        LEFT JOIN cottages c ON u.cottage_id = c.id
         LEFT JOIN issues i ON u.id = i.agent_id
         WHERE u.role = 'agent'
-        GROUP BY u.id, u.name, u.email, u.phone, u.department, u.status, u.created_at, u.last_login, ea.name
+        GROUP BY u.id, u.name, u.email, u.phone, u.department, u.status, u.created_at, u.last_login, mc.name, sc.name, s.name, c.name
         ORDER BY u.created_at DESC
     ");
 
@@ -51,10 +57,25 @@ try {
     // Get filter options
     $statusOptions = ['active', 'inactive'];
 
-    // Get electoral areas for filtering
-    $stmt = $conn->prepare("SELECT DISTINCT name FROM electoral_areas ORDER BY name");
+    // Get main communities for filtering
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoralAreas = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $mainCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get smaller communities for filtering
+    $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smallerCommunities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get suburbs for filtering
+    $stmt = $conn->prepare("SELECT id, name FROM suburbs ORDER BY name");
+    $stmt->execute();
+    $suburbs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Get cottages for filtering
+    $stmt = $conn->prepare("SELECT id, name FROM cottages ORDER BY name");
+    $stmt->execute();
+    $cottages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Get departments
     $stmt = $conn->prepare("SELECT DISTINCT department FROM users WHERE role = 'agent' AND department IS NOT NULL ORDER BY department");
@@ -65,7 +86,10 @@ try {
     $message_type = "error";
     $agents = [];
     $statusOptions = [];
-    $electoralAreas = [];
+    $mainCommunities = [];
+    $smallerCommunities = [];
+    $suburbs = [];
+    $cottages = [];
     $departments = [];
 }
 
@@ -251,13 +275,46 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             </select>
                         </div>
 
-                        <!-- Electoral Area Filter -->
+                        <!-- Main Community Filter -->
                         <div>
-                            <label for="electoralAreaFilter" class="block text-xs font-medium text-gray-700 mb-2">Electoral Area</label>
-                            <select id="electoralAreaFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">
-                                <option value="">All Areas</option>
-                                <?php foreach ($electoralAreas as $area) : ?>
-                                    <option value="<?php echo htmlspecialchars($area); ?>"><?php echo htmlspecialchars($area); ?></option>
+                            <label for="mainCommunityFilter" class="block text-xs font-medium text-gray-700 mb-2">Main Community</label>
+                            <select id="mainCommunityFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">
+                                <option value="">All Communities</option>
+                                <?php foreach ($mainCommunities as $mc) : ?>
+                                    <option value="<?php echo htmlspecialchars($mc['name']); ?>"><?php echo htmlspecialchars($mc['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Smaller Community Filter -->
+                        <div>
+                            <label for="smallerCommunityFilter" class="block text-xs font-medium text-gray-700 mb-2">Smaller Community</label>
+                            <select id="smallerCommunityFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">
+                                <option value="">All Smaller Communities</option>
+                                <?php foreach ($smallerCommunities as $sc) : ?>
+                                    <option value="<?php echo htmlspecialchars($sc['name']); ?>"><?php echo htmlspecialchars($sc['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Suburb Filter -->
+                        <div>
+                            <label for="suburbFilter" class="block text-xs font-medium text-gray-700 mb-2">Suburb</label>
+                            <select id="suburbFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">
+                                <option value="">All Suburbs</option>
+                                <?php foreach ($suburbs as $suburb) : ?>
+                                    <option value="<?php echo htmlspecialchars($suburb['name']); ?>"><?php echo htmlspecialchars($suburb['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Cottage Filter -->
+                        <div>
+                            <label for="cottageFilter" class="block text-xs font-medium text-gray-700 mb-2">Cottage</label>
+                            <select id="cottageFilter" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring focus:ring-primary focus:border-primary">
+                                <option value="">All Cottages</option>
+                                <?php foreach ($cottages as $cottage) : ?>
+                                    <option value="<?php echo htmlspecialchars($cottage['name']); ?>"><?php echo htmlspecialchars($cottage['name']); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -290,7 +347,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Info</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Electoral Area</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Main Community</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Smaller Community</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suburb</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cottage</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issues Stats</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
@@ -311,7 +371,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                         data-email="<?php echo strtolower($agent['email']); ?>"
                                         data-department="<?php echo strtolower($agent['department'] ?? ''); ?>"
                                         data-status="<?php echo strtolower($agent['status']); ?>"
-                                        data-electoral-area="<?php echo strtolower($agent['electoral_area_name'] ?? ''); ?>">
+                                        data-main-community="<?php echo strtolower($agent['main_community_name'] ?? ''); ?>"
+                                        data-smaller-community="<?php echo strtolower($agent['smaller_community_name'] ?? ''); ?>"
+                                        data-suburb="<?php echo strtolower($agent['suburb_name'] ?? ''); ?>"
+                                        data-cottage="<?php echo strtolower($agent['cottage_name'] ?? ''); ?>">
 
                                         <!-- Agent Name & Department -->
                                         <td class="px-6 py-4">
@@ -336,9 +399,24 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                             <?php endif; ?>
                                         </td>
 
-                                        <!-- Electoral Area -->
+                                        <!-- Main Community -->
                                         <td class="px-6 py-4 text-sm text-gray-500">
-                                            <?php echo htmlspecialchars($agent['electoral_area_name'] ?? 'Not Assigned'); ?>
+                                            <?php echo htmlspecialchars($agent['main_community_name'] ?? 'Not Assigned'); ?>
+                                        </td>
+                                        
+                                        <!-- Smaller Community -->
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <?php echo htmlspecialchars($agent['smaller_community_name'] ?? 'Not Assigned'); ?>
+                                        </td>
+                                        
+                                        <!-- Suburb -->
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <?php echo htmlspecialchars($agent['suburb_name'] ?? 'Not Assigned'); ?>
+                                        </td>
+                                        
+                                        <!-- Cottage -->
+                                        <td class="px-6 py-4 text-sm text-gray-500">
+                                            <?php echo htmlspecialchars($agent['cottage_name'] ?? 'Not Assigned'); ?>
                                         </td>
 
                                         <!-- Issues Statistics -->
@@ -409,7 +487,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             const filters = {
                 search: document.getElementById('searchInput'),
                 status: document.getElementById('statusFilter'),
-                electoralArea: document.getElementById('electoralAreaFilter'),
+                mainCommunity: document.getElementById('mainCommunityFilter'),
+                smallerCommunity: document.getElementById('smallerCommunityFilter'),
+                suburb: document.getElementById('suburbFilter'),
+                cottage: document.getElementById('cottageFilter'),
                 department: document.getElementById('departmentFilter')
             };
 
@@ -459,7 +540,10 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             row.dataset.department.includes(values.search)
                         ) &&
                         (!values.status || row.dataset.status === values.status) &&
-                        (!values.electoralArea || row.dataset.electoralArea === values.electoralArea) &&
+                        (!values.mainCommunity || row.dataset.mainCommunity === values.mainCommunity) &&
+                        (!values.smallerCommunity || row.dataset.smallerCommunity === values.smallerCommunity) &&
+                        (!values.suburb || row.dataset.suburb === values.suburb) &&
+                        (!values.cottage || row.dataset.cottage === values.cottage) &&
                         (!values.department || row.dataset.department === values.department);
 
                     row.style.display = matches ? '' : 'none';

@@ -28,9 +28,16 @@ if ($agent_id <= 0) {
 // Fetch existing agent data
 try {
     $stmt = $conn->prepare("
-        SELECT u.*, ea.name as electoral_area_name 
+        SELECT u.*, 
+               c.name as main_community_name,
+               sc.name as smaller_community_name,
+               s.name as suburb_name,
+               co.name as cottage_name
         FROM users u
-        LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+        LEFT JOIN communities c ON u.main_community_id = c.id
+        LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+        LEFT JOIN suburbs s ON u.suburb_id = s.id
+        LEFT JOIN cottages co ON u.cottage_id = co.id
         WHERE u.id = ? AND u.role = 'agent'
     ");
     $stmt->execute([$agent_id]);
@@ -59,7 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim($_POST['phone'] ?? '');
     $new_password = trim($_POST['new_password'] ?? '');
     $confirm_password = trim($_POST['confirm_password'] ?? '');
-    $electoral_area = intval($_POST['electoral_area'] ?? 0);
+    $main_community_id = intval($_POST['main_community_id'] ?? 0);
+    $smaller_community_id = intval($_POST['smaller_community_id'] ?? 0);
+    $suburb_id = intval($_POST['suburb_id'] ?? 0);
+    $cottage_id = intval($_POST['cottage_id'] ?? 0);
     $department = trim($_POST['department'] ?? '');
     $status = $_POST['status'] ?? 'active';
 
@@ -87,8 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($electoral_area <= 0) {
-        $errors[] = "Please select an electoral area";
+    if ($main_community_id <= 0) {
+        $errors[] = "Please select a Main Community";
     }
 
     // Check if email already exists (excluding current agent)
@@ -116,7 +126,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("
                     UPDATE users SET 
                         name = ?, email = ?, password = ?, phone = ?, 
-                        electoral_area = ?, department = ?, status = ?, updated_at = NOW()
+                        main_community_id = ?, smaller_community_id = ?, suburb_id = ?, cottage_id = ?,
+                        department = ?, status = ?, updated_at = NOW()
                     WHERE id = ? AND role = 'agent'
                 ");
 
@@ -125,7 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $email,
                     $password_hash,
                     $phone,
-                    $electoral_area,
+                    $main_community_id,
+                    $smaller_community_id,
+                    $suburb_id,
+                    $cottage_id,
                     $department,
                     $status,
                     $agent_id
@@ -135,7 +149,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("
                     UPDATE users SET 
                         name = ?, email = ?, phone = ?, 
-                        electoral_area = ?, department = ?, status = ?, updated_at = NOW()
+                        main_community_id = ?, smaller_community_id = ?, suburb_id = ?, cottage_id = ?,
+                        department = ?, status = ?, updated_at = NOW()
                     WHERE id = ? AND role = 'agent'
                 ");
 
@@ -143,7 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $name,
                     $email,
                     $phone,
-                    $electoral_area,
+                    $main_community_id,
+                    $smaller_community_id,
+                    $suburb_id,
+                    $cottage_id,
                     $department,
                     $status,
                     $agent_id
@@ -163,7 +181,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($agent['name'] !== $name) $changes[] = "name";
             if ($agent['email'] !== $email) $changes[] = "email";
             if ($agent['phone'] !== $phone) $changes[] = "phone";
-            if ($agent['electoral_area'] != $electoral_area) $changes[] = "electoral area";
+            if ($agent['main_community_id'] != $main_community_id) $changes[] = "main community";
+            if ($agent['smaller_community_id'] != $smaller_community_id) $changes[] = "smaller community";
+            if ($agent['suburb_id'] != $suburb_id) $changes[] = "suburb";
+            if ($agent['cottage_id'] != $cottage_id) $changes[] = "cottage";
             if ($agent['department'] !== $department) $changes[] = "department";
             if ($agent['status'] !== $status) $changes[] = "status";
             if (!empty($new_password)) $changes[] = "password";
@@ -217,15 +238,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch electoral areas for dropdown
+// Fetch communities for dropdowns
 try {
-    $stmt = $conn->prepare("SELECT id, name, constituency, region FROM electoral_areas ORDER BY name");
+    // Main communities
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoral_areas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $main_communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Smaller communities
+    $stmt = $conn->prepare("SELECT id, name, community_id FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smaller_communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Suburbs
+    $stmt = $conn->prepare("SELECT id, name, smaller_community_id FROM suburbs ORDER BY name");
+    $stmt->execute();
+    $suburbs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Cottages
+    $stmt = $conn->prepare("SELECT id, name, suburb_id FROM cottages ORDER BY name");
+    $stmt->execute();
+    $cottages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    $electoral_areas = [];
+    $main_communities = [];
+    $smaller_communities = [];
+    $suburbs = [];
+    $cottages = [];
     if (empty($message)) {
-        $message = "Error loading electoral areas: " . $e->getMessage();
+        $message = "Error loading location data: " . $e->getMessage();
         $message_type = 'error';
     }
 }
@@ -386,27 +426,99 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                 </h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Electoral Area -->
+                                    <!-- Main Community -->
                                     <div>
-                                        <label for="electoral_area" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Electoral Area <span class="text-red-500">*</span>
+                                        <label for="main_community_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Main Community <span class="text-red-500">*</span>
                                         </label>
                                         <select
-                                            id="electoral_area"
-                                            name="electoral_area"
+                                            id="main_community_id"
+                                            name="main_community_id"
                                             required
                                             class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
-                                            <option value="">Select Electoral Area</option>
-                                            <?php foreach ($electoral_areas as $area) : ?>
+                                            <option value="">Select Main Community</option>
+                                            <?php foreach ($main_communities as $community) : ?>
                                                 <option
-                                                    value="<?php echo $area['id']; ?>"
-                                                    <?php echo (isset($form_data['electoral_area']) && $form_data['electoral_area'] == $area['id']) ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($area['name'] . ' - ' . $area['constituency'] . ', ' . $area['region']); ?>
+                                                    value="<?php echo $community['id']; ?>"
+                                                    <?php echo (isset($form_data['main_community_id']) && $form_data['main_community_id'] == $community['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($community['name']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <?php if (isset($agent['electoral_area_name'])) : ?>
-                                            <p class="text-xs text-gray-500 mt-1">Current: <?php echo htmlspecialchars($agent['electoral_area_name']); ?></p>
+                                        <?php if (isset($agent['main_community_name'])) : ?>
+                                            <p class="text-xs text-gray-500 mt-1">Current: <?php echo htmlspecialchars($agent['main_community_name'] ?? 'Not assigned'); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <!-- Smaller Community -->
+                                    <div>
+                                        <label for="smaller_community_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Smaller Community
+                                        </label>
+                                        <select
+                                            id="smaller_community_id"
+                                            name="smaller_community_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Smaller Community</option>
+                                            <?php foreach ($smaller_communities as $community) : ?>
+                                                <option
+                                                    value="<?php echo $community['id']; ?>"
+                                                    data-main-community-id="<?php echo $community['community_id']; ?>"
+                                                    <?php echo (isset($form_data['smaller_community_id']) && $form_data['smaller_community_id'] == $community['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($community['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <?php if (isset($agent['smaller_community_name'])) : ?>
+                                            <p class="text-xs text-gray-500 mt-1">Current: <?php echo htmlspecialchars($agent['smaller_community_name'] ?? 'Not assigned'); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <!-- Suburb -->
+                                    <div>
+                                        <label for="suburb_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Suburb
+                                        </label>
+                                        <select
+                                            id="suburb_id"
+                                            name="suburb_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Suburb</option>
+                                            <?php foreach ($suburbs as $suburb) : ?>
+                                                <option
+                                                    value="<?php echo $suburb['id']; ?>"
+                                                    data-smaller-community-id="<?php echo $suburb['smaller_community_id']; ?>"
+                                                    <?php echo (isset($form_data['suburb_id']) && $form_data['suburb_id'] == $suburb['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($suburb['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <?php if (isset($agent['suburb_name'])) : ?>
+                                            <p class="text-xs text-gray-500 mt-1">Current: <?php echo htmlspecialchars($agent['suburb_name'] ?? 'Not assigned'); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <!-- Cottage -->
+                                    <div>
+                                        <label for="cottage_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Cottage
+                                        </label>
+                                        <select
+                                            id="cottage_id"
+                                            name="cottage_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Cottage</option>
+                                            <?php foreach ($cottages as $cottage) : ?>
+                                                <option
+                                                    value="<?php echo $cottage['id']; ?>"
+                                                    data-suburb-id="<?php echo $cottage['suburb_id']; ?>"
+                                                    <?php echo (isset($form_data['cottage_id']) && $form_data['cottage_id'] == $cottage['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($cottage['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <?php if (isset($agent['cottage_name'])) : ?>
+                                            <p class="text-xs text-gray-500 mt-1">Current: <?php echo htmlspecialchars($agent['cottage_name'] ?? 'Not assigned'); ?></p>
                                         <?php endif; ?>
                                     </div>
 
@@ -522,7 +634,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                                 <li>The agent will be notified of any profile changes</li>
                                                 <li>If you change the password, the agent will be informed</li>
                                                 <li>Changing status to inactive will prevent login</li>
-                                                <li>Electoral area changes affect issue assignment</li>
+                                                <li>Location changes affect issue assignment</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -616,6 +728,105 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                     }
                 }
             });
+            
+            // Handle cascading location dropdowns
+            const mainCommunitySelect = document.getElementById('main_community_id');
+            const smallerCommunitySelect = document.getElementById('smaller_community_id');
+            const suburbSelect = document.getElementById('suburb_id');
+            const cottageSelect = document.getElementById('cottage_id');
+            
+            // Store all options for filtering
+            const allSmallerCommunities = Array.from(smallerCommunitySelect.options);
+            const allSuburbs = Array.from(suburbSelect.options);
+            const allCottages = Array.from(cottageSelect.options);
+            
+            // Filter smaller communities based on selected main community
+            mainCommunitySelect.addEventListener('change', function() {
+                const selectedMainCommunityId = this.value;
+                
+                // Reset and populate smaller communities
+                smallerCommunitySelect.innerHTML = '';
+                smallerCommunitySelect.appendChild(new Option('Select Smaller Community', ''));
+                
+                if (selectedMainCommunityId) {
+                    allSmallerCommunities.forEach(option => {
+                        if (option.value === '' || option.dataset.mainCommunityId === selectedMainCommunityId) {
+                            smallerCommunitySelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no main community selected, show all options
+                    allSmallerCommunities.forEach(option => {
+                        smallerCommunitySelect.appendChild(option.cloneNode(true));
+                    });
+                }
+                
+                // Clear subsequent dropdowns
+                smallerCommunitySelect.value = '';
+                suburbSelect.innerHTML = '<option value="">Select Suburb</option>';
+                cottageSelect.innerHTML = '<option value="">Select Cottage</option>';
+            });
+            
+            // Filter suburbs based on selected smaller community
+            smallerCommunitySelect.addEventListener('change', function() {
+                const selectedSmallerCommunityId = this.value;
+                
+                // Reset and populate suburbs
+                suburbSelect.innerHTML = '';
+                suburbSelect.appendChild(new Option('Select Suburb', ''));
+                
+                if (selectedSmallerCommunityId) {
+                    allSuburbs.forEach(option => {
+                        if (option.value === '' || option.dataset.smallerCommunityId === selectedSmallerCommunityId) {
+                            suburbSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no smaller community selected, show all options
+                    allSuburbs.forEach(option => {
+                        suburbSelect.appendChild(option.cloneNode(true));
+                    });
+                }
+                
+                // Clear subsequent dropdown
+                suburbSelect.value = '';
+                cottageSelect.innerHTML = '<option value="">Select Cottage</option>';
+            });
+            
+            // Filter cottages based on selected suburb
+            suburbSelect.addEventListener('change', function() {
+                const selectedSuburbId = this.value;
+                
+                // Reset and populate cottages
+                cottageSelect.innerHTML = '';
+                cottageSelect.appendChild(new Option('Select Cottage', ''));
+                
+                if (selectedSuburbId) {
+                    allCottages.forEach(option => {
+                        if (option.value === '' || option.dataset.suburbId === selectedSuburbId) {
+                            cottageSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no suburb selected, show all options
+                    allCottages.forEach(option => {
+                        cottageSelect.appendChild(option.cloneNode(true));
+                    });
+                }
+            });
+            
+            // Initial filtering to set correct options on page load
+            if (mainCommunitySelect.value) {
+                mainCommunitySelect.dispatchEvent(new Event('change'));
+                
+                if (smallerCommunitySelect.value) {
+                    smallerCommunitySelect.dispatchEvent(new Event('change'));
+                    
+                    if (suburbSelect.value) {
+                        suburbSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
         });
     </script>
 </body>

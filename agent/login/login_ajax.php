@@ -31,11 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // Find user by email (alias electoral_area to main_community_id for compatibility with DB)
-        $stmt = $conn->prepare("SELECT id, name, email, password, role, electoral_area AS main_community_id, status FROM users WHERE email = ? LIMIT 1");
-        $stmt->bindValue(1, $email);
-        $stmt->execute();
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Find user by email
+    $stmt = $conn->prepare("SELECT id, name, email, password, role, status FROM users WHERE email = ? LIMIT 1");
+    $stmt->bindValue(1, $email);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Check if user exists
         if ($user) {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
-                $_SESSION['main_community_id'] = $user['main_community_id'];
+                // main_community_id not present in users table
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time();
 
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         // System error
         error_log("Login error: " . $e->getMessage());
-        $response['message'] = 'System error. Please try again later';
+        $response['message'] = 'System error. Please try again later, ' . $e->getMessage();
     }
 } else {
     // Not a POST request
