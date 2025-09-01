@@ -19,9 +19,16 @@ $form_data = [];
 // Fetch current officer data
 try {
     $stmt = $conn->prepare("
-        SELECT u.*, ea.name as electoral_area_name, ea.constituency, ea.region
+        SELECT u.*, 
+               mc.name as main_community_name,
+               sc.name as smaller_community_name,
+               sb.name as suburb_name,
+               ct.name as cottage_name
         FROM users u
-        LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+        LEFT JOIN communities mc ON u.main_community_id = mc.id
+        LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+        LEFT JOIN suburbs sb ON u.suburb_id = sb.id
+        LEFT JOIN cottages ct ON u.cottage_id = ct.id
         WHERE u.id = ? AND u.role = 'officer'
     ");
     $stmt->execute([$officer_id]);
@@ -173,9 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Refresh officer data
             $stmt = $conn->prepare("
-                SELECT u.*, ea.name as electoral_area_name, ea.constituency, ea.region
+                SELECT u.*, 
+                       mc.name as main_community_name,
+                       sc.name as smaller_community_name,
+                       sb.name as suburb_name,
+                       ct.name as cottage_name
                 FROM users u
-                LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+                LEFT JOIN communities mc ON u.main_community_id = mc.id
+                LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+                LEFT JOIN suburbs sb ON u.suburb_id = sb.id
+                LEFT JOIN cottages ct ON u.cottage_id = ct.id
                 WHERE u.id = ? AND u.role = 'officer'
             ");
             $stmt->execute([$officer_id]);
@@ -291,11 +305,11 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     <?php endif; ?>
                                 </div>
 
-                                <h2 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($officer['name']); ?></h2>
+                                <h2 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($officer['name'] ?? 'Officer'); ?></h2>
                                 <p class="text-sm text-gray-500">Officer</p>
                                 <div class="mt-2">
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full <?php echo $officer['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
-                                        <?php echo ucfirst($officer['status']); ?>
+                                    <span class="px-3 py-1 text-xs font-medium rounded-full <?php echo (!empty($officer['status']) && $officer['status'] === 'active') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                        <?php echo ucfirst($officer['status'] ?? 'inactive'); ?>
                                     </span>
                                 </div>
                             </div>
@@ -303,32 +317,60 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             <div class="mt-6 space-y-3 text-sm">
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Email:</span>
-                                    <span class="text-gray-900"><?php echo htmlspecialchars($officer['email']); ?></span>
+                                    <span class="text-gray-900"><?php echo htmlspecialchars($officer['email'] ?? ''); ?></span>
                                 </div>
 
-                                <?php if ($officer['phone']) : ?>
+                                <?php if (!empty($officer['phone'])) : ?>
                                     <div class="flex justify-between">
                                         <span class="text-gray-500">Phone:</span>
                                         <span class="text-gray-900"><?php echo htmlspecialchars($officer['phone']); ?></span>
                                     </div>
                                 <?php endif; ?>
 
-                                <?php if ($officer['department']) : ?>
+                                <?php if (!empty($officer['department'])) : ?>
                                     <div class="flex justify-between">
                                         <span class="text-gray-500">Department:</span>
                                         <span class="text-gray-900"><?php echo htmlspecialchars($officer['department']); ?></span>
                                     </div>
                                 <?php endif; ?>
+                                
+                                <?php if (!empty($officer['main_community_name'])) : ?>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Main Community:</span>
+                                        <span class="text-gray-900"><?php echo htmlspecialchars($officer['main_community_name']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($officer['smaller_community_name'])) : ?>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Smaller Community:</span>
+                                        <span class="text-gray-900"><?php echo htmlspecialchars($officer['smaller_community_name']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($officer['suburb_name'])) : ?>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Suburb:</span>
+                                        <span class="text-gray-900"><?php echo htmlspecialchars($officer['suburb_name']); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if (!empty($officer['cottage_name'])) : ?>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-500">Cottage:</span>
+                                        <span class="text-gray-900"><?php echo htmlspecialchars($officer['cottage_name']); ?></span>
+                                    </div>
+                                <?php endif; ?>
 
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Member Since:</span>
-                                    <span class="text-gray-900"><?php echo date('M Y', strtotime($officer['created_at'])); ?></span>
+                                    <span class="text-gray-900"><?php echo !empty($officer['created_at']) ? date('M Y', strtotime($officer['created_at'])) : 'N/A'; ?></span>
                                 </div>
 
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Last Login:</span>
                                     <span class="text-gray-900">
-                                        <?php echo $officer['last_login'] ? date('M d, Y', strtotime($officer['last_login'])) : 'Never'; ?>
+                                        <?php echo !empty($officer['last_login']) ? date('M d, Y', strtotime($officer['last_login'])) : 'Never'; ?>
                                     </span>
                                 </div>
                             </div>
@@ -463,6 +505,49 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     </div>
                                 </div>
 
+                                <!-- Location Information -->
+                                <div>
+                                    <h3 class="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-map-marker-alt text-indigo-900 mr-2"></i>
+                                        Location Information
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Main Community</label>
+                                            <div class="px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-lg text-gray-600">
+                                                <?php echo htmlspecialchars($officer['main_community_name'] ?? 'Not Assigned'); ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Smaller Community</label>
+                                            <div class="px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-lg text-gray-600">
+                                                <?php echo htmlspecialchars($officer['smaller_community_name'] ?? 'Not Assigned'); ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Suburb</label>
+                                            <div class="px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-lg text-gray-600">
+                                                <?php echo htmlspecialchars($officer['suburb_name'] ?? 'Not Assigned'); ?>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Cottage</label>
+                                            <div class="px-3 py-2.5 text-sm border border-gray-200 bg-gray-50 rounded-lg text-gray-600">
+                                                <?php echo htmlspecialchars($officer['cottage_name'] ?? 'Not Assigned'); ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Location information can only be updated by an administrator.
+                                    </p>
+                                </div>
+
                                 <!-- Security Information -->
                                 <div>
                                     <h3 class="text-base font-semibold text-gray-800 mb-4 flex items-center">
@@ -545,16 +630,16 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                                         <div>
                                             <span class="text-gray-500">Account Created:</span>
-                                            <span class="text-gray-800 ml-2"><?php echo date('M d, Y H:i', strtotime($officer['created_at'])); ?></span>
+                                            <span class="text-gray-800 ml-2"><?php echo !empty($officer['created_at']) ? date('M d, Y H:i', strtotime($officer['created_at'])) : 'N/A'; ?></span>
                                         </div>
                                         <div>
                                             <span class="text-gray-500">Last Updated:</span>
-                                            <span class="text-gray-800 ml-2"><?php echo date('M d, Y H:i', strtotime($officer['updated_at'])); ?></span>
+                                            <span class="text-gray-800 ml-2"><?php echo !empty($officer['updated_at']) ? date('M d, Y H:i', strtotime($officer['updated_at'])) : 'N/A'; ?></span>
                                         </div>
                                         <div>
                                             <span class="text-gray-500">Account Status:</span>
-                                            <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full <?php echo $officer['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
-                                                <?php echo ucfirst($officer['status']); ?>
+                                            <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full <?php echo (!empty($officer['status']) && $officer['status'] === 'active') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                                <?php echo ucfirst($officer['status'] ?? 'inactive'); ?>
                                             </span>
                                         </div>
                                         <div>

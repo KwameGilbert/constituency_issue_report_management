@@ -32,9 +32,10 @@ if ($agent_id <= 0) {
         $stmt = $conn->prepare("
             SELECT
                 u.*,
-                ea.name AS electoral_area_name,
-                ea.constituency,
-                ea.region,
+                mc.name AS main_community_name,
+                sc.name AS smaller_community_name,
+                s.name AS suburb_name,
+                c.name AS cottage_name,
                 COUNT(i.id) AS total_issues,
                 SUM(CASE WHEN i.status = 'pending' THEN 1 ELSE 0 END) AS pending_issues,
                 SUM(CASE WHEN i.status = 'reviewed' THEN 1 ELSE 0 END) AS reviewed_issues,
@@ -44,7 +45,10 @@ if ($agent_id <= 0) {
                 AVG(CASE WHEN i.status = 'resolved' AND i.resolved_at IS NOT NULL 
                     THEN DATEDIFF(i.resolved_at, i.created_at) END) AS avg_resolution_days
             FROM users u
-            LEFT JOIN electoral_areas ea ON u.electoral_area = ea.id
+            LEFT JOIN communities mc ON u.main_community_id = mc.id
+            LEFT JOIN smaller_communities sc ON u.smaller_community_id = sc.id
+            LEFT JOIN suburbs s ON u.suburb_id = s.id
+            LEFT JOIN cottages c ON u.cottage_id = c.id
             LEFT JOIN issues i ON u.id = i.agent_id
             WHERE u.id = ? AND u.role = 'agent'
             GROUP BY u.id
@@ -62,13 +66,17 @@ if ($agent_id <= 0) {
                 SELECT
                     i.*,
                     ic.name AS category_name,
-                    c.name AS community_name,
+                    mc.name AS main_community_name,
+                    sc.name AS smaller_community_name,
                     s.name AS suburb_name,
+                    cot.name AS cottage_name,
                     const.name AS constituent_name
                 FROM issues i
                 LEFT JOIN issue_categories ic ON i.category_id = ic.id
-                LEFT JOIN communities c ON i.community_id = c.id
+                LEFT JOIN communities mc ON i.main_community_id = mc.id
+                LEFT JOIN smaller_communities sc ON i.smaller_community_id = sc.id
                 LEFT JOIN suburbs s ON i.suburb_id = s.id
+                LEFT JOIN cottages cot ON i.cottage_id = cot.id
                 LEFT JOIN constituents const ON i.constituent_id = const.id
                 WHERE i.agent_id = ?
                 ORDER BY i.created_at DESC
@@ -252,10 +260,59 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                     <?php endif; ?>
 
                                     <div>
-                                        <h3 class="text-xs font-semibold text-gray-700 mb-1">Electoral Area</h3>
-                                        <p class="text-sm text-gray-600"><?php echo htmlspecialchars($agent['electoral_area_name'] ?? 'Not Assigned'); ?></p>
-                                        <?php if ($agent['constituency']) : ?>
-                                            <p class="text-xs text-gray-500"><?php echo htmlspecialchars($agent['constituency'] . ', ' . $agent['region']); ?></p>
+                                        <h3 class="text-xs font-semibold text-gray-700 mb-1">Location</h3>
+                                        <?php if (!$agent['main_community_name'] && !$agent['smaller_community_name'] && !$agent['suburb_name'] && !$agent['cottage_name']): ?>
+                                            <p class="text-sm text-gray-600">Not Assigned</p>
+                                        <?php else: ?>
+                                            <div class="p-2 bg-gray-50 rounded-lg mt-1">
+                                                <?php if ($agent['main_community_name']): ?>
+                                                    <div class="flex items-start mb-2">
+                                                        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                                                            <i class="fas fa-city text-blue-600 text-xs"></i>
+                                                        </div>
+                                                        <div class="ml-2">
+                                                            <p class="text-xs font-medium text-gray-700">Main Community</p>
+                                                            <p class="text-sm text-gray-600"><?php echo htmlspecialchars($agent['main_community_name']); ?></p>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <?php if ($agent['smaller_community_name']): ?>
+                                                    <div class="flex items-start mb-2 pl-3 border-l-2 border-blue-100">
+                                                        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mt-0.5">
+                                                            <i class="fas fa-building text-green-600 text-xs"></i>
+                                                        </div>
+                                                        <div class="ml-2">
+                                                            <p class="text-xs font-medium text-gray-700">Smaller Community</p>
+                                                            <p class="text-sm text-gray-600"><?php echo htmlspecialchars($agent['smaller_community_name']); ?></p>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <?php if ($agent['suburb_name']): ?>
+                                                    <div class="flex items-start mb-2 pl-6 border-l-2 border-green-100">
+                                                        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-yellow-100 flex items-center justify-center mt-0.5">
+                                                            <i class="fas fa-home text-yellow-600 text-xs"></i>
+                                                        </div>
+                                                        <div class="ml-2">
+                                                            <p class="text-xs font-medium text-gray-700">Suburb</p>
+                                                            <p class="text-sm text-gray-600"><?php echo htmlspecialchars($agent['suburb_name']); ?></p>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <?php if ($agent['cottage_name']): ?>
+                                                    <div class="flex items-start pl-9 border-l-2 border-yellow-100">
+                                                        <div class="flex-shrink-0 w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center mt-0.5">
+                                                            <i class="fas fa-house-user text-purple-600 text-xs"></i>
+                                                        </div>
+                                                        <div class="ml-2">
+                                                            <p class="text-xs font-medium text-gray-700">Cottage</p>
+                                                            <p class="text-sm text-gray-600"><?php echo htmlspecialchars($agent['cottage_name']); ?></p>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
 
@@ -392,16 +449,33 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                                         <?php echo htmlspecialchars(substr($issue['description'], 0, 120)) . (strlen($issue['description']) > 120 ? '...' : ''); ?>
                                                     </p>
 
-                                                    <div class="flex items-center text-xs text-gray-500 space-x-4">
-                                                        <?php if ($issue['community_name']) : ?>
-                                                            <span><i class="fas fa-map-marker-alt mr-1"></i><?php echo htmlspecialchars($issue['community_name']); ?></span>
+                                                    <div class="flex flex-wrap items-center text-xs text-gray-500 space-x-2 space-y-1">
+                                                        <?php 
+                                                        $locations = [];
+                                                        if (!empty($issue['main_community_name'])) $locations[] = $issue['main_community_name'];
+                                                        if (!empty($issue['smaller_community_name'])) $locations[] = $issue['smaller_community_name'];
+                                                        if (!empty($issue['suburb_name'])) $locations[] = $issue['suburb_name'];
+                                                        if (!empty($issue['cottage_name'])) $locations[] = $issue['cottage_name'];
+                                                        
+                                                        if (!empty($locations)) : 
+                                                        ?>
+                                                            <span class="inline-flex items-center">
+                                                                <i class="fas fa-map-marker-alt text-primary mr-1"></i>
+                                                                <?php echo htmlspecialchars(implode(' > ', $locations)); ?>
+                                                            </span>
                                                         <?php endif; ?>
 
                                                         <?php if ($issue['constituent_name']) : ?>
-                                                            <span><i class="fas fa-user mr-1"></i><?php echo htmlspecialchars($issue['constituent_name']); ?></span>
+                                                            <span class="inline-flex items-center">
+                                                                <i class="fas fa-user text-secondary mr-1"></i>
+                                                                <?php echo htmlspecialchars($issue['constituent_name']); ?>
+                                                            </span>
                                                         <?php endif; ?>
 
-                                                        <span><i class="fas fa-clock mr-1"></i><?php echo date('M d, Y', strtotime($issue['created_at'])); ?></span>
+                                                        <span class="inline-flex items-center">
+                                                            <i class="fas fa-clock text-gray-500 mr-1"></i>
+                                                            <?php echo date('M d, Y', strtotime($issue['created_at'])); ?>
+                                                        </span>
                                                     </div>
                                                 </div>
 

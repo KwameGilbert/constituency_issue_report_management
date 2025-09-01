@@ -368,26 +368,28 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
             });
 
             // Initialize dynamic dropdowns
-            const electoralAreaSelect = document.getElementById('electoral_area_id');
-            const communitySelect = document.getElementById('community_id');
+            const mainCommunitySelect = document.getElementById('main_community_id');
+            const smallerCommunitySelect = document.getElementById('smaller_community_id');
             const suburbSelect = document.getElementById('suburb_id');
+            const cottageSelect = document.getElementById('cottage_id');
             const sectorSelect = document.getElementById('sector_id');
             const subsectorSelect = document.getElementById('subsector_id');
 
-            // Function to load communities based on selected electoral area
-            async function loadCommunities() {
-                const electoralAreaId = electoralAreaSelect.value;
-                communitySelect.innerHTML = '<option value="">Loading Communities...</option>';
-                suburbSelect.innerHTML = '<option value="">Select Suburb (Optional)</option>'; // Reset suburbs
+            // Function to load smaller communities based on selected main community
+            async function loadSmallerCommunities() {
+                const mainCommunityId = mainCommunitySelect.value;
+                smallerCommunitySelect.innerHTML = '<option value="">Loading Communities...</option>';
+                suburbSelect.innerHTML = '<option value="">Select Suburb</option>'; // Reset suburbs
+                cottageSelect.innerHTML = '<option value="">Select Cottage</option>'; // Reset cottages
 
-                if (electoralAreaId) {
+                if (mainCommunityId) {
                     try {
-                        const response = await fetch(`../../api/get_communities.php?electoral_area_id=${electoralAreaId}`);
+                        const response = await fetch(`../../api/get_smaller_communities.php?main_community_id=${mainCommunityId}`);
                         const communities = await response.json();
-                        populateSelect(communitySelect, communities, 'Select Community');
+                        populateSelect(smallerCommunitySelect, communities, 'Select Smaller Community');
                     } catch (error) {
-                        console.error('Error fetching communities:', error);
-                        populateSelect(communitySelect, [], 'Error loading communities');
+                        console.error('Error fetching smaller communities:', error);
+                        populateSelect(smallerCommunitySelect, [], 'Error loading communities');
                     }
                 } else {
                     populateSelect(communitySelect, [], 'Select Community');

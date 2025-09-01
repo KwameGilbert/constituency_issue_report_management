@@ -73,16 +73,16 @@ try {
     $stmt->execute([$date_from, $date_to]);
     $category_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Issues by electoral area
+    // Issues by community
     $stmt = $conn->prepare("
         SELECT 
-            ea.name as area_name,
+            c.name as area_name,
             COUNT(i.id) as issue_count,
             SUM(CASE WHEN i.status = 'resolved' THEN 1 ELSE 0 END) as resolved_count
         FROM issues i
-        LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
+        LEFT JOIN communities c ON i.main_community_id = c.id
         WHERE i.created_at BETWEEN ? AND DATE_ADD(?, INTERVAL 1 DAY)
-        GROUP BY ea.id, ea.name
+        GROUP BY c.id, c.name
         ORDER BY issue_count DESC
     ");
     $stmt->execute([$date_from, $date_to]);
@@ -103,7 +103,7 @@ try {
         FROM issues i
         LEFT JOIN users u ON i.agent_id = u.id
         LEFT JOIN issue_categories ic ON i.category_id = ic.id
-        LEFT JOIN electoral_areas ea ON i.electoral_area_id = ea.id
+        LEFT JOIN communities ea ON i.main_community_id = ea.id
         WHERE i.updated_at BETWEEN ? AND DATE_ADD(?, INTERVAL 1 DAY)
         ORDER BY i.updated_at DESC
         LIMIT 20

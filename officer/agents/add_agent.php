@@ -26,7 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim($_POST['phone'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $confirm_password = trim($_POST['confirm_password'] ?? '');
-    $electoral_area = intval($_POST['electoral_area'] ?? 0);
+    $main_community_id = intval($_POST['main_community_id'] ?? 0);
+    $smaller_community_id = intval($_POST['smaller_community_id'] ?? 0);
+    $suburb_id = intval($_POST['suburb_id'] ?? 0);
+    $cottage_id = intval($_POST['cottage_id'] ?? 0);
     $department = trim($_POST['department'] ?? '');
     $status = $_POST['status'] ?? 'active';
 
@@ -53,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Passwords do not match";
     }
 
-    if ($electoral_area <= 0) {
-        $errors[] = "Please select an electoral area";
+    if ($main_community_id <= 0) {
+        $errors[] = "Please select a main community";
     }
 
     // Check if email already exists
@@ -81,10 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insert new agent
             $stmt = $conn->prepare("
                 INSERT INTO users (
-                    name, email, password, role, phone, electoral_area, 
+                    name, email, password, role, phone, 
+                    main_community_id, smaller_community_id, suburb_id, cottage_id,
                     department, status, created_at, updated_at
                 ) VALUES (
-                    ?, ?, ?, 'agent', ?, ?, ?, ?, NOW(), NOW()
+                    ?, ?, ?, 'agent', ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()
                 )
             ");
 
@@ -93,7 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $email,
                 $password_hash,
                 $phone,
-                $electoral_area,
+                $main_community_id,
+                $smaller_community_id,
+                $suburb_id,
+                $cottage_id,
                 $department,
                 $status
             ]);
@@ -149,15 +156,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch electoral areas for dropdown
+// Fetch location data for dropdowns
 try {
-    $stmt = $conn->prepare("SELECT id, name, constituency, region FROM electoral_areas ORDER BY name");
+    // Main communities
+    $stmt = $conn->prepare("SELECT id, name FROM communities ORDER BY name");
     $stmt->execute();
-    $electoral_areas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $main_communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Smaller communities
+    $stmt = $conn->prepare("SELECT id, name FROM smaller_communities ORDER BY name");
+    $stmt->execute();
+    $smaller_communities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Suburbs
+    $stmt = $conn->prepare("SELECT id, name, community_id FROM suburbs ORDER BY name");
+    $stmt->execute();
+    $suburbs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Cottages
+    $stmt = $conn->prepare("SELECT id, name, smaller_community_id FROM cottages ORDER BY name");
+    $stmt->execute();
+    $cottages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    $electoral_areas = [];
+    $main_communities = [];
+    $smaller_communities = [];
+    $suburbs = [];
+    $cottages = [];
     if (empty($message)) {
-        $message = "Error loading electoral areas: " . $e->getMessage();
+        $message = "Error loading location data: " . $e->getMessage();
         $message_type = 'error';
     }
 }
@@ -310,22 +336,84 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                 </h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Electoral Area -->
+                                    <!-- Main Community -->
                                     <div>
-                                        <label for="electoral_area" class="block text-sm font-medium text-gray-700 mb-2">
-                                            Electoral Area <span class="text-red-500">*</span>
+                                        <label for="main_community_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Main Community <span class="text-red-500">*</span>
                                         </label>
                                         <select
-                                            id="electoral_area"
-                                            name="electoral_area"
+                                            id="main_community_id"
+                                            name="main_community_id"
                                             required
                                             class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
-                                            <option value="">Select Electoral Area</option>
-                                            <?php foreach ($electoral_areas as $area) : ?>
+                                            <option value="">Select Main Community</option>
+                                            <?php foreach ($main_communities as $community) : ?>
                                                 <option
-                                                    value="<?php echo $area['id']; ?>"
-                                                    <?php echo (isset($form_data['electoral_area']) && $form_data['electoral_area'] == $area['id']) ? 'selected' : ''; ?>>
-                                                    <?php echo htmlspecialchars($area['name'] . ' - ' . $area['constituency'] . ', ' . $area['region']); ?>
+                                                    value="<?php echo $community['id']; ?>"
+                                                    <?php echo (isset($form_data['main_community_id']) && $form_data['main_community_id'] == $community['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($community['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Smaller Community -->
+                                    <div>
+                                        <label for="smaller_community_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Smaller Community
+                                        </label>
+                                        <select
+                                            id="smaller_community_id"
+                                            name="smaller_community_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Smaller Community</option>
+                                            <?php foreach ($smaller_communities as $community) : ?>
+                                                <option
+                                                    value="<?php echo $community['id']; ?>"
+                                                    <?php echo (isset($form_data['smaller_community_id']) && $form_data['smaller_community_id'] == $community['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($community['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Suburb -->
+                                    <div>
+                                        <label for="suburb_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Suburb
+                                        </label>
+                                        <select
+                                            id="suburb_id"
+                                            name="suburb_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Suburb</option>
+                                            <?php foreach ($suburbs as $suburb) : ?>
+                                                <option
+                                                    value="<?php echo $suburb['id']; ?>"
+                                                    data-community-id="<?php echo $suburb['community_id']; ?>"
+                                                    <?php echo (isset($form_data['suburb_id']) && $form_data['suburb_id'] == $suburb['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($suburb['name']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Cottage -->
+                                    <div>
+                                        <label for="cottage_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Cottage
+                                        </label>
+                                        <select
+                                            id="cottage_id"
+                                            name="cottage_id"
+                                            class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-900 focus:border-indigo-900 transition-colors">
+                                            <option value="">Select Cottage</option>
+                                            <?php foreach ($cottages as $cottage) : ?>
+                                                <option
+                                                    value="<?php echo $cottage['id']; ?>"
+                                                    data-suburb-id="<?php echo $cottage['suburb_id']; ?>"
+                                                    <?php echo (isset($form_data['cottage_id']) && $form_data['cottage_id'] == $cottage['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($cottage['name']); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -416,7 +504,7 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                                             <ul class="list-disc list-inside space-y-1">
                                                 <li>The agent will receive login credentials via email</li>
                                                 <li>They can change their password after first login</li>
-                                                <li>Make sure the electoral area assignment is correct</li>
+                                                <li>Make sure the community assignment is correct</li>
                                                 <li>You can modify these details later if needed</li>
                                             </ul>
                                         </div>
@@ -496,6 +584,86 @@ $userName = $_SESSION['user_name'] ?? 'Officer';
                             block: 'center'
                         });
                     }
+                }
+            });
+
+            // Handle cascading location dropdowns
+            const mainCommunitySelect = document.getElementById('main_community_id');
+            const smallerCommunitySelect = document.getElementById('smaller_community_id');
+            const suburbSelect = document.getElementById('suburb_id');
+            const cottageSelect = document.getElementById('cottage_id');
+            
+            // Store all options for filtering
+            const allSmallerCommunities = Array.from(smallerCommunitySelect.options);
+            const allSuburbs = Array.from(suburbSelect.options);
+            const allCottages = Array.from(cottageSelect.options);
+            
+            // Filter suburbs based on selected main community
+            mainCommunitySelect.addEventListener('change', function() {
+                const selectedMainCommunityId = this.value;
+                
+                // Reset subsequent dropdowns
+                smallerCommunitySelect.value = '';
+                suburbSelect.innerHTML = '';
+                suburbSelect.appendChild(new Option('Select Suburb', ''));
+                cottageSelect.innerHTML = '<option value="">Select Cottage</option>';
+                
+                // Populate suburbs based on the selected main community
+                if (selectedMainCommunityId) {
+                    allSuburbs.forEach(option => {
+                        if (option.value === '' || option.dataset.communityId === selectedMainCommunityId) {
+                            suburbSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no main community selected, show all suburbs
+                    allSuburbs.forEach(option => {
+                        suburbSelect.appendChild(option.cloneNode(true));
+                    });
+                }
+            });
+            
+            // Filter cottages based on selected smaller community
+            smallerCommunitySelect.addEventListener('change', function() {
+                const selectedSmallerCommunityId = this.value;
+                
+                // Reset and populate cottages
+                cottageSelect.innerHTML = '';
+                cottageSelect.appendChild(new Option('Select Cottage', ''));
+                
+                if (selectedSmallerCommunityId) {
+                    allCottages.forEach(option => {
+                        if (option.value === '' || option.dataset.smallerCommunityId === selectedSmallerCommunityId) {
+                            cottageSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no smaller community selected, show all options
+                    allCottages.forEach(option => {
+                        cottageSelect.appendChild(option.cloneNode(true));
+                    });
+                }
+            });
+            
+            // Filter cottages based on selected suburb
+            suburbSelect.addEventListener('change', function() {
+                const selectedSuburbId = this.value;
+                
+                // Reset and populate cottages
+                cottageSelect.innerHTML = '';
+                cottageSelect.appendChild(new Option('Select Cottage', ''));
+                
+                if (selectedSuburbId) {
+                    allCottages.forEach(option => {
+                        if (option.value === '' || option.dataset.suburbId === selectedSuburbId) {
+                            cottageSelect.appendChild(option.cloneNode(true));
+                        }
+                    });
+                } else {
+                    // If no suburb selected, show all options
+                    allCottages.forEach(option => {
+                        cottageSelect.appendChild(option.cloneNode(true));
+                    });
                 }
             });
         });
