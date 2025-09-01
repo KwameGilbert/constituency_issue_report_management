@@ -11,6 +11,16 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Check if password reset is required
+$current_script = $_SERVER['SCRIPT_NAME'];
+if (isset($_SESSION['password_reset_required']) && 
+    $_SESSION['password_reset_required'] == 1 && 
+    !strpos($current_script, 'change_password.php')) {
+    // Redirect to change password page
+    header("Location: ../profile_settings/change_password.php");
+    exit();
+}
+
 // Optional: Check if session has been inactive for too long (e.g., 7200 minutes)
 $max_idle_time = 7200 * 60; // 7200 minutes in seconds
 

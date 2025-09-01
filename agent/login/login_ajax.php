@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
     // Find user by email
-    $stmt = $conn->prepare("SELECT id, name, email, password, role, status FROM users WHERE email = ? LIMIT 1");
+    $stmt = $conn->prepare("SELECT id, name, email, password, role, status, password_reset_required FROM users WHERE email = ? LIMIT 1");
     $stmt->bindValue(1, $email);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -61,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
+                $_SESSION['password_reset_required'] = $user['password_reset_required'] ?? 0;
                 // main_community_id not present in users table
                 $_SESSION['logged_in'] = true;
                 $_SESSION['last_activity'] = time();
