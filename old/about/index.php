@@ -10,6 +10,7 @@
 
     <!-- Tailwind CSS -->
      <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/main.css">
     <!-- AOS (Animate On Scroll) -->
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">

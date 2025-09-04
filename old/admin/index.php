@@ -26,6 +26,7 @@ if (isset($_SESSION['admin_id'])) {
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
