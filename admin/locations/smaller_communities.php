@@ -135,26 +135,15 @@ if (!empty($search_query)) {
     $params[] = $search_term;
 }
 
-if (!empty($suburb_filter)) {
-    $where_clauses[] = "sc.suburb_id = ?";
-    $params[] = $suburb_filter;
-}
-
-if (!empty($community_filter)) {
-    $where_clauses[] = "c.id = ?";
-    $params[] = $community_filter;
-}
-
-$where_clause = !empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "";
+// suburb/community filters are not supported by the current schema (smaller_communities
+// are independent and only have cottages under them), so ignore those GET filters.
 
 // Count total smaller communities for pagination
 try {
     $count_sql = "
         SELECT COUNT(*) 
         FROM smaller_communities sc
-        JOIN suburbs s ON sc.suburb_id = s.id
-        JOIN communities c ON s.community_id = c.id
-        {$where_clause}
+        " . (!empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "") . "
     ";
     $stmt = $conn->prepare($count_sql);
     
@@ -174,25 +163,24 @@ try {
     $offset = ($page - 1) * $per_page;
     
     // Query to fetch smaller communities with pagination and related data
+    // Note: schema does not link smaller_communities to suburbs/communities directly.
+    // To keep the UI working without changing templates, we select placeholder NULL/empty
+    // values for suburb/community fields. Cottages are counted via subquery.
     $sql = "
         SELECT 
             sc.id, 
             sc.name, 
             sc.created_at,
-            sc.suburb_id,
-            s.name AS suburb_name,
-            c.id AS community_id,
-            c.name AS community_name,
+            NULL AS suburb_id,
+            '' AS suburb_name,
+            NULL AS community_id,
+            '' AS community_name,
             (SELECT COUNT(*) FROM cottages WHERE smaller_community_id = sc.id) AS cottage_count
         FROM 
             smaller_communities sc
-        JOIN 
-            suburbs s ON sc.suburb_id = s.id
-        JOIN 
-            communities c ON s.community_id = c.id
-        {$where_clause}
+        " . (!empty($where_clauses) ? "WHERE " . implode(" AND ", $where_clauses) : "") . "
         ORDER BY 
-            c.name ASC, s.name ASC, sc.name ASC
+            sc.name ASC
         LIMIT {$per_page} OFFSET {$offset}
     ";
     

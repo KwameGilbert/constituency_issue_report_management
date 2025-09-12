@@ -352,3 +352,55 @@ CREATE TABLE activity_logs(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- Youth Records Table
+CREATE TABLE youth_records (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    date_of_birth DATE NOT NULL,
+    national_id VARCHAR(50) NOT NULL UNIQUE,
+    home_town VARCHAR(255) NOT NULL,
+    residential_community VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(50) NOT NULL,
+    
+    -- Educational Qualifications
+    jhs_completed BOOLEAN DEFAULT FALSE,
+    shs_qualification VARCHAR(255),
+    certificate_qualification VARCHAR(255),
+    diploma_qualification VARCHAR(255),
+    first_degree VARCHAR(255),
+    postgraduate_qualification VARCHAR(255),
+    professional_qualification VARCHAR(255),
+    
+    -- Work Experience (up to 6 entries)
+    work_experience_1 VARCHAR(500),
+    work_experience_2 VARCHAR(500),
+    work_experience_3 VARCHAR(500),
+    work_experience_4 VARCHAR(500),
+    work_experience_5 VARCHAR(500),
+    work_experience_6 VARCHAR(500),
+    
+    -- Employment Status
+    employment_status ENUM('unemployed', 'employed', 'self_employed', 'student') DEFAULT 'unemployed',
+    current_employment VARCHAR(255),
+    employment_notes TEXT,
+    
+    -- Additional Information
+    skills TEXT,
+    interests TEXT,
+    availability_status ENUM('available', 'unavailable', 'part_time') DEFAULT 'available',
+    preferred_work_location VARCHAR(255),
+    salary_expectation DECIMAL(10,2),
+    
+    -- Admin Management
+    status ENUM('pending', 'approved', 'rejected', 'archived') DEFAULT 'pending',
+    reviewed_by INT,
+    reviewed_at TIMESTAMP NULL,
+    admin_notes TEXT,
+    
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+);
