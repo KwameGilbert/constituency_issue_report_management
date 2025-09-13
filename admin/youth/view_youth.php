@@ -138,11 +138,24 @@ $availability_badge_class = $availability_badges[$youth['availability_status']] 
 
 ?>
 
-<?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($youth['name']); ?> | Admin - Youth Records</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+<?php
+// ...existing code...
+renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
+?>
 <div class="lg:pl-64 flex flex-col flex-1">
-    <?php require_once __DIR__ . '/../components/header.php'; ?>
-    
+    <?php renderAdminHeader($current_page); ?>
     <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <!-- Page header -->
         <div class="bg-white shadow rounded-lg mb-6">
@@ -175,9 +188,18 @@ $availability_badge_class = $availability_badges[$youth['availability_status']] 
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Action Buttons -->
                     <div class="mt-4 flex-shrink-0 flex md:mt-0 md:ml-4 space-x-3">
+// ...existing code...
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ...existing code... -->
+    </main>
+</div>
+</body>
+</html>
                         <a href="edit_youth.php?id=<?php echo $youth['id']; ?>" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <i class="fas fa-edit mr-2"></i>
                             Edit Record

@@ -293,15 +293,44 @@ $headerActionButtons = [
 $pendingIssuesCount = getSystemPendingIssuesCount($conn);
 $activeUsersCount = getActiveUsersCount($conn);
 
-?>
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Youth Records Management - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/styles/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444',
+                        slate: {}
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans">
+    <?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
 
-<?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
+    <main class="lg:pl-64 flex flex-col flex-1">
+        <?php renderAdminHeader('Youth Records Management', 'Manage all youth records, view, edit, delete, and update employment status.', $headerActionButtons); ?>
 
-<div class="lg:pl-64 flex flex-col flex-1">
-    <?php require_once __DIR__ . '/../components/header.php'; ?>
-    
-    <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <!-- Page header -->
+        <div class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
+              <!-- Page header -->
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-wrap items-center justify-between">
@@ -630,20 +659,23 @@ $activeUsersCount = getActiveUsersCount($conn);
                 <?php endif; ?>
             <?php endif; ?>
         </div>
+        </div>
     </main>
-</div>
 
-<script>
-// JavaScript for table row hover effects
-document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(row => {
-        row.addEventListener('mouseenter', () => {
-            row.classList.add('bg-gray-50');
-        });
-        row.addEventListener('mouseleave', () => {
-            row.classList.remove('bg-gray-50');
+    <script>
+    // JavaScript for table row hover effects
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('bg-gray-50');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('bg-gray-50');
+            });
         });
     });
-});
-</script>
+    </script>
+</body>
+</html>
+
