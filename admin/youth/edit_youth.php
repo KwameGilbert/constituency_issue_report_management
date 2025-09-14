@@ -1,21 +1,255 @@
+<?php
+// admin/youth/edit_youth.php - Edit Youth Record
+require_once __DIR__ . '/../login/session_check.php';
+require_once __DIR__ . '/../../config/db_connection.php';
+require_once __DIR__ . '/../components/sidebar.php';
+require_once __DIR__ . '/../components/header.php';
+
+$database = new Database();
+$conn = $database->getConnection();
+
+$current_page = 'youth';
+
+// Initialize message variables
+$message = '';
+$message_type = '';
+
+// Check if we're editing an existing record or creating a new one
+$is_new = !isset($_GET['id']) || !is_numeric($_GET['id']);
+$id = $is_new ? null : (int)$_GET['id'];
+$title = $is_new ? 'Add New Youth Record' : 'Edit Youth Record';
+
+// Process GET parameters for messages
+if (isset($_GET['message']) && !empty($_GET['message'])) {
+    $message = htmlspecialchars($_GET['message']);
+    $message_type = isset($_GET['type']) ? htmlspecialchars($_GET['type']) : 'info';
+}
+
+// Initialize default youth data
+$youth = [
+    'name' => '',
+    'date_of_birth' => '',
+    'national_id' => '',
+    'home_town' => '',
+    'residential_community' => '',
+    'phone_number' => '',
+    'jhs_completed' => false,
+    'shs_qualification' => '',
+    'certificate_qualification' => '',
+    'diploma_qualification' => '',
+    'first_degree' => '',
+    'postgraduate_qualification' => '',
+    'professional_qualification' => '',
+    'work_experience_1' => '',
+    'work_experience_2' => '',
+    'work_experience_3' => '',
+    'work_experience_4' => '',
+    'work_experience_5' => '',
+    'work_experience_6' => '',
+    'employment_status' => 'unemployed',
+    'current_employment' => '',
+    'employment_notes' => '',
+    'skills' => '',
+    'interests' => '',
+    'availability_status' => 'available',
+    'preferred_work_location' => '',
+    'salary_expectation' => '',
+    'status' => 'pending',
+    'admin_notes' => ''
+];
+
+// If editing an existing record, fetch the data
+if (!$is_new) {
+    try {
+        $stmt = $conn->prepare("SELECT * FROM youth_records WHERE id = ?");
+        $stmt->execute([$id]);
+        $record = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$record) {
+            header('Location: index.php?message=Youth record not found&type=error');
+            exit;
+        }
+        
+        $youth = $record;
+    } catch (Exception $e) {
+        $message = "Error fetching youth record: " . $e->getMessage();
+        $message_type = 'error';
+    }
+}
+
+// Process form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Validate required fields
+    $required_fields = ['name', 'date_of_birth', 'national_id', 'home_town', 'residential_community', 'phone_number'];
+    $validation_errors = [];
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            $validation_errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required';
+        }
+    }
+    
+    // Validate national ID uniqueness (only for new records or if changed)
+    if (empty($validation_errors) && (!$is_new && $youth['national_id'] !== $_POST['national_id'])) {
+        $national_id = $_POST['national_id'];
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM youth_records WHERE national_id = ? AND id != ?');
+        $stmt->execute([$national_id, $id]);
+        if ($stmt->fetchColumn() > 0) {
+            $validation_errors[] = 'National ID already exists in the system';
+        }
+    }
+    
+    if (empty($validation_errors)) {
+        try {
+            $admin_id = $_SESSION['admin_id'];
+            
+            // Prepare data for update/insert
+            $youth_data = [
+                'name' => $_POST['name'],
+                'date_of_birth' => $_POST['date_of_birth'],
+                'national_id' => $_POST['national_id'],
+                'phone_number' => $_POST['phone_number'],
+                'home_town' => $_POST['home_town'],
+                'residential_community' => $_POST['residential_community'],
+                'jhs_completed' => isset($_POST['jhs_completed']) ? 1 : 0,
+                'shs_qualification' => $_POST['shs_qualification'] ?? '',
+                'certificate_qualification' => $_POST['certificate_qualification'] ?? '',
+                'diploma_qualification' => $_POST['diploma_qualification'] ?? '',
+                'first_degree' => $_POST['first_degree'] ?? '',
+                'postgraduate_qualification' => $_POST['postgraduate_qualification'] ?? '',
+                'professional_qualification' => $_POST['professional_qualification'] ?? '',
+                'employment_status' => $_POST['employment_status'],
+                'current_employment' => $_POST['current_employment'] ?? '',
+                'availability_status' => $_POST['availability_status'],
+                'preferred_work_location' => $_POST['preferred_work_location'] ?? '',
+                'salary_expectation' => !empty($_POST['salary_expectation']) ? $_POST['salary_expectation'] : null,
+                'employment_notes' => $_POST['employment_notes'] ?? '',
+                'skills' => $_POST['skills'] ?? '',
+                'interests' => $_POST['interests'] ?? '',
+                'status' => $_POST['status'],
+                'admin_notes' => $_POST['admin_notes'] ?? '',
+                'work_experience_1' => $_POST['work_experience_1'] ?? '',
+                'work_experience_2' => $_POST['work_experience_2'] ?? '',
+                'work_experience_3' => $_POST['work_experience_3'] ?? '',
+                'work_experience_4' => $_POST['work_experience_4'] ?? '',
+                'work_experience_5' => $_POST['work_experience_5'] ?? '',
+                'work_experience_6' => $_POST['work_experience_6'] ?? ''
+            ];
+            
+            if ($is_new) {
+                // Set the reviewed_by field to the current admin
+                $youth_data['reviewed_by'] = $admin_id;
+                $youth_data['reviewed_at'] = date('Y-m-d H:i:s');
+                
+                // Insert new record
+                $sql_fields = implode(', ', array_keys($youth_data));
+                $sql_placeholders = implode(', ', array_fill(0, count($youth_data), '?'));
+                
+                $stmt = $conn->prepare("INSERT INTO youth_records ($sql_fields) VALUES ($sql_placeholders)");
+                $stmt->execute(array_values($youth_data));
+                $new_id = $conn->lastInsertId();
+                
+                // Log the action
+                $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent) VALUES (?, 'create_youth_record', ?, ?, ?)");
+                $details = "Created new youth record for: " . $youth_data['name'];
+                $stmt->execute([$admin_id, $details, $_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_USER_AGENT']]);
+                
+                $message = "Youth record created successfully";
+                $message_type = 'success';
+                
+                // Redirect to the view page
+                header("Location: view_youth.php?id=$new_id&message=" . urlencode($message) . "&type=" . urlencode($message_type));
+                exit;
+            } else {
+                // Update the reviewed_by field if it hasn't been set yet
+                if (!$youth['reviewed_by']) {
+                    $youth_data['reviewed_by'] = $admin_id;
+                    $youth_data['reviewed_at'] = date('Y-m-d H:i:s');
+                }
+                
+                // The updated_at timestamp will be automatically updated by MySQL due to the ON UPDATE CURRENT_TIMESTAMP
+                
+                // Update existing record
+                $sql_parts = [];
+                foreach (array_keys($youth_data) as $key) {
+                    $sql_parts[] = "$key = ?";
+                }
+                $sql_set = implode(', ', $sql_parts);
+                
+                $stmt = $conn->prepare("UPDATE youth_records SET $sql_set WHERE id = ?");
+                $params = array_values($youth_data);
+                $params[] = $id; // Add the ID for the WHERE clause
+                $stmt->execute($params);
+                
+                // Log the action
+                $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent) VALUES (?, 'update_youth_record', ?, ?, ?)");
+                $details = "Updated youth record for: " . $youth_data['name'];
+                $stmt->execute([$admin_id, $details, $_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_USER_AGENT']]);
+                
+                $message = "Youth record updated successfully";
+                $message_type = 'success';
+                
+                // Redirect to the view page
+                header("Location: view_youth.php?id=$id&message=" . urlencode($message) . "&type=" . urlencode($message_type));
+                exit;
+            }
+            
+        } catch (Exception $e) {
+            $message = "Error saving youth record: " . $e->getMessage();
+            $message_type = 'error';
+        }
+    } else {
+        $message = "Please fix the following errors:<br>" . implode('<br>', $validation_errors);
+        $message_type = 'error';
+        
+        // Keep the submitted values
+        foreach ($_POST as $key => $value) {
+            if (is_string($value)) {
+                $youth[$key] = $value;
+            }
+        }
+        $youth['jhs_completed'] = isset($_POST['jhs_completed']);
+    }
+}
+
+// Get counts for sidebar
+$pendingIssuesCount = getSystemPendingIssuesCount($conn);
+$activeUsersCount = getActiveUsersCount($conn);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?> | Admin - Youth Records</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/styles/output.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444',
+                        slate: {}
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
-<?php
-// ...existing code...
-renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
-?>
+<body class="bg-gray-50 min-h-screen font-sans">
+<?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
 <div class="lg:pl-64 flex flex-col flex-1">
-    <?php renderAdminHeader($current_page); ?>
+    <?php renderAdminHeader('Edit Youth Record', 'Update youth details and information.', []); ?>
     <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <!-- Page header -->
         <div class="bg-white shadow rounded-lg mb-6">
@@ -79,6 +313,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-user-circle mr-2 text-purple-500"></i>
                         Personal Information
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -89,11 +324,6 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
                     <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <label for="name" class="block text-sm font-medium text-gray-700">Full Name *</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-          
                             <div class="mt-1">
                                 <input type="text" name="name" id="name" required
                                     value="<?php echo htmlspecialchars($youth['name']); ?>"
@@ -153,6 +383,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-graduation-cap mr-2 text-purple-500"></i>
                         Educational Qualifications
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -239,6 +470,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-briefcase mr-2 text-purple-500"></i>
                         Employment Information
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -318,6 +550,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-tools mr-2 text-purple-500"></i>
                         Skills and Interests
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -353,6 +586,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-history mr-2 text-purple-500"></i>
                         Work Experience
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -381,6 +615,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-cog mr-2 text-purple-500"></i>
                         Administrative Information
                     </h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">
@@ -416,14 +651,29 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             </div>
             
             <!-- Form Actions -->
-            <div class="flex justify-end">
-                <a href="<?php echo $is_new ? 'index.php' : 'view_youth.php?id=' . $id; ?>" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
-                    Cancel
-                </a>
-                <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <?php echo $is_new ? 'Create Record' : 'Update Record'; ?>
-                </button>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        <i class="fas fa-save mr-2 text-purple-500"></i>
+                        Save Changes
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <div class="flex justify-end">
+                        <a href="<?php echo $is_new ? 'index.php' : 'view_youth.php?id=' . $id; ?>" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-3">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-save mr-2"></i>
+                            <?php echo $is_new ? 'Create Record' : 'Update Record'; ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
             </div>
         </form>
     </main>
 </div>
+</body>
+</html>

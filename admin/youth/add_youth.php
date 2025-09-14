@@ -75,6 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'home_town' => $_POST['home_town'],
                 'residential_community' => $_POST['residential_community'],
                 'phone_number' => $_POST['phone_number'],
+                'reviewed_by' => $admin_id,
+                'reviewed_at' => date('Y-m-d H:i:s'),
                 'jhs_completed' => isset($_POST['jhs_completed']) ? 1 : 0,
                 'shs_qualification' => $_POST['shs_qualification'] ?? '',
                 'certificate_qualification' => $_POST['certificate_qualification'] ?? '',
@@ -138,16 +140,17 @@ $activeUsersCount = getActiveUsersCount($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?> | Admin - Youth Records</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/styles/output.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-slate-50 min-h-screen font-sans">
 <?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
 <div class="lg:pl-64 flex flex-col flex-1">
-    <?php renderAdminHeader($current_page); ?>
-    <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <?php renderAdminHeader('Add Youth Record', 'Create a new youth record with personal and professional details.', []); ?>
+    <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-wrap items-center justify-between">
@@ -204,7 +207,7 @@ $activeUsersCount = getActiveUsersCount($conn);
         <form method="POST" class="space-y-6">
             <!-- Personal Information -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Personal Information</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Basic details about the youth.</p>
                 </div>
@@ -251,7 +254,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             </div>
             <!-- Educational Qualifications -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Educational Qualifications</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Academic achievements and certifications.</p>
                 </div>
@@ -308,7 +311,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             </div>
             <!-- Work Experience -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Work Experience</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Previous employment history (up to 6 entries).</p>
                 </div>
@@ -327,7 +330,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             </div>
             <!-- Employment Status -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Employment Information</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Current employment status and preferences.</p>
                 </div>
@@ -383,7 +386,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             </div>
             <!-- Skills and Interests -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Skills and Interests</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Professional skills and personal interests.</p>
                 </div>
@@ -408,7 +411,7 @@ $activeUsersCount = getActiveUsersCount($conn);
             </div>
             <!-- Administrative Information -->
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 bg-gray-50">
+                <div class="px-4 py-5 sm:px-6 bg-slate-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Administrative Information</h3>
                     <p class="mt-1 max-w-2xl text-sm text-gray-500">Status and administrative notes.</p>
                 </div>
