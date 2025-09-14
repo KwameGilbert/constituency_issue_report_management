@@ -93,12 +93,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
                     </div>
                 </div>
             </div>
-            <!-- ...existing code... -->
-        </form>
-    </main>
-</div>
-</body>
-</html>
+          
                             <div class="mt-1">
                                 <input type="text" name="name" id="name" required
                                     value="<?php echo htmlspecialchars($youth['name']); ?>"

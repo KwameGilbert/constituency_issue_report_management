@@ -144,18 +144,37 @@ $availability_badge_class = $availability_badges[$youth['availability_status']] 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($youth['name']); ?> | Admin - Youth Records</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter:400,500,600,700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/styles/output.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#8b5cf6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        error: '#ef4444',
+                        slate: {}
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
-<?php
-// ...existing code...
-renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
-?>
+<body class="bg-slate-50 min-h-screen font-sans">
+<?php renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount); ?>
+
 <div class="lg:pl-64 flex flex-col flex-1">
-    <?php renderAdminHeader($current_page); ?>
+    <?php renderAdminHeader('Youth Record Details', 'View detailed information about this youth record.', []); ?>
+    
     <main class="flex-1 pb-8 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <!-- Page header -->
         <div class="bg-white shadow rounded-lg mb-6">
@@ -190,39 +209,29 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
                     </div>
                     <!-- Action Buttons -->
                     <div class="mt-4 flex-shrink-0 flex md:mt-0 md:ml-4 space-x-3">
-// ...existing code...
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ...existing code... -->
-    </main>
-</div>
-</body>
-</html>
-                        <a href="edit_youth.php?id=<?php echo $youth['id']; ?>" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="edit_youth.php?id=<?php echo $youth['id']; ?>" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="fas fa-edit mr-2"></i>
                             Edit Record
                         </a>
-                        <a href="index.php" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="index.php" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Back to List
                         </a>
                         
                         <?php if ($youth['status'] === 'pending'): ?>
                             <div class="relative inline-block text-left" x-data="{ open: false }">
-                                <button @click="open = !open" type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500" id="options-menu" aria-haspopup="true" aria-expanded="true">
+                                <button @click="open = !open" type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-red-500" id="options-menu" aria-haspopup="true" aria-expanded="true">
                                     <i class="fas fa-cog mr-2"></i>
                                     Actions
                                     <i class="fas fa-chevron-down ml-2"></i>
                                 </button>
                                 <div x-show="open" @click.away="open = false" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                                     <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                                        <a href="#" onclick="confirmAction('approve', <?php echo $youth['id']; ?>)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center" role="menuitem">
+                                        <a href="#" onclick="confirmAction('approve', <?php echo $youth['id']; ?>)" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
                                             <i class="fas fa-check-circle mr-3 text-green-500"></i>
                                             Approve Record
                                         </a>
-                                        <a href="#" onclick="confirmAction('reject', <?php echo $youth['id']; ?>)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center" role="menuitem">
+                                        <a href="#" onclick="confirmAction('reject', <?php echo $youth['id']; ?>)" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900" role="menuitem">
                                             <i class="fas fa-times-circle mr-3 text-red-500"></i>
                                             Reject Record
                                         </a>
@@ -306,7 +315,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        <i class="fas fa-briefcase mr-2 text-blue-500"></i>
+                        <i class="fas fa-briefcase mr-2 text-red-600"></i>
                         Employment Information
                     </h3>
                 </div>
@@ -361,7 +370,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        <i class="fas fa-graduation-cap mr-2 text-green-500"></i>
+                        <i class="fas fa-graduation-cap mr-2 text-red-600"></i>
                         Educational Qualifications
                     </h3>
                 </div>
@@ -417,7 +426,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        <i class="fas fa-tools mr-2 text-indigo-500"></i>
+                        <i class="fas fa-tools mr-2 text-red-600"></i>
                         Skills & Interests
                     </h3>
                 </div>
@@ -443,7 +452,7 @@ renderAdminSidebar($current_page, $pendingIssuesCount, $activeUsersCount);
             <div class="lg:col-span-2 bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6 bg-gray-50">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">
-                        <i class="fas fa-history mr-2 text-yellow-500"></i>
+                        <i class="fas fa-history mr-2 text-red-600"></i>
                         Work Experience
                     </h3>
                 </div>

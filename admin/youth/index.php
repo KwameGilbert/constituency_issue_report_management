@@ -279,7 +279,7 @@ $headerActionButtons = [
         'label' => 'Add New Youth Record',
         'icon' => 'fas fa-plus',
         'url' => 'add_youth.php',
-        'class' => 'bg-purple-600 hover:bg-purple-700'
+        'class' => 'bg-red-600 hover:bg-red-700'
     ],
     [
         'label' => 'Export Records',
@@ -352,7 +352,7 @@ $activeUsersCount = getActiveUsersCount($conn);
                                 Approved: <?php echo $status_counts['approved']; ?>
                             </div>
                             <div class="mt-2 flex items-center text-sm text-gray-500">
-                                <i class="fas fa-briefcase flex-shrink-0 mr-1.5 text-blue-500"></i>
+                                <i class="fas fa-briefcase flex-shrink-0 mr-1.5 text-red-600"></i>
                                 Unemployed: <?php echo $employment_counts['unemployed']; ?>
                             </div>
                         </div>
@@ -361,7 +361,7 @@ $activeUsersCount = getActiveUsersCount($conn);
                     <!-- Action Buttons -->
                     <div class="mt-4 flex-shrink-0 flex md:mt-0 md:ml-4">
                         <?php foreach ($headerActionButtons as $button): ?>
-                            <a href="<?php echo $button['url']; ?>" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white <?php echo $button['class']; ?> focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            <a href="<?php echo $button['url']; ?>" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white <?php echo $button['class']; ?> focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                 <i class="<?php echo $button['icon']; ?> mr-2"></i>
                                 <?php echo $button['label']; ?>
                             </a>
@@ -419,13 +419,13 @@ $activeUsersCount = getActiveUsersCount($conn);
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-search text-gray-400"></i>
                             </div>
-                            <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search_query); ?>" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Name, ID, Phone, Community">
+                            <input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search_query); ?>" class="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Name, ID, Phone, Community">
                         </div>
                     </div>
                     
                     <div class="w-full sm:w-1/5">
                         <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md">
                             <option value="">All Statuses</option>
                             <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>Pending</option>
                             <option value="approved" <?php echo $status_filter === 'approved' ? 'selected' : ''; ?>>Approved</option>
@@ -436,7 +436,7 @@ $activeUsersCount = getActiveUsersCount($conn);
                     
                     <div class="w-full sm:w-1/5">
                         <label for="employment" class="block text-sm font-medium text-gray-700">Employment</label>
-                        <select id="employment" name="employment" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <select id="employment" name="employment" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md">
                             <option value="">All Employment</option>
                             <option value="unemployed" <?php echo $employment_filter === 'unemployed' ? 'selected' : ''; ?>>Unemployed</option>
                             <option value="employed" <?php echo $employment_filter === 'employed' ? 'selected' : ''; ?>>Employed</option>
@@ -447,7 +447,7 @@ $activeUsersCount = getActiveUsersCount($conn);
                     
                     <div class="w-full sm:w-1/5">
                         <label for="qualification" class="block text-sm font-medium text-gray-700">Qualification</label>
-                        <select id="qualification" name="qualification" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <select id="qualification" name="qualification" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md">
                             <option value="">All Qualifications</option>
                             <option value="jhs" <?php echo $qualification_filter === 'jhs' ? 'selected' : ''; ?>>JHS</option>
                             <option value="shs" <?php echo $qualification_filter === 'shs' ? 'selected' : ''; ?>>SHS</option>
@@ -460,12 +460,12 @@ $activeUsersCount = getActiveUsersCount($conn);
                     </div>
                     
                     <div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="fas fa-filter mr-2"></i>
                             Filter
                         </button>
                         <?php if (!empty($search_query) || !empty($status_filter) || !empty($employment_filter) || !empty($qualification_filter)): ?>
-                            <a href="index.php" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <a href="index.php" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                                 <i class="fas fa-times mr-2"></i>
                                 Clear
                             </a>
@@ -491,7 +491,7 @@ $activeUsersCount = getActiveUsersCount($conn);
                         <?php endif; ?>
                     </p>
                     <div class="mt-6">
-                        <a href="add_youth.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <a href="add_youth.php" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             <i class="fas fa-plus mr-2"></i>
                             Add New Youth Record
                         </a>
@@ -592,10 +592,10 @@ $activeUsersCount = getActiveUsersCount($conn);
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
-                                        <a href="view_youth.php?id=<?php echo $record['id']; ?>" class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                                        <a href="view_youth.php?id=<?php echo $record['id']; ?>" class="text-red-600 hover:text-red-900" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="edit_youth.php?id=<?php echo $record['id']; ?>" class="text-blue-600 hover:text-blue-900" title="Edit Record">
+                                        <a href="edit_youth.php?id=<?php echo $record['id']; ?>" class="text-red-600 hover:text-red-900" title="Edit Record">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <?php if ($record['status'] === 'pending'): ?>
