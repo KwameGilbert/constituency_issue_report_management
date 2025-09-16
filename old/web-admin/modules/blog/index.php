@@ -92,6 +92,7 @@ if (isset($_GET['feature']) && is_numeric($_GET['feature'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog Posts Management | Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>

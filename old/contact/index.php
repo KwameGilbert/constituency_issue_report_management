@@ -255,6 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="description"
         content="Get in touch with the Office of the Member of Parliament for Sefwi Wiawso Constituency. Report issues, suggest projects, or request information.">
      <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>

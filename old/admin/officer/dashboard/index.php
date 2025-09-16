@@ -75,6 +75,7 @@ while($issue = $recent_result->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Field Officer Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>

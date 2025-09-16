@@ -100,6 +100,7 @@ if (isset($_SESSION['success_message'])) {
     <title>Constituency Issue Management | Admin Login</title>
     <link rel="icon" href="../../assets/images/favicon.ico" type="image/x-icon">
      <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 

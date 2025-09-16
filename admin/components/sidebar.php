@@ -140,6 +140,7 @@ function renderAdminSidebar($current_page, $pendingIssuesCount = 0, $activeUsers
                         'users' => ['icon' => 'fas fa-users-cog', 'label' => 'Users', 'badge' => $activeUsersCount],
                         'officers' => ['icon' => 'fas fa-user-shield', 'label' => 'Officers'],
                         'agents' => ['icon' => 'fas fa-user-tie', 'label' => 'Field Agents'],
+                        'youth' => ['icon' => 'fas fa-user-graduate', 'label' => 'Youth Records'],
                         'locations' => ['icon' => 'fas fa-map-marked-alt', 'label' => 'Locations'],
                     ];
 

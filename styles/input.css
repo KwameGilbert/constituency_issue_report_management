@@ -1,0 +1,40 @@
+@import "tailwindcss";
+:root {
+    /* Default theme (general/fallback for school management system) */
+    --primary-color: #2563eb;      /* School blue */
+    --secondary-color: #fbbf24;    /* School gold */
+    --background-color: #f9fafb;   /* Neutral background */
+    --text-color: #1e293b;         /* Slate */
+}
+
+/* Admin theme */
+.admin-theme {
+    --primary-color: #1e293b;      /* Deep slate (authority) */
+    --secondary-color: #ef4444;    /* Red (alert/important) */
+    --background-color: #e5e7eb;   /* Light gray */
+    --text-color: #0f172a;         /* Dark blue */
+}
+
+/* Teacher theme */
+.teacher-theme {
+    --primary-color: #10b981;      /* Emerald (growth/learning) */
+    --secondary-color: #2563eb;    /* Blue (trust) */
+    --background-color: #f3f4f6;   /* Light gray */
+    --text-color: #334155;         /* Slate */
+}
+
+/* Student theme */
+.student-theme {
+    --primary-color: #38bdf8;      /* Sky blue (youth) */
+    --secondary-color: #f43f5e;    /* Pink (energy) */
+    --background-color: #fef9c3;   /* Light yellow */
+    --text-color: #0f172a;         /* Dark blue */
+}
+
+/* Parent theme */
+.parent-theme {
+    --primary-color: #fbbf24;      /* Gold (support) */
+    --secondary-color: #9333ea;    /* Purple (care) */
+    --background-color: #fff7ed;   /* Light orange */
+    --text-color: #78350f;         /* Brown */
+}

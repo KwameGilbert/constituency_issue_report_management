@@ -26,6 +26,7 @@ $locations = $conn->query("SELECT DISTINCT location FROM projects")->fetch_all(M
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projects</title>
      <script src="https://cdn.tailwindcss.com"></script>
+<link href="/styles/output.css"  rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/main.css">
     <!-- Coat of arms favicon  -->
     <link rel="icon" type="image/x-icon" href="./../assets/images/coat-of-arms.png">
