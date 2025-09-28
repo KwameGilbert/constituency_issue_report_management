@@ -8,7 +8,8 @@ $status = $_GET['status'] ?? '';
 $search = $_GET['search'] ?? '';
 
 // Build WHERE clause - ALWAYS include featured=1
-$where = ["featured = 1"];  // This ensures only featured projects are shown
+$where = ["is_public = `TRUE`"];  
+// This ensures only featured projects are shown
 $params = [];
 $param_types = '';
 
@@ -44,7 +45,7 @@ $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $projects_per_page = 12;
 $offset = ($current_page - 1) * $projects_per_page;
 
-// Prepare the WHERE clause - note we always have at least one condition (featured=1)
+// Prepare the WHERE clause - note we always have at least one condition (is_public=true)
 $where_clause = "WHERE " . implode(" AND ", $where);
 
 // Count total projects for pagination
@@ -60,7 +61,7 @@ $total_projects = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_projects / $projects_per_page);
 
 // Fetch projects with pagination
-$sql = "SELECT * FROM projects $where_clause ORDER BY start_date DESC LIMIT ?, ?";
+$sql = "SELECT * FROM projects $where_clause ORDER BY started_at DESC LIMIT ?, ?";
 $stmt = $conn->prepare($sql);
 
 // Add pagination parameters
@@ -73,8 +74,8 @@ $stmt->execute();
 $projects = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Fetch filters options - but only from FEATURED projects
-$sectors = $conn->query("SELECT DISTINCT sector FROM projects WHERE featured = 1 ORDER BY sector")->fetch_all(MYSQLI_ASSOC);
-$locations = $conn->query("SELECT DISTINCT location FROM projects WHERE featured = 1 ORDER BY location")->fetch_all(MYSQLI_ASSOC);
+$sectors = $conn->query("SELECT DISTINCT sector FROM projects WHERE is_public = TRUE ORDER BY sector")->fetch_all(MYSQLI_ASSOC);
+$locations = $conn->query("SELECT DISTINCT location FROM projects WHERE is_public = TRUE ORDER BY location")->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -230,9 +231,9 @@ $locations = $conn->query("SELECT DISTINCT location FROM projects WHERE featured
                                 <div class="flex items-center text-sm text-gray-500 mb-3">
                                     <i class="fas fa-calendar-alt mr-2"></i>
                                     <span>
-                                        <?= date('M d, Y', strtotime($project['start_date'])) ?>
-                                        <?php if (!empty($project['end_date'])): ?>
-                                        - <?= date('M d, Y', strtotime($project['end_date'])) ?>
+                                        <?= date('M d, Y', strtotime($project['started_at'])) ?>
+                                        <?php if (!empty($project['completed_at'])): ?>
+                                        - <?= date('M d, Y', strtotime($project['completed_at'])) ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>

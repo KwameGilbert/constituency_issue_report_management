@@ -1,6 +1,6 @@
 <?php
 // youth_registration.php - Public Youth Registration Form
-require_once __DIR__ . '/config/db_connection.php';
+require_once __DIR__ . '/../iss/config/db_connection.php';
 
 $database = new Database();
 $conn = $database->getConnection();
@@ -129,38 +129,7 @@ $page_description = "Register for youth employment and skills database";
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-red-900 text-white shadow-md">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                    <a href="index.php" class="flex items-center">
-                        <span class="text-xl font-bold ml-2">Constituency Management</span>
-                    </a>
-                </div>
-                <nav class="hidden md:flex space-x-8">
-                    <a href="index.php" class="hover:text-red-200 transition-colors">Home</a>
-                    <a href="#" class="font-semibold border-b-2 border-white">Youth Registration</a>
-                    <a href="contact.php" class="hover:text-red-200 transition-colors">Contact</a>
-                </nav>
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-white focus:outline-none">
-                        <i class="fas fa-bars fa-lg"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-    
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="md:hidden bg-red-800 hidden">
-        <div class="container mx-auto px-4 py-2">
-            <nav class="flex flex-col space-y-2">
-                <a href="index.php" class="text-white py-2 hover:bg-red-700 px-4 rounded">Home</a>
-                <a href="#" class="text-white py-2 bg-red-700 px-4 rounded font-medium">Youth Registration</a>
-                <a href="contact.php" class="text-white py-2 hover:bg-red-700 px-4 rounded">Contact</a>
-            </nav>
-        </div>
-    </div>
+   <?php include_once '../includes/header.php'; ?>
     
     <main class="container mx-auto px-4 py-8">
         <div class="max-w-4xl mx-auto">
@@ -466,33 +435,8 @@ $page_description = "Register for youth employment and skills database";
     </main>
     
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-16">
-        <div class="container mx-auto px-4 py-10">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">About Us</h3>
-                    <p class="text-gray-300">The Constituency Management Office is dedicated to serving the people and addressing their needs through effective representation and resource management.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
-                    <p class="text-gray-300">123 Main Street<br>Accra, Ghana</p>
-                    <p class="text-gray-300 mt-2">Phone: +233 XX XXX XXXX<br>Email: info@constituency.gov.gh</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
-                    <ul class="space-y-2">
-                        <li><a href="index.php" class="text-gray-300 hover:text-white">Home</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white">Youth Registration</a></li>
-                        <li><a href="contact.php" class="text-gray-300 hover:text-white">Contact</a></li>
-                        <li><a href="admin/login/" class="text-gray-300 hover:text-white">Admin Login</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
-                <p>&copy; <?php echo date('Y'); ?> Constituency Management System. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+       <?php include_once '../includes/footer.php'; ?>
+
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {

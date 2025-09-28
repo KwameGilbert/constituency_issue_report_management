@@ -1,18 +1,21 @@
 <?php
-// filepath: c:\xampp\htdocs\swma\admin\index.php
-session_start();
+// // filepath: c:\xampp\htdocs\swma\admin\index.php
+// session_start();
 
-// Check if already logged in and redirect to appropriate dashboard
-if (isset($_SESSION['admin_id'])) {
-    if ($_SESSION['role'] === 'officer') {
-        header("Location: officer/dashboard/");
-    } elseif ($_SESSION['role'] === 'pa') {
-        header("Location: pa/dashboard/");
-    } elseif ($_SESSION['role'] === 'super_admin') {
-        header("Location: super/dashboard/");
-    }
-    exit();
-}
+// // Check if already logged in and redirect to appropriate dashboard
+// if (isset($_SESSION['admin_id'])) {
+//     if ($_SESSION['role'] === 'agent') {
+//         // New role: Agent (replaces Field Officer)
+//         header("Location: agent/dashboard/");
+//     } elseif ($_SESSION['role'] === 'officer') {
+//         // New role: Officer (replaces Personal Assistant)
+//         header("Location: officer/dashboard/");
+//     } elseif ($_SESSION['role'] === 'admin') {
+//         // New role: Admin (replaces super_admin/Supervisor)
+//         header("Location: admin/dashboard/");
+//     }
+//     exit();
+// }
 ?>
 
 <!DOCTYPE html>
@@ -24,11 +27,9 @@ if (isset($_SESSION['admin_id'])) {
     <title>Admin Portal | Sefwi Wiawso Constituency</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/coat-of-arms.png">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-<link href="/styles/output.css"  rel="stylesheet">
+<link href="/styles/output.css"  rel="stylesheet">
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
@@ -53,7 +54,6 @@ if (isset($_SESSION['admin_id'])) {
 </head>
 
 <body class="min-h-screen flex flex-col">
-    <!-- Header -->
     <header class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center">
@@ -70,7 +70,6 @@ if (isset($_SESSION['admin_id'])) {
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-5xl w-full space-y-8">
             <div class="text-center">
@@ -79,44 +78,42 @@ if (isset($_SESSION['admin_id'])) {
             </div>
 
             <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Field Officer Card -->
-                <a href="officer/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-amber-500 border-2 border-transparent">
+                
+                <a href="agent/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-slate-700 border-2 border-transparent">
                     <div class="p-6 text-center">
-                        <div class="mx-auto h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center mb-4">
-                            <i class="fas fa-user-tie text-amber-600 text-3xl role-icon"></i>
+                        <div class="mx-auto h-20 w-20 rounded-full bg-slate-300 flex items-center justify-center mb-4">
+                            <i class="fas fa-user-tag text-slate-900 text-3xl role-icon"></i>
                         </div>
-                        <h3 class="text-xl font-medium text-gray-900 mb-2">Field Officer</h3>
+                        <h3 class="text-xl font-medium text-slate-900 mb-2">Agent</h3>
                         <p class="text-gray-500 text-sm mb-4">Manage field activities and report issues from the community</p>
-                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700">
+                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-slate-900 hover:bg-slate-800">
+                            Login as Agent
+                        </div>
+                    </div>
+                </a>
+
+                <a href="officer/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-blue-500 border-2 border-transparent">
+                    <div class="p-6 text-center">
+                        <div class="mx-auto h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                            <i class="fas fa-user-cog text-blue-600 text-3xl role-icon"></i>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-900 mb-2">Officer</h3>
+                        <p class="text-gray-500 text-sm mb-4">Coordinate resources, manage communications, and support staff</p>
+                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                             Login as Officer
                         </div>
                     </div>
                 </a>
 
-                <!-- Personal Assistant Card -->
-                <a href="pa/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-blue-500 border-2 border-transparent">
-                    <div class="p-6 text-center">
-                        <div class="mx-auto h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                            <i class="fas fa-user-clock text-blue-600 text-3xl role-icon"></i>
-                        </div>
-                        <h3 class="text-xl font-medium text-gray-900 mb-2">Personal Assistant</h3>
-                        <p class="text-gray-500 text-sm mb-4">Manage schedules, communications and assist the MP</p>
-                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                            Login as PA
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Supervisor Card -->
-                <a href="super/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-green-500 border-2 border-transparent">
+                <a href="admin/login/" class="role-card bg-white rounded-xl shadow-md overflow-hidden hover:border-green-500 border-2 border-transparent">
                     <div class="p-6 text-center">
                         <div class="mx-auto h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                            <i class="fas fa-user-shield text-green-600 text-3xl role-icon"></i>
+                            <i class="fas fa-user-shield text-red-900 text-3xl role-icon"></i>
                         </div>
-                        <h3 class="text-xl font-medium text-gray-900 mb-2">Supervisor</h3>
-                        <p class="text-gray-500 text-sm mb-4">Oversee all operations and manage constituency matters</p>
-                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                            Login as Supervisor
+                        <h3 class="text-xl font-medium text-red-900 mb-2">Admin</h3>
+                        <p class="text-red-500 text-sm mb-4">Oversee all operations, manage users, and handle system settings</p>
+                        <div class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                            Login as Admin
                         </div>
                     </div>
                 </a>
@@ -128,12 +125,11 @@ if (isset($_SESSION['admin_id'])) {
         </div>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-white border-t mt-auto">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-500">
-                    &copy; <?= date('Y') ?> Sefwi Wiawso Municipal Assembly. All rights reserved.
+                    &copy; <?= date('Y') ?> Hon. Kofi Afful Benteh. All rights reserved.
                 </div>
                 <div class="text-sm text-gray-500">
                     <span class="mr-2">Version 1.0</span>

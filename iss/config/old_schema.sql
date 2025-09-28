@@ -1,4 +1,6 @@
--- Core User and Admin Tables
+-- Constituency Issue Reporting & Development System Schema
+-- Using INT PRIMARY KEYS with AUTO_INCREMENT
+
 CREATE TABLE web_admins (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(100) NOT NULL,
@@ -48,36 +50,30 @@ CREATE TABLE blog_comments (
     FOREIGN KEY (post_id) REFERENCES blog_posts(id) ON DELETE CASCADE
 );
 
--- Location-related Tables
-CREATE TABLE communities (
+CREATE TABLE carousel_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE suburbs (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    community_id INT NOT NULL,
+    title VARCHAR(255),
+    image_url TEXT,
+    link TEXT,
+    position INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE smaller_communities (
+CREATE TABLE contact_messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE cottages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    smaller_community_id INT NOT NULL,
+    name VARCHAR(255),
+    email VARCHAR(100),
+    phone VARCHAR(50),
+    subject VARCHAR(255),
+    message TEXT,
+    status ENUM('pending', 'reviewed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Primary User and Constituency Tables
+
+
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255),
@@ -86,20 +82,13 @@ CREATE TABLE users (
     role ENUM('mp', 'mce', 'pa', 'officer', 'agent', 'admin'),
     phone VARCHAR(50),
     profile_image TEXT,
-    main_community_id INT,
-    smaller_community_id INT,
-    suburb_id INT,
-    cottage_id INT,
+    electoral_area INT,
     department VARCHAR(255),
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
-    password_reset_required TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (main_community_id) REFERENCES communities(id) ON DELETE SET NULL,
-    FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE SET NULL,
-    FOREIGN KEY (suburb_id) REFERENCES suburbs(id) ON DELETE SET NULL,
-    FOREIGN KEY (cottage_id) REFERENCES cottages(id) ON DELETE SET NULL
+    FOREIGN KEY (electoral_area) REFERENCES electoral_areas(id) ON DELETE SET NULL
 );
 
 CREATE TABLE constituents (
@@ -111,7 +100,30 @@ CREATE TABLE constituents (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Issue & Project-related Tables
+CREATE TABLE electoral_areas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),
+    constituency VARCHAR(255),
+    region VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE communities (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    electoral_area_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (electoral_area_id) REFERENCES electoral_areas(id) ON DELETE CASCADE
+);
+
+CREATE TABLE suburbs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    community_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE CASCADE
+);
+
 CREATE TABLE issue_categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255),
@@ -137,11 +149,10 @@ CREATE TABLE issues (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
     description TEXT,
-    location_description VARCHAR(255),
-    main_community_id INT,
-    smaller_community_id INT,
+    location VARCHAR(255),
+    electoral_area_id INT,
+    community_id INT,
     suburb_id INT,
-    cottage_id INT,
     category_id INT,
     sector_id INT,
     subsector_id INT,
@@ -160,16 +171,15 @@ CREATE TABLE issues (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     resolved_at TIMESTAMP NULL,
-    FOREIGN KEY (main_community_id) REFERENCES communities(id) ON DELETE SET NULL,
-    FOREIGN KEY (smaller_community_id) REFERENCES smaller_communities(id) ON DELETE SET NULL,
+    FOREIGN KEY (electoral_area_id) REFERENCES electoral_areas(id) ON DELETE SET NULL,
+    FOREIGN KEY (community_id) REFERENCES communities(id) ON DELETE SET NULL,
     FOREIGN KEY (suburb_id) REFERENCES suburbs(id) ON DELETE SET NULL,
-    FOREIGN KEY (cottage_id) REFERENCES cottages(id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES issue_categories(id) ON DELETE SET NULL,
     FOREIGN KEY (sector_id) REFERENCES issue_sectors(id) ON DELETE SET NULL,
     FOREIGN KEY (subsector_id) REFERENCES issue_subsectors(id) ON DELETE SET NULL,
     FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (officer_id) REFERENCES users(id) ON DELETE SET NULL,
-    FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL
+    FOREIGN KEY (constituent_id) REFERENCES constituents(id) ON DELETE SET NULL,
 );
 
 CREATE TABLE issue_updates (
@@ -198,7 +208,9 @@ CREATE TABLE issue_attachments (
     FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Project-related Tables
+
+
+
 CREATE TABLE projects (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
@@ -244,18 +256,6 @@ CREATE TABLE project_photos (
     FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE TABLE project_history_logs (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    project_id INT,
-    user_id INT,
-    action TEXT,
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- Employment & Idea Bank
 CREATE TABLE employment_opportunities (
     id INT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
@@ -290,27 +290,15 @@ CREATE TABLE idea_bank (
     FOREIGN KEY (submitted_by) REFERENCES constituents(id) ON DELETE SET NULL
 );
 
--- Other utility tables
-CREATE TABLE carousel_items (
+CREATE TABLE project_history_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255),
-    image_url TEXT,
-    link TEXT,
-    position INT,
+    project_id INT,
+    user_id INT,
+    action TEXT,
+    comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE contact_messages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
-    email VARCHAR(100),
-    phone VARCHAR(50),
-    subject VARCHAR(255),
-    message TEXT,
-    status ENUM('pending', 'reviewed') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE notifications (
@@ -351,56 +339,4 @@ CREATE TABLE activity_logs(
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- Youth Records Table
-CREATE TABLE youth_records (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    date_of_birth DATE NOT NULL,
-    national_id VARCHAR(50) NOT NULL UNIQUE,
-    home_town VARCHAR(255) NOT NULL,
-    residential_community VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(50) NOT NULL,
-    
-    -- Educational Qualifications
-    jhs_completed BOOLEAN DEFAULT FALSE,
-    shs_qualification VARCHAR(255),
-    certificate_qualification VARCHAR(255),
-    diploma_qualification VARCHAR(255),
-    first_degree VARCHAR(255),
-    postgraduate_qualification VARCHAR(255),
-    professional_qualification VARCHAR(255),
-    
-    -- Work Experience (up to 6 entries)
-    work_experience_1 VARCHAR(500),
-    work_experience_2 VARCHAR(500),
-    work_experience_3 VARCHAR(500),
-    work_experience_4 VARCHAR(500),
-    work_experience_5 VARCHAR(500),
-    work_experience_6 VARCHAR(500),
-    
-    -- Employment Status
-    employment_status ENUM('unemployed', 'employed', 'self_employed', 'student') DEFAULT 'unemployed',
-    current_employment VARCHAR(255),
-    employment_notes TEXT,
-    
-    -- Additional Information
-    skills TEXT,
-    interests TEXT,
-    availability_status ENUM('available', 'unavailable', 'part_time') DEFAULT 'available',
-    preferred_work_location VARCHAR(255),
-    salary_expectation DECIMAL(10,2),
-    
-    -- Admin Management
-    status ENUM('pending', 'approved', 'rejected', 'archived') DEFAULT 'pending',
-    reviewed_by INT,
-    reviewed_at TIMESTAMP NULL,
-    admin_notes TEXT,
-    
-    -- Timestamps
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
 );

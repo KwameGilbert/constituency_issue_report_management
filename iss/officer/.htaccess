@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # Set the base for the rewrite rules to the current directory (officer/)
-RewriteBase /officer/
+RewriteBase /iss/officer/
 
 # Redirect only if the request is for the root of the 'officer' directory (empty string after RewriteBase)
 RewriteRule ^$ dashboard/ [L,R=301]

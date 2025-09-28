@@ -19,8 +19,8 @@
                     <a href="/"
                         class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Home</a>
 
-                    <a href="/projects/"
-                        class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Projects</a>
+                    <a href="/youth/"
+                        class="block px-2 py-1 hover:bg-red-600 rounded transition duration-200 text-sm md:text-base">Youth</a>
 
                     <div class="relative group">
                         <button
