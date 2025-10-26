@@ -427,7 +427,7 @@ $page_description = "Register for youth employment and skills database";
                             <li>You may be contacted for relevant employment or skills development opportunities</li>
                             <li>Your data will be kept confidential and only used for constituency development purposes</li>
                         </ol>
-                        <p class="mt-4">If you have any questions about this process, please contact our office at <a href="tel:+233XXXXXXXXX" class="text-blue-600 hover:underline">+233 XX XXX XXXX</a> or email <a href="mailto:youth@constituency.gov.gh" class="text-blue-600 hover:underline">youth@constituency.gov.gh</a>.</p>
+                        <p class="mt-4">If you have any questions about this process, please contact our office at <a href="tel:+233548531963" class="text-blue-600 hover:underline">+233 54 853 1963</a></p>
                     </div>
                 </div>
             </div>

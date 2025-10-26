@@ -24,7 +24,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Portal | Sefwi Wiawso Constituency</title>
+    <title>Admin Portal | Kofi Afful Bentehy</title>
     <link rel="icon" type="image/x-icon" href="../assets/images/coat-of-arms.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,8 +59,8 @@
             <div class="flex items-center">
                 <img src="../assets/images/coat-of-arms.png" alt="Ghana Coat of Arms" class="h-10 w-auto">
                 <div class="ml-3">
-                    <h1 class="text-xl font-bold text-gray-900">Sefwi Wiawso</h1>
-                    <p class="text-sm text-gray-600">Municipal Assembly</p>
+                    <h1 class="text-xl font-bold text-gray-900">Kofi Afful Benteh</h1>
+                    <p class="text-sm text-gray-600">Member of Parliament</p>
                 </div>
             </div>
             <a href="/" class="text-amber-600 hover:text-amber-700 flex items-center">

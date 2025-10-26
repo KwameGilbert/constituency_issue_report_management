@@ -31,11 +31,13 @@ $post['author_url'] = 'https://' . $_SERVER['HTTP_HOST']; // Site URL as author 
 $post['author_twitter'] = ''; // Empty author twitter
 $post['tags'] = []; // Empty tags array
 ?>
+
 <!DOCTYPE html>
-<html lang="en" itemscope itemtype="http://schema.org/Article">
+<html lang="en">
 <!-- Schema.org Article -->
 
 <head>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- 1. BASIC META -->
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -61,31 +63,6 @@ $post['tags'] = []; // Empty tags array
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-
-    <!-- 5. STRUCTURED DATA (JSON-LD Article) -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Article",
-        "headline": "<?= htmlspecialchars($post['title']) ?>",
-        "image": ["<?= htmlspecialchars($post['image_url'] ?? '') ?>"],
-        "datePublished": "<?= htmlspecialchars($post['created_at']) ?>",
-        "dateModified": "<?= htmlspecialchars($post['updated_at'] ?? $post['created_at']) ?>",
-        "author": {
-            "@type": "Person",
-            "name": "<?= htmlspecialchars($post['author_name']) ?>"
-        },
-        "publisher": {
-            "@type": "Organization",
-            "name": "Sefwi Wiawso Municipal Assembly",
-            "logo": {
-                "@type": "ImageObject",
-                "url": "https://<?= $_SERVER['HTTP_HOST'] ?>/assets/images/coat-of-arms.png"
-            }
-        },
-        "description": "<?= htmlspecialchars(mb_substr(strip_tags($post['content']), 0, 160)) ?>"
-    }
-    </script>
 
     <!-- 6. OPEN GRAPH / FACEBOOK -->
     <meta property="og:locale" content="en_US">
@@ -113,7 +90,6 @@ $post['tags'] = []; // Empty tags array
     <?php endif; ?>
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
@@ -169,8 +145,8 @@ $post['tags'] = []; // Empty tags array
             <?php endif; ?>
 
             <!-- Content -->
-            <section class="prose max-w-none" itemprop="articleBody">
-                <?= nl2br(htmlspecialchars($post['content'])) ?>
+            <section class="prose max-w-none">
+                <?php echo html_entity_decode($post['content']); ?>
             </section>
         </article>
     </main>

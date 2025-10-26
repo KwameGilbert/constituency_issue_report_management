@@ -251,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us | Sefwi Wiawso Constituency</title>
+    <title>Contact Us | Kofi Benteh</title>
     <meta name="description"
         content="Get in touch with the Office of the Member of Parliament for Sefwi Wiawso Constituency. Report issues, suggest projects, or request information.">
      <script src="https://cdn.tailwindcss.com"></script>
@@ -308,8 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div>
                             <h3 class="font-medium text-gray-900">Phone Numbers</h3>
                             <div class="text-gray-600 text-sm mt-1 space-y-1">
-                                <div>Constituency Office: <a href="tel:+233242560140" class="hover:text-red-600">(+233)
-                                        242 560 140</a></div>
+
                                 <div>Constituency Secretary: <a href="tel:+233548531963"
                                         class="hover:text-red-600">(+233) 548 531 963</a></div>
                             </div>

@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             // Updated to use admins table
-            $stmt = $conn->prepare("SELECT id, password_hash, username, first_name, role FROM admins WHERE email=? AND status='active' AND id > 0");
+            $stmt = $conn->prepare("SELECT id, password_hash, username, first_name, role FROM web_admins WHERE email=? AND status='active' AND id > 0");
             $stmt->bind_param('s', $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             // Log error
             error_log("Login error: " . $e->getMessage());
-            $error = "System error. Please try again later.";
+            $error = "System error. Please try again later....:" . $e->getMessage();
         }
     }
 }
@@ -114,7 +114,7 @@ if (isset($_SESSION['success_message'])) {
         </div>
 
         <div class="bg-white rounded-lg shadow-lg p-8">
-            <h2 class="text-xl font-semibold mb-6 text-center">Admin Login</h2>
+            <h2 class="text-xl font-semibold mb-6 text-center">Web Admin Login</h2>
 
             <?php if (!empty($error)): ?>
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 relative" role="alert">
