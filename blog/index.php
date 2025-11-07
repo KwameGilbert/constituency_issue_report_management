@@ -4,10 +4,10 @@ require_once '../config/db.php';
 // Handle filtering and search
 $search = $_GET['search'] ?? '';
 
-// Build WHERE clause
-$where = [];
-$params = [];
-$param_types = '';
+// Build WHERE clause - Filter only BLOG posts (not news)
+$where = ["post_type = 'blog'"];
+$params = ['blog'];
+$param_types = 's';
 
 if (!empty($search)) {
     $where[] = "(title LIKE ? OR content LIKE ? OR excerpt LIKE ?)";

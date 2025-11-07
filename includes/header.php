@@ -3,7 +3,7 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 sm:gap-4">
-                    <img src="/assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-8 h-8 sm:w-10 sm:h-10">
+                    <img src="assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-8 h-8 sm:w-10 sm:h-10">
                     <span class="font-bold text-sm sm:text-lg">Kofi Benteh Afful - The Office of the MP</span>
                 </div>
                 <button id="menu-toggle" class="md:hidden focus:outline-none">
@@ -81,7 +81,7 @@ window.addEventListener('resize', function() {
 // Combined dropdown functionality
 document.addEventListener('DOMContentLoaded', function() {
     // Mobile dropdown functionality
-    const dropdownButtons = document.querySelectorAll('.md:hidden button');
+    const dropdownButtons = document.querySelectorAll('#menu-toggle');
 
     dropdownButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Desktop dropdown functionality
-    const desktopDropdowns = document.querySelectorAll('.md:block .group');
+    const desktopDropdowns = document.querySelectorAll('.group');
 
     desktopDropdowns.forEach(dropdown => {
         const button = dropdown.querySelector('button');

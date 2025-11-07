@@ -6,11 +6,11 @@ require_once __DIR__ .'/../config/db.php';             // Database connection
 // Retrieve the slug from the URL
 $slug = isset($_GET['slug']) ? $_GET['slug'] : '';
 
-// Fetch the blog post by slug
+// Fetch the blog post by slug - BLOG posts only (not news)
 $stmt = $conn->prepare("
     SELECT id, title, content, image_url, created_at, updated_at
     FROM blog_posts
-    WHERE slug = ?
+    WHERE slug = ? AND post_type = 'blog'
     LIMIT 1
 ");
 $stmt->bind_param('s', $slug);

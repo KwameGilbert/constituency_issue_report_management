@@ -86,6 +86,8 @@ CREATE TABLE `blog_posts` (
   `content` longtext NOT NULL,
   `image_url` text DEFAULT NULL,
   `featured` tinyint(1) NOT NULL DEFAULT 0,
+  `post_type` enum('blog','news') NOT NULL DEFAULT 'blog',
+  `category` varchar(100) DEFAULT NULL,
   `author_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()

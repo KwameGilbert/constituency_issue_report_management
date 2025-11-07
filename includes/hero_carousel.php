@@ -5,17 +5,15 @@ $items = $conn
   ->fetch_all(MYSQLI_ASSOC);
 ?>
 <section class="bg-gray-100">
-    <div id="hero-carousel" class="relative" data-carousel="slide" data-carousel-autoplay="true"
-        data-carousel-interval="5000">
-        <!-- Wrapper (Flowbite carousel structure) -->
+    <div id="hero-carousel" class="relative">
+        <!-- Wrapper -->
         <div class="relative w-full h-[520px] overflow-hidden">
-            <!-- Hero Slide (active by default) -->
-            <div class="hidden duration-700 ease-in-out absolute inset-0 transition-transform transform"
-                data-carousel-item="active">
-                <img src="/assets/images/carousel/banner.jpg" class="block w-full h-full object-cover object-top"
+            <!-- Hero Slide (only slide now) -->
+            <div class="absolute inset-0">
+                <img src="assets/images/carousel/banner.jpg" class="block w-full h-full object-cover object-top"
                     alt="Hero Banner">
                 <div class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white">
-                    <img src="/assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-24 mb-4">
+                    <img src="assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-24 mb-4">
                     <h1 class="text-4xl md:text-5xl font-bold text-center">
                         Sefwi Wiawso Constituency
                     </h1>
@@ -23,8 +21,8 @@ $items = $conn
                 </div>
             </div>
 
-            <!-- Dynamic Slides from DB -->
-            <?php foreach ($items as $i): ?>
+            <!-- Dynamic Slides from DB - COMMENTED OUT -->
+            <?php /*foreach ($items as $i): ?>
             <div class="hidden duration-700 ease-in-out absolute inset-0 transition-transform transform"
                 data-carousel-item>
                 <a href="<?= htmlspecialchars($i['link']) ?>" class="block w-full h-full">
@@ -37,10 +35,11 @@ $items = $conn
                     </div>
                 </a>
             </div>
-            <?php endforeach; ?>
+            <?php endforeach; */ ?>
         </div>
 
-        <!-- Controls -->
+        <!-- Controls - COMMENTED OUT (not needed for single image) -->
+        <?php /*
         <button type="button"
             class="absolute top-1/2 left-4 -translate-y-1/2 bg-amber-600 text-white p-2 rounded-full hover:bg-amber-700"
             data-carousel-prev>
@@ -51,18 +50,22 @@ $items = $conn
             data-carousel-next>
             ›
         </button>
+        */ ?>
 
-        <!-- Indicators -->
+        <!-- Indicators - COMMENTED OUT (not needed for single image) -->
+        <?php /*
         <div class="absolute bottom-4 left-1/2 flex space-x-2 -translate-x-1/2">
             <?php for ($i = 0; $i <= count($items); $i++): ?>
             <button type="button" class="w-3 h-3 rounded-full bg-white/50 hover:bg-white"
                 data-carousel-slide-to="<?= $i ?>"></button>
             <?php endfor; ?>
         </div>
+        */ ?>
     </div>
 </section>
 
-<!-- Flowbite JS (Carousel + Swipe support) -->
+<!-- Flowbite JS (Carousel + Swipe support) - COMMENTED OUT (not needed for single image) -->
+<?php /*
 <script src="https://unpkg.com/flowbite@latest/dist/flowbite.js"></script>
 <!-- Hammer.js for robust swipe fallback -->
 <script src="https://unpkg.com/hammerjs@2.0.8/hammer.min.js"></script>
@@ -93,3 +96,4 @@ $items = $conn
     hammer.on('swiperight', () => carousel.prev()); // prev on right swipe :contentReference[oaicite:6]{index=6}
 })();
 </script>
+*/ ?>

@@ -15,7 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
     $content = $_POST['content'];
     $excerpt = $_POST['excerpt'];
-       $featured = isset($_POST['featured']) ? 1 : 0;
+    $featured = isset($_POST['featured']) ? 1 : 0;
+    $post_type = isset($_POST['post_type']) ? $_POST['post_type'] : 'blog';
+    $category = !empty($_POST['category']) ? $_POST['category'] : null;
     
     // Handle slug
     if (!empty($_POST['slug'])) {
@@ -70,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Update the blog post - add slug to the query
-    $stmt = $conn->prepare("UPDATE blog_posts SET title = ?, content = ?, excerpt = ?, image_url = ?, slug = ?, featured = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->bind_param("sssssii", $title, $content, $excerpt, $image_url, $slug, $featured, $post_id);
+    $stmt = $conn->prepare("UPDATE blog_posts SET title = ?, content = ?, excerpt = ?, image_url = ?, slug = ?, featured = ?, post_type = ?, category = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->bind_param("ssssisssi", $title, $content, $excerpt, $image_url, $slug, $featured, $post_type, $category, $post_id);
     
     
     if ($stmt->execute()) {
@@ -210,7 +212,28 @@ if (!$post) {
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"><?= htmlspecialchars($post['excerpt']) ?></textarea>
                             </div>
 
-                            <!-- Add this after the excerpt input -->
+                            <!-- Post Type Selection -->
+                            <div>
+                                <label for="post_type" class="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
+                                <select id="post_type" name="post_type" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="blog" <?= (isset($post['post_type']) && $post['post_type'] === 'blog') ? 'selected' : '' ?>>Blog Post</option>
+                                    <option value="news" <?= (isset($post['post_type']) && $post['post_type'] === 'news') ? 'selected' : '' ?>>News Article</option>
+                                </select>
+                                <span class="text-xs text-gray-500">Choose whether this is a blog post or news article</span>
+                            </div>
+
+                            <!-- Category Input -->
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category (Optional)</label>
+                                <input type="text" id="category" name="category" 
+                                    value="<?= isset($post['category']) ? htmlspecialchars($post['category']) : '' ?>"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., Community Development, Health, Education">
+                                <span class="text-xs text-gray-500">Add a category to help organize your content</span>
+                            </div>
+
+                            <!-- Featured Post Checkbox -->
                             <div class="flex items-center">
                                 <input type="checkbox" id="featured" name="featured"
                                     class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"

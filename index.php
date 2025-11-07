@@ -9,8 +9,9 @@ require_once 'config/db.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kofi Benteh Afful - The Office of the MP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<link href="/styles/output.css"  rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/main.css">
+<link href="styles/output.css"  rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Coat of arms favicon  -->
     <link rel="icon" type="image/x-icon" href="assets/images/coat-of-arms.png">
 </head>
@@ -20,9 +21,11 @@ require_once 'config/db.php';
     <main class="bg-white text-gray-800">
         <?php 
         require_once 'includes/hero_carousel.php';
+        require_once 'includes/latest_news.php'; // Latest news section
         // require_once 'includes/featured_projects.php';
         require_once 'includes/blog_section.php';// Latest blog grid 
         require_once 'includes/events.php'; // Upcoming events 
+        require_once 'includes/image_gallery.php'; // Event image gallery
         require_once 'includes/map.php'; // Leaflet map 
         require_once 'includes/faq.php'; // FAQ accordion 
         require_once 'includes/report.php'; // Report an issue section

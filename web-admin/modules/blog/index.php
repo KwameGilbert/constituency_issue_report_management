@@ -54,8 +54,15 @@ if ($filter === 'featured') {
     $search_condition .= $filter_condition;
 }
 
+// Add post type filter
+$type_filter = isset($_GET['type']) ? $_GET['type'] : '';
+if (!empty($type_filter) && in_array($type_filter, ['blog', 'news'])) {
+    $type_condition = $search_condition ? " AND post_type = '$type_filter'" : "WHERE post_type = '$type_filter'";
+    $search_condition .= $type_condition;
+}
+
 // Fetch blog posts with pagination and search
-$query = "SELECT id, title, slug, image_url, created_at, featured,
+$query = "SELECT id, title, slug, image_url, created_at, featured, post_type, category,
           (SELECT COUNT(*) FROM blog_comments WHERE post_id = blog_posts.id) as comment_count 
           FROM blog_posts 
           $search_condition
@@ -157,14 +164,25 @@ if (isset($_GET['feature']) && is_numeric($_GET['feature'])) {
                             <p class="text-gray-500 text-sm">Create, edit and manage your blog content</p>
                         </div>
                         <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                            <form action="" method="get" class="flex">
-                                <input type="text" name="search" placeholder="Search posts..."
-                                    value="<?= htmlspecialchars($search) ?>"
-                                    class="border rounded-l px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                <button type="submit"
-                                    class="bg-blue-50 text-blue-600 px-4 rounded-r border border-l-0 hover:bg-blue-100">
-                                    <i class="fas fa-search"></i>
-                                </button>
+                            <form action="" method="get" class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                <div class="flex">
+                                    <input type="text" name="search" placeholder="Search posts..."
+                                        value="<?= htmlspecialchars($search) ?>"
+                                        class="border rounded-l px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <button type="submit"
+                                        class="bg-blue-50 text-blue-600 px-4 rounded-r border border-l-0 hover:bg-blue-100">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <select name="type" onchange="this.form.submit()" 
+                                    class="border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="">All Content</option>
+                                    <option value="blog" <?= $type_filter === 'blog' ? 'selected' : '' ?>>Blog Posts</option>
+                                    <option value="news" <?= $type_filter === 'news' ? 'selected' : '' ?>>News Articles</option>
+                                </select>
+                                <?php if (!empty($search)): ?>
+                                <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+                                <?php endif; ?>
                             </form>
                             <div class="flex items-center ml-2">
                                 <a href="index.php"
@@ -245,7 +263,18 @@ if (isset($_GET['feature']) && is_numeric($_GET['feature'])) {
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-medium text-gray-900">
-                                                    <?= htmlspecialchars($post['title']) ?></div>
+                                                    <?= htmlspecialchars($post['title']) ?>
+                                                </div>
+                                                <div class="flex items-center space-x-2 mt-1">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full <?= isset($post['post_type']) && $post['post_type'] === 'news' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' ?>">
+                                                        <?= isset($post['post_type']) ? ucfirst($post['post_type']) : 'Blog' ?>
+                                                    </span>
+                                                    <?php if (!empty($post['category'])): ?>
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                                        <?= htmlspecialchars($post['category']) ?>
+                                                    </span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
