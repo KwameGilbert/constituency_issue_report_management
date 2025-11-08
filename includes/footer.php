@@ -14,47 +14,74 @@
                     Tel.: <a href="tel:+233242560140" class="hover:underline">(+233) 242 560 140</a><br>
                     Tel.: <a href="tel:+233548531963" class="hover:underline">054 853 1963</a>
                 </div>
-                <div>
+                <!-- <div>
                     Email:
                     <a href="mailto:info@swma.gov.gh" class="hover:underline">info@swma.gov.gh</a><br>
                     <a href="mailto:clientservice@swma.gov.gh" class="hover:underline">clientservice@swma.gov.gh</a>
                 </div>
-                <div>Ghana Post GPS: <span class="font-medium">WG - 0002 - 7111</span></div>
+                <div>Ghana Post GPS: <span class="font-medium">WG - 0002 - 7111</span></div> -->
             </address>
         </div>
 
-        <!-- Working Hours -->
-        <div>
+        <!-- Working Hours (Commented Out) -->
+        <!-- <div>
             <h3 class="text-xl font-semibold mb-4">Working Hours</h3>
             <p class="text-sm">
                 Monday - Friday<br>
                 <span class="font-medium">08:00 AM - 05:00 PM</span>
             </p>
-        </div>
+        </div> -->
 
-        <!-- Location -->
-        <div>
+        <!-- Location (Commented Out) -->
+        <!-- <div>
             <h3 class="text-xl font-semibold mb-4">Location</h3>
             <p class="text-sm">Sefwi Wiawso, Western North Region, Ghana</p>
-        </div>
+        </div> -->
 
-        <!-- Useful Links -->
+        <!-- Government Links -->
         <div>
-            <h3 class="text-xl font-semibold mb-4">Useful Links</h3>
+            <h3 class="text-xl font-semibold mb-4">Government Links</h3>
             <ul class="space-y-2 text-sm">
                 <li><a href="https://lgs.gov.gh/" class="hover:underline">Local Government Service</a></li>
-                <li><a href="https://www.ghanadistricts.com/" class="hover:underline">Ghana Districts</a></li>
                 <li><a href="https://www.ghana.gov.gh/" class="hover:underline">GoG Official Portal</a></li>
                 <li><a href="https://www.eservices.gov.gh/" class="hover:underline">Gov. eServices Portal</a></li>
                 <li><a href="https://www.epay.gov.gh/" class="hover:underline">Gov. ePayment Portal</a></li>
                 <li><a href="https://payslip.gov.gh/" class="hover:underline">GoG Payslip Portal</a></li>
+                <li><a href="https://ghanaprojectstracker.gov.gh/" class="hover:underline">Performance Tracker</a></li>
+            </ul>
+        </div>
+
+        <!-- Parliamentary & Institutional Links -->
+        <div>
+            <h3 class="text-xl font-semibold mb-4">Parliamentary & Institutions</h3>
+            <ul class="space-y-2 text-sm">
+                <li><a href="https://parliament.gh/" class="hover:underline">Parliament of Ghana</a></li>
+                <li><a href="https://presidency.gov.gh/" class="hover:underline">The Presidency - Ghana</a></li>
+                <li><a href="https://www.ghanadistricts.com/" class="hover:underline">Ghana Districts</a></li>
                 <li><a href="https://mlgrd.gov.gh/" class="hover:underline">Min. of Local Gov't & Rural Dev't</a></li>
                 <li><a href="https://ilgs.edu.gh/" class="hover:underline">Institute of Local Government Studies</a></li>
                 <li><a href="https://psc.gov.gh/" class="hover:underline">Public Services Commission</a></li>
-                <li><a href="https://presidency.gov.gh/" class="hover:underline">The Presidency - Republic of Ghana</a></li>
-                <li><a href="https://parliament.gh/" class="hover:underline">Parliament of Ghana</a></li>
-                <li><a href="https://ghanaprojectstracker.gov.gh/" class="hover:underline">Performance Tracker</a></li>
             </ul>
+        </div>
+
+        <!-- Parliament Emblem -->
+        <div class="flex flex-col items-center text-center">
+            <h3 class="text-xl font-semibold mb-4">Parliament of Ghana</h3>
+            <div class="mb-4">
+                <img src="assets/images/Ghana_Parliament_Emblem.png" 
+                     alt="Parliament of Ghana Emblem" 
+                     class="w-20 h-20 md:w-24 md:h-24 mx-auto opacity-80 hover:opacity-100 transition-opacity duration-300">
+            </div>
+            <p class="text-xs text-gray-300 italic">
+                Representing the people of<br>
+                Sefwi Wiawso Constituency
+            </p>
+            <div class="mt-3">
+                <a href="https://parliament.gh/" 
+                   class="text-amber-400 hover:text-amber-300 text-sm font-medium transition-colors duration-200">
+                    Visit Parliament Website
+                </a>
+            </div>
         </div>
 
     </div>

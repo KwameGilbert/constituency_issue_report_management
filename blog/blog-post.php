@@ -139,7 +139,12 @@ $post['tags'] = []; // Empty tags array
             <!-- Featured Image -->
             <?php if (!empty($post['image_url'])): ?>
             <figure>
-                <img src="<?= htmlspecialchars($post['image_url']) ?>" alt="<?= htmlspecialchars($post['title']) ?>"
+                <?php 
+                $image_src = (strpos($post['image_url'], 'http') === 0) ? 
+                           $post['image_url'] : 
+                           '../' . $post['image_url']; 
+                ?>
+                <img src="<?= htmlspecialchars($image_src) ?>" alt="<?= htmlspecialchars($post['title']) ?>"
                     class="w-full rounded-lg my-6" itemprop="image">
             </figure>
             <?php endif; ?>
@@ -173,7 +178,12 @@ $relatedPosts = $relatedStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <?php foreach ($relatedPosts as $related): ?>
                 <div class="bg-white shadow rounded overflow-hidden">
                     <?php if (!empty($related['image_url'])): ?>
-                    <img src="<?= htmlspecialchars($related['image_url']) ?>"
+                    <?php 
+                    $related_image_src = (strpos($related['image_url'], 'http') === 0) ? 
+                                       $related['image_url'] : 
+                                       '../' . $related['image_url']; 
+                    ?>
+                    <img src="<?= htmlspecialchars($related_image_src) ?>"
                         alt="<?= htmlspecialchars($related['title']) ?>" class="w-full h-48 object-cover">
                     <?php endif; ?>
                     <div class="p-4">

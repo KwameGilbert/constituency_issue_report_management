@@ -320,7 +320,7 @@ try {
     background: 
         linear-gradient(135deg, rgba(0,0,0,0.1) 0%, transparent 25%, rgba(0,0,0,0.05) 50%, transparent 75%, rgba(0,0,0,0.1) 100%),
         linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%),
-        linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #f59e0b 100%);
+        linear-gradient(135deg, #374151 0%, #1f2937 50%, #374151 100%);
     background-size: 100px 100px, 60px 60px, 200% 200%;
     animation: gradientShift 8s ease-in-out infinite, patternMove 15s linear infinite;
 }

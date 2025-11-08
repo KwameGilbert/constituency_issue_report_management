@@ -297,10 +297,15 @@ if (!$show_error_page && isset($event) && $event) {
                     <?php if (count($event_images) === 1): ?>
                     <!-- Single Image Display -->
                     <div class="text-center">
-                        <img src="../<?= htmlspecialchars($event_images[0]['url']) ?>" 
+                        <?php 
+                        $image_src = (strpos($event_images[0]['url'], 'http') === 0) ? 
+                                   $event_images[0]['url'] : 
+                                   '../' . $event_images[0]['url']; 
+                        ?>
+                        <img src="<?= htmlspecialchars($image_src) ?>" 
                              alt="<?= htmlspecialchars($event_images[0]['alt']) ?>"
-                             class="max-w-full h-auto rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
-                             onclick="openImageModal('../<?= htmlspecialchars($event_images[0]['url']) ?>', '<?= htmlspecialchars($event_images[0]['alt']) ?>')"
+                             class="max-w-full h-auto rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow clickable-image"
+                             data-image-url="<?= htmlspecialchars($image_src) ?>"
                              onerror="this.src='../assets/images/carousel/banner.jpg'; this.onerror=null;">
                     </div>
                     <?php else: ?>
@@ -308,10 +313,15 @@ if (!$show_error_page && isset($event) && $event) {
                     <div class="gallery-grid">
                         <?php foreach ($event_images as $index => $image): ?>
                         <div class="relative group">
-                            <img src="../<?= htmlspecialchars($image['url']) ?>" 
+                            <?php 
+                            $image_src = (strpos($image['url'], 'http') === 0) ? 
+                                       $image['url'] : 
+                                       '../' . $image['url']; 
+                            ?>
+                            <img src="<?= htmlspecialchars($image_src) ?>" 
                                  alt="<?= htmlspecialchars($image['alt']) ?>"
-                                 class="w-full h-64 object-cover rounded-lg shadow-lg cursor-pointer group-hover:shadow-xl transition-all duration-300 hover:scale-105"
-                                 onclick="openImageModal('../<?= htmlspecialchars($image['url']) ?>', '<?= htmlspecialchars($image['alt']) ?>')"
+                                 class="w-full h-64 object-cover rounded-lg shadow-lg cursor-pointer group-hover:shadow-xl transition-all duration-300 hover:scale-105 clickable-image"
+                                 data-image-url="<?= htmlspecialchars($image_src) ?>"
                                  onerror="this.src='../assets/images/carousel/banner.jpg'; this.onerror=null;">
                             
                             <!-- Image Overlay -->
@@ -459,9 +469,9 @@ if (!$show_error_page && isset($event) && $event) {
     <?php endif; // End of error page condition ?>
 
     <!-- Image Modal (available for all pages) -->
-    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 image-modal hidden z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 image-modal hidden flex items-center justify-center p-4" style="z-index: 9999;" onclick="closeImageModal()">
         <div class="relative max-w-full max-h-full" onclick="event.stopPropagation()">
-            <img id="modalImage" src="" alt="" class="modal-image rounded-lg">
+            <img id="modalImage" src="" alt="" class="modal-image rounded-lg" style="max-height: 90vh; max-width: 90vw; object-fit: contain;">
             <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75 transition-all">
                 <i class="fas fa-times"></i>
             </button>
@@ -473,23 +483,49 @@ if (!$show_error_page && isset($event) && $event) {
     <!-- JavaScript for image modal functionality -->
     <script>
         function openImageModal(imageSrc, imageAlt) {
+            console.log('Opening modal with:', imageSrc, imageAlt); // Debug log
+            
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
             
-            modalImage.src = imageSrc;
+            if (!modal) {
+                console.error('Modal element not found!');
+                return;
+            }
+            
+            if (!modalImage) {
+                console.error('Modal image element not found!');
+                return;
+            }
+            
+            // Ensure the path is relative to the current context
+            const fullImagePath = imageSrc.startsWith('http') ? imageSrc : '../' + imageSrc;
+            
+            modalImage.src = fullImagePath;
             modalImage.alt = imageAlt;
             modal.classList.remove('hidden');
             
             // Prevent body scrolling
             document.body.style.overflow = 'hidden';
+            
+            console.log('Modal opened successfully with path:', fullImagePath);
         }
         
         function closeImageModal() {
+            console.log('Closing modal'); // Debug log
+            
             const modal = document.getElementById('imageModal');
+            if (!modal) {
+                console.error('Modal not found for closing!');
+                return;
+            }
+            
             modal.classList.add('hidden');
             
             // Restore body scrolling
             document.body.style.overflow = '';
+            
+            console.log('Modal closed successfully');
         }
         
         // Close modal with Escape key
@@ -498,6 +534,56 @@ if (!$show_error_page && isset($event) && $event) {
                 closeImageModal();
             }
         });
+        
+        // Debug: Check if DOM is ready and elements exist
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeImageModal);
+        } else {
+            // DOM is already ready
+            initializeImageModal();
+        }
+        
+        function initializeImageModal() {
+            // Remove any existing click listeners to prevent conflicts
+            document.removeEventListener('click', handleImageClick);
+            
+            // Add new event delegation
+            document.addEventListener('click', handleImageClick);
+        }
+        
+        function handleImageClick(event) {
+            let targetElement = event.target;
+            
+            // Check if clicked element has the clickable-image class
+            if (targetElement && targetElement.classList && targetElement.classList.contains('clickable-image')) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const imageUrl = targetElement.dataset.imageUrl || targetElement.src;
+                const alt = targetElement.alt || 'Event Image';
+                
+                openImageModal(imageUrl, alt);
+                return;
+            }
+            
+            // If not a direct image click, check if we clicked on an overlay div
+            // Look for the parent container that has a clickable-image as a sibling
+            let parentContainer = targetElement.closest('.group');
+            if (parentContainer) {
+                const image = parentContainer.querySelector('.clickable-image');
+                if (image) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    const imageUrl = image.dataset.imageUrl || image.src;
+                    const alt = image.alt || 'Event Image';
+                    
+                    openImageModal(imageUrl, alt);
+                    return;
+                }
+            }
+        }
     </script>
 
 </body>

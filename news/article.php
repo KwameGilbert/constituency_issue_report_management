@@ -147,7 +147,12 @@ try {
                 <!-- Featured Image -->
                 <?php if (!empty($article['image_url'])): ?>
                 <div class="mb-12">
-                    <img src="<?= htmlspecialchars($article['image_url']) ?>" 
+                    <?php 
+                    $image_src = (strpos($article['image_url'], 'http') === 0) ? 
+                               $article['image_url'] : 
+                               '../' . $article['image_url']; 
+                    ?>
+                    <img src="<?= htmlspecialchars($image_src) ?>" 
                          alt="<?= htmlspecialchars($article['title']) ?>"
                          class="w-full h-96 object-cover rounded-2xl shadow-xl"
                          onerror="this.src='../assets/images/carousel/banner.jpg'; this.onerror=null; this.style.display='block'">
@@ -213,7 +218,12 @@ try {
                     <?php foreach ($relatedArticles as $related): ?>
                     <article class="group bg-gray-50 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
                         <?php if (!empty($related['image_url'])): ?>
-                        <img src="<?= htmlspecialchars($related['image_url']) ?>" 
+                        <?php 
+                        $related_image_src = (strpos($related['image_url'], 'http') === 0) ? 
+                                           $related['image_url'] : 
+                                           '../' . $related['image_url']; 
+                        ?>
+                        <img src="<?= htmlspecialchars($related_image_src) ?>" 
                              class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" 
                              alt="<?= htmlspecialchars($related['title']) ?>"
                              onerror="this.src='../assets/images/carousel/banner.jpg'">

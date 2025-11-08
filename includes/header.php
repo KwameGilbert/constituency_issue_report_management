@@ -3,13 +3,19 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2 sm:gap-4">
-                    <img src="assets/images/coat-of-arms.png" alt="Coat of Arms" class="w-8 h-8 sm:w-10 sm:h-10">
+                    <img src="assets/images/Ghana_Parliament_Emblem.png" alt="Coat of Arms" class="w-8 h-8 sm:w-10 sm:h-10">
                     <span class="font-bold text-sm sm:text-lg">Kofi Benteh Afful - The Office of the MP</span>
                 </div>
                 <button id="menu-toggle" class="md:hidden focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Hamburger Icon -->
+                    <svg id="hamburger-icon" class="w-6 h-6 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <!-- X Icon (hidden by default) -->
+                    <svg id="close-icon" class="w-6 h-6 transition-opacity duration-200 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
@@ -58,16 +64,32 @@
 <script>
 const menuToggle = document.getElementById('menu-toggle');
 const mobileMenu = document.getElementById('mobile-menu');
+const hamburgerIcon = document.getElementById('hamburger-icon');
+const closeIcon = document.getElementById('close-icon');
 
 // For Mobile Menu Toggle
 menuToggle.addEventListener('click', function() {
     mobileMenu.classList.toggle('hidden');
+    
+    // Toggle between hamburger and X icons
+    if (mobileMenu.classList.contains('hidden')) {
+        // Menu is closed - show hamburger icon
+        hamburgerIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+    } else {
+        // Menu is open - show X icon
+        hamburgerIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+    }
 });
 
 // Close menu when clicking outside
 document.addEventListener('click', function(event) {
     if (!menuToggle.contains(event.target) && !mobileMenu.contains(event.target)) {
         mobileMenu.classList.add('hidden');
+        // Reset to hamburger icon when menu is closed
+        hamburgerIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
     }
 });
 
@@ -75,45 +97,32 @@ document.addEventListener('click', function(event) {
 window.addEventListener('resize', function() {
     if (window.innerWidth >= 768) { // md breakpoint
         mobileMenu.classList.add('hidden');
+        // Reset to hamburger icon when menu is closed
+        hamburgerIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
     }
 });
 
-// Combined dropdown functionality
+// Desktop dropdown functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile dropdown functionality
-    const dropdownButtons = document.querySelectorAll('#menu-toggle');
-
-    dropdownButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const dropdown = this.nextElementSibling;
-            dropdown.classList.toggle('hidden');
-
-            // Close other dropdowns
-            dropdownButtons.forEach(otherButton => {
-                if (otherButton !== button) {
-                    otherButton.nextElementSibling.classList.add('hidden');
-                }
-            });
-        });
-    });
-
     // Desktop dropdown functionality
     const desktopDropdowns = document.querySelectorAll('.group');
 
     desktopDropdowns.forEach(dropdown => {
-        const button = dropdown.querySelector('button');
-        const menu = dropdown.querySelector('.absolute');
+        if (dropdown) {
+            const button = dropdown.querySelector('button');
+            const menu = dropdown.querySelector('.absolute');
 
-        button.addEventListener('mouseenter', () => {
-            menu.classList.remove('hidden');
-        });
+            if (button && menu) {
+                button.addEventListener('mouseenter', () => {
+                    menu.classList.remove('hidden');
+                });
 
-        dropdown.addEventListener('mouseleave', () => {
-            menu.classList.add('hidden');
-        });
+                dropdown.addEventListener('mouseleave', () => {
+                    menu.classList.add('hidden');
+                });
+            }
+        }
     });
 });
 </script>
