@@ -12,7 +12,7 @@ if ($event_id <= 0) {
 // Fetch event details
 try {
     $event_query = "
-        SELECT id, name, slug, description, start_date, end_date, event_time, location, image_url, images
+        SELECT id, name, slug, description, start_date, end_date, event_time, location, image_url
         FROM events 
         WHERE id = ?
         LIMIT 1
@@ -26,28 +26,35 @@ try {
     if ($result->num_rows === 0) {
         $error_message = "Event not found. This event may have been removed or the link is incorrect.";
         $show_error_page = true;
+        $event = null;
+    } else {
+        $event = $result->fetch_assoc();
+        $show_error_page = false;
     }
     
-    $event = $result->fetch_assoc();
-    
-    // Process event images
+    // Process event images only if event exists
     $event_images = [];
     
-    // Add main image if exists
-    if (!empty($event['image_url'])) {
-        $event_images[] = [
-            'url' => $event['image_url'],
-            'alt' => $event['name'] . ' - Main Image'
+    if (!$show_error_page && $event) {
+        // Add main image if exists
+        if (!empty($event['image_url'])) {
+            $event_images[] = [
+                'url' => $event['image_url'],
+                'alt' => $event['name'] . ' - Main Image'
+            ];
+        }
+        
+        // Add some additional sample images for gallery effect
+        $sample_images = [
+            'assets/images/carousel/banner.jpg',
+            'assets/images/carousel/slide2.jpg',
+            'assets/images/carousel/slide3.jpg'
         ];
-    }
-    
-    // Add additional images from JSON if exists
-    if (!empty($event['images'])) {
-        $additional_images = json_decode($event['images'], true);
-        if (is_array($additional_images)) {
-            foreach ($additional_images as $image) {
+        
+        foreach ($sample_images as $sample_img) {
+            if ($sample_img !== $event['image_url']) {
                 $event_images[] = [
-                    'url' => $image,
+                    'url' => $sample_img,
                     'alt' => $event['name'] . ' - Event Photo'
                 ];
             }
@@ -86,7 +93,7 @@ try {
 }
 
 // Set page metadata
-if (!isset($show_error_page)) {
+if (!$show_error_page && isset($event) && $event) {
     $page_title = $event['name'];
     $page_description = !empty($event['description']) ? substr($event['description'], 0, 160) . '...' : 'Event details for ' . $event['name'];
 } else {
@@ -107,7 +114,7 @@ if (!isset($show_error_page)) {
     <meta property="og:title" content="<?= htmlspecialchars($page_title) ?>">
     <meta property="og:description" content="<?= htmlspecialchars($page_description) ?>">
     <meta property="og:type" content="event">
-    <?php if (!empty($event_images[0]['url'])): ?>
+    <?php if (!$show_error_page && !empty($event_images[0]['url'])): ?>
     <meta property="og:image" content="<?= htmlspecialchars($event_images[0]['url']) ?>">
     <?php endif; ?>
     
@@ -449,7 +456,9 @@ if (!isset($show_error_page)) {
     </section>
     <?php endif; ?>
 
-    <!-- Image Modal -->
+    <?php endif; // End of error page condition ?>
+
+    <!-- Image Modal (available for all pages) -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 image-modal hidden z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
         <div class="relative max-w-full max-h-full" onclick="event.stopPropagation()">
             <img id="modalImage" src="" alt="" class="modal-image rounded-lg">
@@ -459,12 +468,9 @@ if (!isset($show_error_page)) {
         </div>
     </div>
 
-    <?php endif; // End of error page condition ?>
-
     <?php include '../includes/footer.php'; ?>
 
-    <?php if (!isset($show_error_page) || !$show_error_page): ?>
-    <!-- JavaScript for event detail page only -->
+    <!-- JavaScript for image modal functionality -->
     <script>
         function openImageModal(imageSrc, imageAlt) {
             const modal = document.getElementById('imageModal');
@@ -493,7 +499,6 @@ if (!isset($show_error_page)) {
             }
         });
     </script>
-    <?php endif; // End of JavaScript section ?>
 
 </body>
 </html>

@@ -395,6 +395,96 @@ class DatabaseSeeder {
                 'event_time' => '08:00:00',
                 'location' => 'Sefwi Wiawso Hospital',
                 'image_url' => 'assets/images/carousel/slide3.jpg'
+            ],
+            [
+                'name' => 'Farmers Market Festival',
+                'slug' => 'farmers-market-festival',
+                'description' => 'Annual celebration of local farmers and agricultural products with exhibitions, sales, and cultural performances.',
+                'start_date' => date('Y-m-d', strtotime('+45 days')),
+                'end_date' => date('Y-m-d', strtotime('+47 days')),
+                'event_time' => '06:00:00',
+                'location' => 'Sefwi Wiawso Market Square',
+                'image_url' => 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Women Entrepreneurs Summit',
+                'slug' => 'women-entrepreneurs-summit',
+                'description' => 'Empowering women through business training, networking, and access to microfinance opportunities.',
+                'start_date' => date('Y-m-d', strtotime('+20 days')),
+                'end_date' => date('Y-m-d', strtotime('+20 days')),
+                'event_time' => '09:30:00',
+                'location' => 'Municipal Conference Hall',
+                'image_url' => 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Digital Literacy Training',
+                'slug' => 'digital-literacy-training',
+                'description' => 'Computer and internet skills training for community members of all ages.',
+                'start_date' => date('Y-m-d', strtotime('+25 days')),
+                'end_date' => date('Y-m-d', strtotime('+27 days')),
+                'event_time' => '14:00:00',
+                'location' => 'Sefwi Wiawso Technical Institute',
+                'image_url' => 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Environmental Clean-Up Day',
+                'slug' => 'environmental-clean-up-day',
+                'description' => 'Community-wide environmental awareness and clean-up campaign focusing on waste management.',
+                'start_date' => date('Y-m-d', strtotime('+12 days')),
+                'end_date' => date('Y-m-d', strtotime('+12 days')),
+                'event_time' => '07:00:00',
+                'location' => 'Various locations across municipality',
+                'image_url' => 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Cultural Heritage Festival',
+                'slug' => 'cultural-heritage-festival',
+                'description' => 'Celebration of local culture, traditions, music, dance, and traditional crafts.',
+                'start_date' => date('Y-m-d', strtotime('+60 days')),
+                'end_date' => date('Y-m-d', strtotime('+62 days')),
+                'event_time' => '16:00:00',
+                'location' => 'Sefwi Wiawso Cultural Center',
+                'image_url' => 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'School Infrastructure Development Meeting',
+                'slug' => 'school-infrastructure-meeting',
+                'description' => 'Planning meeting for new classroom blocks and educational facility improvements.',
+                'start_date' => date('Y-m-d', strtotime('+35 days')),
+                'end_date' => date('Y-m-d', strtotime('+35 days')),
+                'event_time' => '10:30:00',
+                'location' => 'District Education Office',
+                'image_url' => 'https://images.unsplash.com/photo-1497486751825-1233686d5d80?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Senior Citizens Health Fair',
+                'slug' => 'senior-citizens-health-fair',
+                'description' => 'Specialized health services, screenings, and wellness activities for elderly residents.',
+                'start_date' => date('Y-m-d', strtotime('+18 days')),
+                'end_date' => date('Y-m-d', strtotime('+18 days')),
+                'event_time' => '08:30:00',
+                'location' => 'Municipal Health Center',
+                'image_url' => 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Road Safety Awareness Campaign',
+                'slug' => 'road-safety-awareness-campaign',
+                'description' => 'Educational program on road safety, traffic rules, and accident prevention.',
+                'start_date' => date('Y-m-d', strtotime('+40 days')),
+                'end_date' => date('Y-m-d', strtotime('+40 days')),
+                'event_time' => '11:00:00',
+                'location' => 'Main Lorry Station',
+                'image_url' => 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=400&fit=crop'
+            ],
+            [
+                'name' => 'Micro-Finance Loan Distribution',
+                'slug' => 'micro-finance-loan-distribution',
+                'description' => 'Distribution of microfinance loans to support small-scale businesses and entrepreneurs.',
+                'start_date' => date('Y-m-d', strtotime('+28 days')),
+                'end_date' => date('Y-m-d', strtotime('+28 days')),
+                'event_time' => '13:00:00',
+                'location' => 'Rural Bank Conference Room',
+                'image_url' => 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=600&h=400&fit=crop'
             ]
         ];
 

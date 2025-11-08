@@ -2,42 +2,37 @@
 // Fetch event images for the gallery
 try {
     $events_query = "
-        SELECT id, name, location, start_date, images, image_url
+        SELECT id, name, location, start_date, image_url
         FROM events 
-        WHERE images IS NOT NULL OR image_url IS NOT NULL
-        ORDER BY start_date DESC
-        LIMIT 12
+        WHERE image_url IS NOT NULL AND image_url != ''
+        ORDER BY start_date ASC
     ";
     
     $events_result = $conn->query($events_query);
     $events = $events_result ? $events_result->fetch_all(MYSQLI_ASSOC) : [];
     
-    // Process events and prepare gallery images
+    // Collect ALL images from all events into one pool
+    $all_images = [];
+    foreach ($events as $event) {
+        if (!empty($event['image_url'])) {
+            $all_images[] = $event['image_url'];
+        }
+    }
+    
+    // Process events and prepare gallery items
     $gallery_images = [];
     foreach ($events as $event) {
-        $event_images = [];
-        
-        // Add main image if exists
         if (!empty($event['image_url'])) {
-            $event_images[] = $event['image_url'];
-        }
-        
-        // Add additional images from JSON if exists
-        if (!empty($event['images'])) {
-            $additional_images = json_decode($event['images'], true);
-            if (is_array($additional_images)) {
-                $event_images = array_merge($event_images, $additional_images);
-            }
-        }
-        
-        // Add to gallery if we have images
-        if (!empty($event_images)) {
+            // Start each grid cell with a random image from the pool
+            $random_start_image = !empty($all_images) ? $all_images[array_rand($all_images)] : $event['image_url'];
+            
             $gallery_images[] = [
                 'event_id' => $event['id'],
                 'event_name' => $event['name'],
                 'event_location' => $event['location'],
                 'event_date' => $event['start_date'],
-                'images' => $event_images
+                'primary_image' => $random_start_image, // Start with random image instead of event's own image
+                'all_available_images' => $all_images // Each grid cell can rotate through ALL images
             ];
         }
     }
@@ -102,62 +97,37 @@ try {
         <!-- Gallery Grid -->
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             <?php 
-            $grid_items = [];
-            $item_count = 0;
-            
-            // Create grid items with rotating images
-            foreach ($gallery_images as $event) {
-                foreach ($event['images'] as $image) {
-                    if ($item_count < 12) { // Limit to 12 grid items
-                        $grid_items[] = [
-                            'image' => $image,
-                            'event' => $event,
-                            'alt_images' => array_filter($event['images'], function($img) use ($image) {
-                                return $img !== $image;
-                            })
-                        ];
-                        $item_count++;
-                    }
-                }
-            }
-            
-            foreach ($grid_items as $index => $item):
+            // Create one grid item per event, but each can rotate through ALL available images
+            foreach ($gallery_images as $index => $event):
             ?>
             <div class="gallery-item group relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                 data-event-id="<?= $item['event']['event_id'] ?>"
-                 data-event-name="<?= htmlspecialchars($item['event']['event_name']) ?>"
+                 data-event-id="<?= $event['event_id'] ?>"
+                 data-event-name="<?= htmlspecialchars($event['event_name']) ?>"
+                 data-all-images='<?= json_encode($event['all_available_images']) ?>'
                  style="animation-delay: <?= $index * 0.1 ?>s">
                 
                 <!-- Image Container with rotating images -->
                 <div class="image-container relative aspect-square overflow-hidden">
-                    <img src="<?= htmlspecialchars($item['image']) ?>" 
-                         alt="<?= htmlspecialchars($item['event']['event_name']) ?>"
-                         class="main-image w-full h-full object-cover transition-opacity duration-500"
+                    <!-- Primary image (starts with this event's image) -->
+                    <img src="<?= htmlspecialchars($event['primary_image']) ?>" 
+                         alt="<?= htmlspecialchars($event['event_name']) ?>"
+                         class="rotating-image w-full h-full object-cover transition-opacity duration-500"
                          onerror="this.src='assets/images/carousel/banner.jpg'; this.onerror=null;">
-                    
-                    <?php if (!empty($item['alt_images'])): ?>
-                    <?php foreach (array_slice($item['alt_images'], 0, 2) as $alt_image): ?>
-                    <img src="<?= htmlspecialchars($alt_image) ?>" 
-                         alt="<?= htmlspecialchars($item['event']['event_name']) ?>"
-                         class="alt-image absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500"
-                         onerror="this.src='assets/images/carousel/banner.jpg'; this.onerror=null;">
-                    <?php endforeach; ?>
-                    <?php endif; ?>
                 </div>
                 
                 <!-- Overlay -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
                         <h3 class="font-bold text-sm mb-1 line-clamp-1">
-                            <?= htmlspecialchars($item['event']['event_name']) ?>
+                            <?= htmlspecialchars($event['event_name']) ?>
                         </h3>
                         <p class="text-xs opacity-90 flex items-center">
                             <i class="fas fa-map-marker-alt mr-1"></i>
-                            <?= htmlspecialchars($item['event']['event_location']) ?>
+                            <?= htmlspecialchars($event['event_location']) ?>
                         </p>
                         <p class="text-xs opacity-75 mt-1">
                             <i class="fas fa-calendar mr-1"></i>
-                            <?= date('M j, Y', strtotime($item['event']['event_date'])) ?>
+                            <?= date('M j, Y', strtotime($event['event_date'])) ?>
                         </p>
                     </div>
                     
@@ -188,11 +158,23 @@ try {
         </div>
 
         <?php else: ?>
-        <!-- No Events Message -->
-        <div class="text-center py-12">
-            <i class="fas fa-images text-6xl text-gray-300 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">No Event Images Available</h3>
-            <p class="text-gray-500">Check back soon for photos from our upcoming community events.</p>
+        <!-- No Events Message (nicer layout) -->
+        <div class="flex items-center justify-center py-12">
+            <div class="max-w-3xl w-full bg-white rounded-xl shadow-md p-8 text-center">
+                <div class="mx-auto w-32 h-32 flex items-center justify-center rounded-full bg-amber-50 mb-6">
+                    <!-- simple camera SVG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7h3l2-3h6l2 3h3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-800 mb-2">No images available right now</h3>
+                <p class="text-gray-600 mb-6">We don't have any event photos to show yet. Try visiting the events page to see upcoming activities or check back later.</p>
+                <div class="flex justify-center gap-4">
+                    <a href="events/" class="inline-block px-6 py-3 bg-amber-600 text-white rounded-full font-semibold hover:bg-amber-700">View Events</a>
+                    <a href="contact/" class="inline-block px-6 py-3 border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50">Contact Us</a>
+                </div>
+            </div>
         </div>
         <?php endif; ?>
 
@@ -227,70 +209,123 @@ try {
 document.addEventListener('DOMContentLoaded', function() {
     const galleryItems = document.querySelectorAll('.gallery-item');
     
-    // Image rotation functionality
+    // Image rotation functionality - each grid cell rotates through ALL available images
     function startImageRotation() {
-        galleryItems.forEach((item, index) => {
-            const mainImage = item.querySelector('.main-image');
-            const altImages = item.querySelectorAll('.alt-image');
-            
-            if (altImages.length > 0) {
-                let currentImageIndex = 0;
-                
-                // Start rotation after initial delay
-                setTimeout(() => {
-                    setInterval(() => {
-                        // Fade out current image
-                        if (currentImageIndex === 0) {
-                            mainImage.style.opacity = '0';
-                        } else {
-                            altImages[currentImageIndex - 1].style.opacity = '0';
+        if (galleryItems && galleryItems.length > 0) {
+            galleryItems.forEach((item, index) => {
+                if (item) {
+                    const rotatingImage = item.querySelector('.rotating-image');
+                    const allImagesData = item.dataset.allImages;
+                    
+                    if (allImagesData && rotatingImage) {
+                        try {
+                            const allImages = JSON.parse(allImagesData);
+                            // Start each grid cell with a random image index
+                            let currentImageIndex = Math.floor(Math.random() * allImages.length);
+                            
+                            // Start rotation after initial delay (staggered for each item)
+                            setTimeout(() => {
+                                const rotationInterval = setInterval(() => {
+                                    // Get a random image (different from current)
+                                    let nextImageIndex;
+                                    do {
+                                        nextImageIndex = Math.floor(Math.random() * allImages.length);
+                                    } while (nextImageIndex === currentImageIndex && allImages.length > 1);
+                                    
+                                    currentImageIndex = nextImageIndex;
+                                    
+                                    // Fade out current image
+                                    rotatingImage.style.opacity = '0.3';
+                                    
+                                    // Change source and fade back in
+                                    setTimeout(() => {
+                                        rotatingImage.src = allImages[currentImageIndex];
+                                        rotatingImage.style.opacity = '1';
+                                    }, 300);
+                                    
+                                }, 4000 + Math.random() * 3000); // Random timing between 4-7 seconds for each grid item
+                                
+                                // Store interval for pause/resume functionality
+                                item.rotationInterval = rotationInterval;
+                            }, 1000 + (index * 200) + Math.random() * 2000); // More random initial delay
+                            
+                        } catch (e) {
+                            console.log('Error parsing images data for item:', index);
                         }
-                        
-                        // Move to next image
-                        currentImageIndex = (currentImageIndex + 1) % (altImages.length + 1);
-                        
-                        // Fade in next image
-                        setTimeout(() => {
-                            if (currentImageIndex === 0) {
-                                mainImage.style.opacity = '1';
-                            } else {
-                                altImages[currentImageIndex - 1].style.opacity = '1';
-                            }
-                        }, 250);
-                        
-                    }, 3000 + (index * 200)); // Stagger the timing
-                }, 2000 + (index * 300)); // Initial delay
-            }
-        });
+                    }
+                }
+            });
+        }
     }
     
     // Click handler for viewing events
-    galleryItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const eventId = this.dataset.eventId;
-            const eventName = this.dataset.eventName;
-            
-            // Add loading animation
-            const loadingIndicator = this.querySelector('.loading-indicator');
-            loadingIndicator.style.opacity = '1';
-            
-            // Redirect to event detail page after short delay
-            setTimeout(() => {
-                window.location.href = `events/event-detail.php?id=${eventId}`;
-            }, 300);
+    if (galleryItems && galleryItems.length > 0) {
+        galleryItems.forEach(item => {
+            if (item) {
+                item.addEventListener('click', function() {
+                    const eventId = this.dataset.eventId;
+                    const eventName = this.dataset.eventName;
+                    
+                    // Add loading animation
+                    const loadingIndicator = this.querySelector('.loading-indicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.style.opacity = '1';
+                    }
+                    
+                    // Redirect to event detail page after short delay
+                    setTimeout(() => {
+                        window.location.href = `events/event-detail.php?id=${eventId}`;
+                    }, 300);
+                });
+                
+                // Pause rotation on hover
+                item.addEventListener('mouseenter', function() {
+                    if (this.rotationInterval) {
+                        clearInterval(this.rotationInterval);
+                    }
+                });
+                
+                // Resume rotation on leave
+                item.addEventListener('mouseleave', function() {
+                    const rotatingImage = this.querySelector('.rotating-image');
+                    const allImagesData = this.dataset.allImages;
+                    
+                    if (allImagesData && rotatingImage) {
+                        try {
+                            const allImages = JSON.parse(allImagesData);
+                            // Find current image index or start random
+                            let currentImageIndex = allImages.findIndex(img => 
+                                rotatingImage.src.includes(img.split('/').pop())
+                            );
+                            if (currentImageIndex === -1) {
+                                currentImageIndex = Math.floor(Math.random() * allImages.length);
+                            }
+                            
+                            this.rotationInterval = setInterval(() => {
+                                // Get a random image (different from current)
+                                let nextImageIndex;
+                                do {
+                                    nextImageIndex = Math.floor(Math.random() * allImages.length);
+                                } while (nextImageIndex === currentImageIndex && allImages.length > 1);
+                                
+                                currentImageIndex = nextImageIndex;
+                                
+                                rotatingImage.style.opacity = '0.3';
+                                setTimeout(() => {
+                                    rotatingImage.src = allImages[currentImageIndex];
+                                    rotatingImage.style.opacity = '1';
+                                }, 300);
+                            }, 4000 + Math.random() * 3000); // Random timing on resume too (4-7 seconds)
+                        } catch (e) {
+                            console.log('Error resuming rotation');
+                        }
+                    }
+                });
+            }
         });
-        
-        // Pause rotation on hover
-        item.addEventListener('mouseenter', function() {
-            this.style.animationPlayState = 'paused';
-        });
-        
-        item.addEventListener('mouseleave', function() {
-            this.style.animationPlayState = 'running';
-        });
-    });
-    
+    }
+
     // Start the image rotation
-    setTimeout(startImageRotation, 1000);
+    setTimeout(startImageRotation, 500);
 });
 </script>
