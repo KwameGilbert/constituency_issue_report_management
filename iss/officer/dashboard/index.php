@@ -12,7 +12,7 @@ $officerId = $_SESSION['user_id'];
 $userName = $_SESSION['user_name'] ?? 'Officer';
 
 $headerActionButtons = [];
-// Colors (random shades for each)
+
 function randomColor($base)
 {
     $shades = [

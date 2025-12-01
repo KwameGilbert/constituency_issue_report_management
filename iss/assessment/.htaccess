@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Set the base for the rewrite rules to the current directory (assessment/)
+RewriteBase /iss/assessment/
+
+# Redirect only if the request is for the root of the 'assessment' directory (empty string after RewriteBase)
+RewriteRule ^$ dashboard/ [L,R=301]
